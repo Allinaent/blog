@@ -1,0 +1,134 @@
+baseurl: https://sdl.moe 
+languageCode: zh-cn
+theme: hugo-theme-stack
+paginate: 5 # 每页显示多少文章
+title: Allinaent
+
+# Set hasCJKLanguage to true if DefaultContentLanguage is in [zh-cn ja ko]
+# This will make .Summary and .WordCount behave correctly for CJK languages.
+hasCJKLanguage: true
+
+permalinks:
+    post: /post/:filename/
+    page: /:filename/
+
+# 下面是 Stack 主题的参数
+
+params:
+    mainSections:
+        - post
+    featuredImageField: image
+    rssFullContent: true # RSS 是否开启全内容 / false 则为只有摘要
+    favicon: img/sdl-logo-white-cir.webp # 浏览器 Tab 页的网站图标
+    toc: true
+
+    article:
+        math: false # 这里关闭是因为我们使用的是 MathJax
+        toc: true # TOC 默认开启
+        readingTime: true
+        license:
+            enabled: true
+            default: '<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener">CC BY-SA 4.0</a>'
+
+    imageProcessing:
+        cover:
+            enabled: true
+        content:
+            enabled: true
+
+# https://stack.jimmycai.com/config/widgets#toc
+# https://sdl.moe/post/hexo-transfer-to-hugo/#toc-%E6%97%A0%E6%B3%95%E8%B7%9F%E9%9A%8F%E6%BB%9A%E5%8A%A8
+# https://github.com/J-shiro/J-shiro.github.io
+# 多参考别人的实现。
+    widgets:
+        homepage:
+            - type: search
+            - type: archives
+              params:
+                  limit: 5
+            - type: categories
+              params:
+                  limit: 10
+            - type: tag-cloud
+              params:
+                  limit: 10
+        page:
+            - type: toc
+
+### Custom menu
+### See https://docs.stack.jimmycai.com/configuration/custom-menu.html
+### To remove about, archive and search page menu item, remove `menu` field from their FrontMatter
+menu:
+    main:
+        - identifier: home
+          name: Home
+          url: /
+          weight: -100
+          params:
+              newTab: false
+              icon: home
+
+        - identifier: categories
+          name: Categories
+          url: /categories
+          weight: -85
+          params:
+              newTab: false
+              icon: categories
+
+        - identifier: rss
+          name: RSS Feed
+          url: /index.xml
+          weight: -10
+          params:
+              newTab: true
+              icon: rss
+
+    social:
+        - identifier: github
+          name: GitHub
+          url: https://github.com/Allinaent
+          params:
+              newTab: true
+              icon: brand-github
+
+related:
+    includeNewer: true
+    threshold: 60
+    toLower: false
+    indices:
+        - name: tags
+          weight: 100
+
+        - name: categories
+          weight: 200
+
+markup: # **Markup Section 非常重要**
+    defaultMarkdownHandler: pandoc # 选择 Pandoc
+    pandoc:
+        preserveTOC: false # 此选项开启则不会剔除掉 Pandoc 自己生成在文章中的 TOC，关闭则只显示 Sidebar TOC
+    tableOfContents:
+        endLevel: 5 # 从 5 结束
+        ordered: true
+        startLevel: 2 # 从 2 开始
+    highlight: # 代码高亮配置，对 Pandoc 而言似乎是没用的。稍后会提到如何使代码高亮
+        anchorLineNos: false
+        codeFences: true
+        guessSyntax: false
+        hl_Lines: ""
+        lineAnchors: ""
+        lineNoStart: 1
+        lineNos: true
+        lineNumbersInTable: true
+        noClasses: true
+        style: dracula
+        tabWidth: 4
+
+
+# 使用下面的配置才能使得 Pandoc 渲染 Blog 文章
+
+security:
+  enableInlineShortcodes: false
+  exec:
+    allow: ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', '^p']
+    osEnv: ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
