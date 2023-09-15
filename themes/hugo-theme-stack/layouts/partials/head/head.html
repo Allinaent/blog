@@ -1,0 +1,32 @@
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+
+{{- $description := partialCached "data/description" . .RelPermalink -}}
+<meta name='description' content='{{ $description }}'>
+{{ with .Params.Keywords }}<meta name="keywords" content="{{ delimit . ", " }}">{{ end }}
+
+{{- $title := partialCached "data/title" . .RelPermalink -}}
+<title>{{ $title }}</title>
+
+<link rel='canonical' href='{{ .Permalink }}'>
+
+{{- partial "head/style.html" . -}}
+{{- partial "head/script.html" . -}}
+{{- partial "head/opengraph/include.html" . -}}
+
+{{- range .AlternativeOutputFormats -}}
+    <link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink | safeURL }}">
+{{- end -}}
+
+{{ with .Site.Params.favicon }}
+    <link rel="shortcut icon" href="{{ . }}" />
+{{ end }}
+
+{{- template "_internal/google_analytics.html" . -}}
+{{- partial "head/custom.html" . -}}
+
+{{ if .Params.mathjax }}{{ partial "mathjax.html" . }}{{ end }}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/base16/darcula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
