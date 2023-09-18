@@ -1,4 +1,4 @@
-baseurl: https://sdl.moe 
+baseurl: https://blog-3gt.pages.dev/ 
 languageCode: zh-cn
 theme: hugo-theme-stack
 paginate: 5 # 每页显示多少文章
@@ -40,7 +40,7 @@ params:
 # https://sdl.moe/post/hexo-transfer-to-hugo/#toc-%E6%97%A0%E6%B3%95%E8%B7%9F%E9%9A%8F%E6%BB%9A%E5%8A%A8
 # https://github.com/J-shiro/J-shiro.github.io
 # 多参考别人的实现。
-    widgets:
+    widgets:	    
         homepage:
             - type: search
             - type: archives
@@ -58,7 +58,7 @@ params:
 ### Custom menu
 ### See https://docs.stack.jimmycai.com/configuration/custom-menu.html
 ### To remove about, archive and search page menu item, remove `menu` field from their FrontMatter
-menu:
+#menu:
     main:
         - identifier: home
           name: Home

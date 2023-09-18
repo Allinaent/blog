@@ -1,7 +1,7 @@
 +++
-title = "hugo-on-cloudflare"
+title = "在cloudfare中搭建hugo博客"
 date = 2023-09-18T16:35:00+08:00
-lastmod = 2023-09-18T16:36:15+08:00
+lastmod = 2023-09-18T17:26:16+08:00
 tags = ["emacs", "hugo"]
 draft = false
 toc = true
@@ -171,8 +171,6 @@ cloudflare 的 CDN，简直是写自己博客的不二选择。参见另一个�
 为了绐我的 emacs 找个好一点的展示的家，我真的是不容易啊。选一个漂亮的博客，而后再用 latex 或者 orgmode 来做笔记。<https://shaohanyun.top/posts/tech/transformer/>
 
 今天把这个弄完吧。
-
-9 月 14 日更新：天呐，cloudfare 的密码忘记了。麻烦。密码是：Glj13579!，文档可不能泄露出去，不要把隐私的内容放到博客中，顶多写在本地的文件当中。
 
 我的选型是 cloudfare + gitlab。
 
