@@ -1,4 +1,4 @@
-baseurl: https://blog-3gt.pages.dev/ 
+baseurl: https://guolongji.xyz/ 
 languageCode: zh-cn
 theme: hugo-theme-stack
 paginate: 5 # 每页显示多少文章
