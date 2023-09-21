@@ -1,8 +1,9 @@
 +++
 title = "在cloudfare中搭建hugo博客"
 date = 2023-09-18T16:35:00+08:00
-lastmod = 2023-09-18T17:26:16+08:00
+lastmod = 2023-09-20T16:36:09+08:00
 tags = ["emacs", "hugo"]
+categories = ["classic"]
 draft = false
 toc = true
 +++

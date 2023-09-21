@@ -7,7 +7,7 @@
 #+DATE: [2023-09-18 一 16:35]
 #+TITLE: 在cloudfare中搭建hugo博客
 #+HUGO_TAGS: emacs hugo
-#+HUGO_CATEGORIES:
+#+HUGO_CATEGORIES: classic
 
 
 * hugo on cloudflare
