@@ -104,11 +104,11 @@ related:
           weight: 200
 
 markup: # **Markup Section 非常重要**
-    defaultMarkdownHandler: pandoc # 选择 Pandoc
+    # defaultMarkdownHandler: pandoc # 选择 Pandoc
     pandoc:
         preserveTOC: false # 此选项开启则不会剔除掉 Pandoc 自己生成在文章中的 TOC，关闭则只显示 Sidebar TOC
     tableOfContents:
-        endLevel: 5 # 从 5 结束
+        endLevel: 6 # 从 5 结束
         ordered: true
         startLevel: 2 # 从 2 开始
     highlight: # 代码高亮配置，对 Pandoc 而言似乎是没用的。稍后会提到如何使代码高亮
