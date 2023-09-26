@@ -118,7 +118,7 @@ markup: # **Markup Section 非常重要**
         hl_Lines: ""
         lineAnchors: ""
         lineNoStart: 1
-        lineNos: true
+        lineNos: false
         lineNumbersInTable: true
         noClasses: true
         style: dracula

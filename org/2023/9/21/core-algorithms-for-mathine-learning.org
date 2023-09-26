@@ -1,0 +1,89 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../
+#+HUGO_SECTION: post/2023/09
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2023-09-21 四 16:55]
+#+TITLE: 深度学习必备核心算法
+#+HUGO_TAGS: ai
+#+HUGO_CATEGORIES: learn
+
+
+* 机器学习流程:
+特征工程
+建立模型
+评估与应用
+数据获取
+
+* 特征工程的作用:
+数据特征决定了模型的上限
+预处理和特征提取是最核心的
+算法与参数选择决定了如何逼近这个上限
+
+* 特征如何提取：
+segway 这个牌子的平衡车，有 handle（把手）和 wheel（轮子）
+handle，wheel -> Feature representation -> Leading Algorithm
+
+* 传统的特征提取方法：
+Natural images（自然界的图片）-> Learning bases: "Edges"
+
+* 为什么需要深度学习：
+32x32 的手写数字“3” -> 5x5 的 convolution（卷积核）处理，Feature Extraction -> fully connection（全连接）进行
+分类
+
+* 深度学习的应用：
+车辆检测
+人脸识别
+医疗（genomic data -> clinical data -> radiomic data）
+表情转换
+黑白图片转彩色图
+图片多分类 imagenet： https://www.image-net.org
+
+* 深度学习算法优于传统人工智能算法
+
+* 图像分类任务定义
+绐图片加标签
+
+* 计算机眼中的图像
+是一个三维（三个通道）数组。数组的元素是色值（精度可以是 255）。数组的长度是像素数。像素数是 width * height
+计算出。
+
+* CV 的挑战
+照射角度
+形状改变
+部分遮蔽
+背景混入
+
+* CV 分类机器学习的常规套路
+1.收集数据并给定标签
+2.训练一个分类器
+3.测试,评估
+
+* K 邻近（KNN）分类方法
+
+1.计算已知类别数据集中的点与当前点的距离
+2.按照距离依次排序
+3.选取与当前点距离最小的 K 个点
+4.确定前 K 个点所在类别的出现概率
+5.返回前 K 个点出现频率最高的类别作为当前点预测分类
+
+* KNN 特点
+KNN 算法本身简单有效,它是一种 lazy-learning 算法。
+分类器不需要使用训练集进行训练,训练时间复杂度为 0。
+KNN 分类的计算复杂度和训练集中的文档数目成正比，也就是说,如果训练集中文档总数为 n,那么 KNN 的分类时间复杂度为 O(n)。
+K 值的选择,距离度量和分类决策规则是该算法的三个基本要素。
+
+* 图片数据库 CIFAR-10
+经典数据集：
+10 类标签
+10000 个测试数据
+50000 个训练数据
+
+* 为什么 K 近邻不能用来图像分类?
+背景主导是一个最大的问题,我们关注的却是主体(主要成分)
+如何才能让机器学习到哪些是重要的成分呢？
+
+
+
+
