@@ -23,7 +23,7 @@ params:
     toc: true
 
     article:
-        math: false # 这里关闭是因为我们使用的是 MathJax
+        math: true # 这里关闭是因为我们使用的是 MathJax
         toc: true # TOC 默认开启
         readingTime: true
         license:

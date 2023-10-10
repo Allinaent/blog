@@ -85,3 +85,60 @@ dde 调用: dde-switchtogreeter uos
 
 gdbus call --system --dest org.freedesktop.DisplayManager --object-path /org/freedesktop/DisplayManager/Seat0 --method org.freedesktop.DisplayManager.Seat.SwitchToGreeter
 
+ioctl(fd, VT_ACTIVATE, vt)，通过这个调用内核。
+
+对应的是内核的 drivers/tty/vt/vt_ioctl.c 里面的两个处理函数：
+
+vt_ioctl 和 vt_compat_ioctl 两个处理函数：
+
+#+begin_src c
+/*
+ * ioctl(fd, VT_ACTIVATE, num) will cause us to switch to vt # num,
+ * with num >= 1 (switches to vt 0, our console, are not allowed, just
+ * to preserve sanity).
+ */
+case VT_ACTIVATE:
+	if (!perm)
+		return -EPERM;
+	if (arg == 0 || arg > MAX_NR_CONSOLES)
+		ret =  -ENXIO;
+	else {
+		arg--;
+		console_lock();
+		ret = vc_allocate(arg);
+		console_unlock();
+		if (ret)
+			break;
+		set_console(arg);
+	}
+	break;
+
+#+end_src
+
+或者是：
+#+begin_src c
+	{
+	// ......
+
+	case VT_ACTIVATE:
+	case VT_WAITACTIVE:
+	case VT_RELDISP:
+	case VT_DISALLOCATE:
+	case VT_RESIZE:
+	case VT_RESIZEX:
+		goto fallback;
+
+	/*
+	 * the rest has a compatible data structure behind arg,
+	 * but we have to convert it to a proper 64 bit pointer.
+	 */
+	default:
+		arg = (unsigned long)compat_ptr(arg);
+		goto fallback;
+	}
+
+	return ret;
+
+fallback:
+	return vt_ioctl(tty, cmd, arg);
+#+end_src
