@@ -1,0 +1,47 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2023/10
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2023-10-11 三 11:18]
+#+TITLE: 丁至宣小伙伴教我diy键盘
+#+HUGO_TAGS: diy
+#+HUGO_CATEGORIES: keyboard
+
+
+* 材料准备
+
++ 3D 打印的壳子：
+
+#+attr_html: :link t
+#+caption: /"壳子"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 800
+[[file:diy-keyboard.org.assets/img_20231011_112137.png]]
+
++ 一大堆的芯片、线还有电池
+
+#+attr_html: :link t
+#+caption: /"芯片和线"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 800
+[[file:diy-keyboard.org.assets/img_20231011_112701.png]]
+
++ 其他
+
+还需要电烙铁，钳子，一些额外的杜邦线，键轴键帽
+
+除了轨迹球和键轴键帽，其它的东西都是丁至宣小伙伴资助的，万分感谢。
+
+
+* 开始动工
+
+
+* ox-hugo image resize
+
+https://corra.fi/posts/ox-hugo-friendly-resize/
