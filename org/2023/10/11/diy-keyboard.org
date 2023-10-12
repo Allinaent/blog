@@ -14,23 +14,27 @@
 
 + 3D 打印的壳子：
 
-#+attr_html: :link t
 #+caption: /"壳子"/
 #+attr_html: :class fancy
 #+attr_html: :target _blank
 #+attr_html: :alt Caption not used as alt text
 #+attr_html: :width 800
-[[file:diy-keyboard.org.assets/img_20231011_112137.png]]
+[[file:diy-keyboard.org.assets/img_20231012_095601.jpg]]
+
+
 
 + 一大堆的芯片、线还有电池
 
-#+attr_html: :link t
 #+caption: /"芯片和线"/
 #+attr_html: :class fancy
 #+attr_html: :target _blank
 #+attr_html: :alt Caption not used as alt text
 #+attr_html: :width 800
-[[file:diy-keyboard.org.assets/img_20231011_112701.png]]
+[[file:diy-keyboard.org.assets/img_20231012_095307.jpg]]
+
+
+
+
 
 + 其他
 
@@ -45,3 +49,24 @@
 * ox-hugo image resize
 
 https://corra.fi/posts/ox-hugo-friendly-resize/
+
+
+[[file:diy-keyboard.org.assets/img_20231011_174251.jpg]]
+
+
+[[file:diy-keyboard.org.assets/img_20231011_175457.jpg]]
+
+https://wiki.archlinux.org/title/Screen_capture
+
+要我自己写一个压缩工具吗？大可不必：
+nix-env -iA nixpkgs.shutter
+
+shutter这个工具完全比任何其它的截图工具好用，超过 Deepin Screenshot。
+
+arch的wiki上对这个软件也没有重点突出出来。这个软件最好。
+
+[[file:diy-keyboard.org.assets/img_20231012_094223.jpg]]
+
+设置完快捷键。
+
+但是还是有问题的，需要shutter截图后再手动拖一下。不过已经不太影响使用了。
