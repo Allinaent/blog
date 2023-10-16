@@ -77,6 +77,35 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数�
 #+attr_org: :width 700
 [[file:tty-x-switch.org.assets/img_20230926_090023.png]]
 
+* dbus
+
++ lightdm(org.freedesktop.DisplayManager)
+
+登录管理：LightDM 提供用户界面，使用户能够输入用户名和密码登录系统。它支持不同的登录方式，如图形界面登录、远程登录和自动登录。
+
+会话管理：LightDM 管理用户登录后的会话过程。它允许用户选择默认的窗口管理器或桌面环境，并为每个用户保存其首选设置。
+
+多用户支持：LightDM 支持多个用户账号，并为每个用户提供独立的登录环境。这意味着多个用户可以同时登录到同一台计算机上，而不会相互干扰。
+
+主题和样式定制：LightDM 允许用户自定义登录界面的外观和样式。用户可以选择不同的主题、背景图像、字体和颜色方案，以创建自己喜欢的登录界面。
+
+扩展性和集成：LightDM 支持插件和扩展，可以与各种其他软件和服务集成。它可以与不同的窗口管理器、桌面环境和身份验证系统一起使用。
+
+总的来说，LightDM 是一个灵活、可定制和易于使用的显示管理器，它提供了一个简单而强大的界面来管理用户登录会话。
+
++ greeter(lightdm-deepin-greeter)
+
+
++ deepin-authenticate(com.deepin.daemon.Authenticate)
++ systemd-logind(org.freedesktop.login1)
++ dde-lockservice(org.deepin.dde.LockService1)
++ dde-system-daemon(org.deepin.dde.Accounts1)
++ accounts-daemon(org.freedesktop.Accounts)
+
+
+以上服务，基本都是 system bus，可以通过 d-feet 去看对应的接口。
+
+
 * X 切换到 tty 花的时间比较长
 
 dde 调用: dde-switchtogreeter uos
