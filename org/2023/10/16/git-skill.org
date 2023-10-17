@@ -1,0 +1,25 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2023/10
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2023-10-16 一 21:08]
+#+TITLE: 使用git中遇到的问题记录
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: git
+
+* gitlab 个人令牌
+
+https://gitlab.com/-/profile/personal_access_tokens
+
+建一个新的 personal access token
+
+#+begin_src bash
+ git remote -v
+ git remote  remove origin
+ git remote add origin https://oauth2:"personal-key"@gitlab.com/Allinaent/"repository"
+ git status
+ git pull
+ git branch --set-upstream-to=origin/main main
+#+end_src

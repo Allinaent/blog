@@ -10,6 +10,7 @@
 #+HUGO_CATEGORIES: math
 
 学习一点数学基础，没学过的话也不可能真正理解 ai。
+https://www.bilibili.com/video/BV1A24y1p76q/
 
 * 线性空间的基于维数
 
@@ -57,6 +58,7 @@
 元素均为 1。除此以外全都为 0。
 
 性代基础。学数学要超纲学，才能在解基础题目时能做到降维打击。
+
 [[file:martrix-analysis-1.org.assets/img_20231016_170923.jpg]]
 
 [[file:martrix-analysis-1.org.assets/img_20231016_171430.jpg]]
