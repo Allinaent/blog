@@ -103,26 +103,26 @@ ${\displaystyle U^{*}U=UU^{*}=I_{n}}$
 
 就是只有对角线上有非零元素。
 
-\begin{equation}
+$$
 \notag
 \left [ \begin{matrix}
 a& 0& 0 \\
 0& b& 0 \\
 0& 0& c
 \end{matrix} \right ]
-\end{equation}
+$$
 
 
 + 实对称矩阵（Real Symmetric Matrix）
 
-\begin{equation}
+$$
 \notag
 \left [ \begin{matrix}
 a& b& c \\
 b& d& e \\
 c& e& f
 \end{matrix} \right ]
-\end{equation}
+$$
 
 是指一个方阵，它满足以下两个条件：
 
@@ -135,20 +135,22 @@ c& e& f
 
 + 反实对称矩阵（Skew-Symmetric Matrix）
 
+英文的原义就是倾斜-称的意思，学数学还要学很多的英文，法文和拉丁文。
+
 是指一个方阵，它满足以下两个条件：
 
 1.矩阵的元素都是实数。
 
 2.矩阵的转置等于它相反数的乘积，即 $A = -A^T$ 。
 
-\begin{equation}
+$$
 \notag
 \left [ \begin{matrix}
 0& a& b \\
 -a& 0& c \\
 -b& -c& 0
 \end{matrix} \right ]
-\end{equation}
+$$
 
 + 厄米特矩阵
 
@@ -163,16 +165,14 @@ c& e& f
 换句话说，厄米特矩阵的每个元素关于主对角线对称，并且每个元素与其对应位置的元素的共轭相等。主对角线
 是从左上角到右下角的一条对角线。
 
-#+begin_export latex
-\begin{equation}
+$$
 \notag
 \left [ \begin{matrix}
 a& b& c \\
 b^{*}& d& e \\
 c^{*}& e^{*}& f
 \end{matrix} \right ]
-\end{equation}
-#+end_export
+$$
 
 其中，a、b、c、d、e、f 都是复数，并且矩阵的共轭转置等于它自己的转置的复共轭 $A = A^H$ 。
 
@@ -201,7 +201,7 @@ $a_{{i,j}}=\overline {a_{{j,i}}}$ ，其中 $\overline{(\cdot)}$ 为共轭算子
 
 
 
-** 正规矩阵一定可以可以对角化
+** 正规矩阵一定可以对角化
 
 
 ** 特征值和特征向量
