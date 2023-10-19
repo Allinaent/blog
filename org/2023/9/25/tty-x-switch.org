@@ -97,9 +97,13 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数�
 
 
 + deepin-authenticate(com.deepin.daemon.Authenticate)
+
 + systemd-logind(org.freedesktop.login1)
+
 + dde-lockservice(org.deepin.dde.LockService1)
+
 + dde-system-daemon(org.deepin.dde.Accounts1)
+
 + accounts-daemon(org.freedesktop.Accounts)
 
 
