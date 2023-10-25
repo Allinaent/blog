@@ -110,6 +110,15 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数�
 以上服务，基本都是 system bus，可以通过 d-feet 去看对应的接口。
 
 
+** dbus 接口的使用
+
+我们有一个服务 deepin-authenticate 是用 golang 来实现的。golang 的 dbus 库的文档在这里：
+
+https://pkg.go.dev/github.com/godbus/dbus
+
+
+
+
 * X 切换到 tty 花的时间比较长
 
 dde 调用: dde-switchtogreeter uos
