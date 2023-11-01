@@ -1,0 +1,13 @@
+#!/bin/bash
+n=0
+while (($n<100))
+do
+        sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
+--method org.freedesktop.login1.Manager.ActivateSession 2"
+        echo $n
+        n=$((n+1))
+        sleep 2
+        sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
+--method org.freedesktop.login1.Manager.ActivateSession c2"
+        sleep 2
+done

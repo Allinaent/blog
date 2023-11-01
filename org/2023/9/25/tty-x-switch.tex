@@ -1,52 +1,116 @@
-#+HUGO_BASE_DIR: ../../../../
-#+HUGO_SECTION: post/2023/09
-#+HUGO_CUSTOM_FRONT_MATTER: :toc true
-#+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
-#+DATE: [2023-09-25 一 10:31]
-#+TITLE: tty和x的切换流程
-#+HUGO_TAGS: gpu
-#+HUGO_CATEGORIES: technology
+% Created 2023-11-01 三 13:43
+% Intended LaTeX compiler: xelatex
+\documentclass[cn,10pt]{elegantbook}
 
 
 
-这篇文档可以在：https://guolongji.xyz/post/tty-x-switch/ 这里看到更新。
+\extrainfo{Victory won\rq t come to us unless we go to it. --- M. Moore}
+\setcounter{tocdepth}{3}
+\logo{logo.png}
+\cover{theme.jpg}
 
-* 概念
 
-+ Console
+\usepackage{fontspec}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{minted}
+\newminted{cpp}{frame=single,linenos,breaklines}
+\newminted{java}{frame=single,linenos,,breaklines}
+\newminted{shell}{frame=single,linenos,breaklines}
+\newminted{ruby}{frame=single,linenos,breaklines}
+\newminted{typescript}{frame=single,linenos,breaklines}
+\newminted{js}{frame=single,linenos,breaklines}
+\newminted{sql}{frame=single,linenos,breaklines}
+\newminted{common-lisp}{frame=single,linenos,breaklines}
+\newminted{lisp}{frame=single,linenos,breaklines}
+\newminted{yaml}{frame=single,linenos,breaklines}
+\newminted{xml}{frame=single,linenos,breaklines}
+\newminted{tex}{frame=single,linenos,breaklines}
+\newminted{rust}{frame=single,linenos,breaklines}
+\newminted{python}{frame=single,linenos,breaklines}
+\newminted{html}{frame=single,linenos,breaklines}
+\newminted{groovy}{frame=single,linenos,breaklines}
+\newminted{go}{frame=single,linenos,breaklines}
+\newminted{c++}{frame=single,linenos,breaklines}
+\newminted{cmake}{frame=single,linenos,breaklines}
+\newminted{make}{frame=single,linenos,breaklines}
+\newminted{abap}{frame=single,linenos,breaklines}
+
+
+
+
+
+\extrainfo{简单介绍一下概念和学习路线}
+\emergencystretch 3em
+\author{郭隆基}
+\date{\textit{[2023-09-25 一 10:31]}}
+\title{tty和x的切换流程}
+\hypersetup{
+ pdfauthor={郭隆基},
+ pdftitle={tty和x的切换流程},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 30.0.50 (Org mode 9.6.7)}, 
+ pdflang={Zh}}
+\begin{document}
+
+%\maketitle
+\frontmatter
+\tableofcontents
+\mainmatter
+
+
+这篇文档可以在：\url{https://guolongji.xyz/post/tty-x-switch/} 这里看到更新。
+
+\chapter{概念}
+\label{sec:org18c1b08}
+
+\begin{itemize}
+\item Console
+\end{itemize}
 Console 意即控制台。Console 出现在操作系统诞生之前，那个时候的老式计算机还只能通过按钮开关等方式控制计算机的
 运转，而 Console 就是将控制计算机器件集中起来的面板。由于现代计算机不再使用控制台来控制电脑，所以现代操作系统
 中的 Console 一般指控制台终端。
 
-+ Terminal
+\begin{itemize}
+\item Terminal
+\end{itemize}
 Terminal 意即终端。顾名思义，是连接到计算机上的终端设备。当操作系统出现之后，不再使用控制台与计算机交互，而是
 使用命令，为了能够输入这些命令，出现了电传打字机（Teletype），程序输入输出可以通过电传打字机打印到屏幕上。所
 以 Terminal 其实是指一种监视计算机输入输出的硬件。但是现代操作系统中使用更多的是软件仿真终端。
 
 
-+ TTY
+\begin{itemize}
+\item TTY
+\end{itemize}
 TTY 即 TeleTYpe，意即电传打字机。TTY 与 Terminal 初期是同一个概念，电传打字机连接到计算机上便是一台终端设备。
 当时的 TTY 需要使用 UART 驱动来传输数据，而现代计算机中的 TTY 直接将输出数据渲染成视频信号，输出到显示器中，
 这些操作都运行在内核态。目前只能在连接键盘与显示器的计算机上使用 TTY。
 
 
-+ PTY
+\begin{itemize}
+\item PTY
+\end{itemize}
 PTY 即 Pseudo TeleTYpe，意即伪 TTY。PTY 是现代计算机中使用终端模拟软件或者 SSH 连接所使用的伪终端，运行在用户
 态。现代操作系统使用的终端都是伪终端，通过终端软件对终端进行模拟。PTY 为了保证能够与 TTY 兼容，采用了主从结构，
 分为 PTY slave side 与 PTY master side。
 
 
-+ PTY slave side
+\begin{itemize}
+\item PTY slave side
+\end{itemize}
 PTY slave side 的通过 TTY 驱动实现。PTY slave side 与 PTY master side 进行连接，将程序输入输出发送给 PTY
 master side 并显示出来。
 
 
-+ PTY master side
+\begin{itemize}
+\item PTY master side
+\end{itemize}
 PTY master side 会将程序的输入输出显示在终端模拟软件中。例如当时用 SSH 远程连接时，PTY master side 与 SSH 连
 接，交换数据。
 
-+ PTMX
+\begin{itemize}
+\item PTMX
+\end{itemize}
 ptmx 是 Linux 操作系统中的一个特殊设备文件，它代表了伪终端（pseudo-terminal）主设备。伪终端是一种虚拟设备，用
 于提供交互式终端功能，让程序能够与终端进行通信。
 
@@ -67,39 +131,40 @@ ptmx 的全称是 "Pseudo Terminal Master for X"，它是伪终端机制的主�
 说人话就是，每打开一个 terminal 的程序 ptmx 就会创建一个新的 "/dev/pts" 的下的设备。sysctl kernel.pty.max，能
 查到这个值是 4096。伪终端的数量也是有限制的。
 
-- dev 下的 ttyX
+\begin{itemize}
+\item dev 下的 ttyX
+\end{itemize}
 
 可以 chvt 进入，即终端，而 pts 目录下的是不能那么进去的。
 
 VT 不需要显卡驱动的支持。framebuffer 相关的代码在内核的 drivers/video/fbdev/fbcon.c 当中。
 
-VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数中调用 con_init 函数。
+VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual\_init 函数中调用 con\_init 函数。
 
 流程是内核启动初始化。
 
-#+attr_html: :link t
-#+caption: /tty 子系统架构图/
-#+attr_html: :class fancy
-#+attr_html: :target _blank
-#+attr_html: :alt Caption not used as alt text
-#+attr_html: :width 700
-[[file:tty-x-switch.org.assets/img_20230926_090023.png]]
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20230926_090023.png}
+\caption{\emph{tty 子系统架构图}}
+\end{figure}
 
 
-* 如何将一个 tty 和一个 xorg 关连起来？
+\chapter{如何将一个 tty 和一个 xorg 关连起来？}
+\label{sec:org3d717a2}
 
 分配新用户的 TTY 涉及到内核中几个关键的函数。以下是其中的一些函数：
 
-1.get_unused_tty_index()：用于获取一个未被使用的 TTY 索引。每个 TTY 都有一个唯一的索引号，内核使用这个索引号
+1.get\_unused\_tty\_index()：用于获取一个未被使用的 TTY 索引。每个 TTY 都有一个唯一的索引号，内核使用这个索引号
 来标识不同的 TTY 设备。
 
-2.tty_alloc_driver()：用于为新的 TTY 实例分配一个 TTY 驱动结构体。TTY 驱动结构体保存了与 TTY 设备相关的信息和操作。
+2.tty\_alloc\_driver()：用于为新的 TTY 实例分配一个 TTY 驱动结构体。TTY 驱动结构体保存了与 TTY 设备相关的信息和操作。
 
-3.tty_init_dev()：用于初始化新的 TTY 设备。这个函数会设置 TTY 的状态、配置串口传输参数以及注册 TTY 设备到系统中。
+3.tty\_init\_dev()：用于初始化新的 TTY 设备。这个函数会设置 TTY 的状态、配置串口传输参数以及注册 TTY 设备到系统中。
 
-4.tty_open()：用于打开 TTY 设备。当一个用户切换到一个新的 TTY 时，内核会调用这个函数来打开对应的 TTY 设备。
+4.tty\_open()：用于打开 TTY 设备。当一个用户切换到一个新的 TTY 时，内核会调用这个函数来打开对应的 TTY 设备。
 
-5.vt_do_activate()：用于激活虚拟终端（Virtual Terminal，VT）。在 Linux 中，每个 TTY 都对应一个 VT，用于提供文
+5.vt\_do\_activate()：用于激活虚拟终端（Virtual Terminal，VT）。在 Linux 中，每个 TTY 都对应一个 VT，用于提供文
 本终端的功能。这个函数会激活新的 VT，并将其与对应的 TTY 关联起来。
 
 这些函数位于内核的 TTY 子系统中，负责管理和处理 TTY 设备。通过调用这些函数，内核能够分配和管理多个 TTY 设备，
@@ -107,38 +172,13 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数�
 
 xorg 通过命令行参数 -vt 1 来绑定。
 
-** vt 的切换流程
 
-Ctrl-Alt-F2 在只有一个用户时，切换是切到 tty 的界面。但是如果有多个登陆的用户时就会切换到其它用户的图形界面。
+\chapter{dbus}
+\label{sec:org76746d4}
 
-当用户切换到新的 TTY 时，涉及到内核的一些操作来实现切换。下面是内核切换 TTY 的详细流程：
-
-用户请求切换 TTY：用户可以通过按下 Ctrl+Alt+F1 到 F6（一般情况下，Linux 系统提供了 6 个 TTY 终端）的组合键来
-请求切换到相应的 TTY。
-
-用户空间程序处理请求：当用户按下组合键后，一个特殊的信号（如 SIGINT）将发送给前台进程组中的所有进程。在这种
-情况下，TTY 驱动程序会接收到信号并执行相应的操作。
-
-TTY 驱动程序检测信号并通知内核：TTY 驱动程序会检测到信号，并将其传递给内核。内核会响应该信号，并开始进行 TTY 切换的操作。
-
-内核切换控制台：内核会根据信号中指定的 TTY 编号，将当前活动的 TTY 切换到新的 TTY。它会关闭当前 TTY 的输入和输
-出，并重新配置设备以与新的 TTY 关联。
-
-内核执行 TTY 切换操作：内核会执行以下操作来完成 TTY 切换：
-
-关闭当前 TTY 设备：内核将关闭当前 TTY 设备的输入和输出，在切换期间停止与 TTY 设备的通信。
-加载新 TTY 设备：内核会初始化和配置新的 TTY 设备，包括打开新 TTY 设备的输入和输出通道。
-切换虚拟终端结构：内核会更新虚拟终端结构，以反映当前活动的 TTY 设备。
-用户空间程序刷新屏幕：在 TTY 切换完成后，用户空间程序将被激活，并负责更新新 TTY 的屏幕内容。
-
-总体而言，内核切换 TTY 的过程涉及到信号处理、设备配置和数据传输等操作。内核负责管理和控制 TTY 设备的状态，以
-确保正确的 TTY 切换和用户体验。这样，用户可以在不同的 TTY 中进行并发的文本模式会话。
-
-
-
-* dbus
-
-+ lightdm(org.freedesktop.DisplayManager)
+\begin{itemize}
+\item lightdm(org.freedesktop.DisplayManager)
+\end{itemize}
 
 登录管理：LightDM 提供用户界面，使用户能够输入用户名和密码登录系统。它支持不同的登录方式，如图形界面登录、远程登录和自动登录。
 
@@ -152,28 +192,31 @@ TTY 驱动程序检测信号并通知内核：TTY 驱动程序会检测到信号
 
 总的来说，LightDM 是一个灵活、可定制和易于使用的显示管理器，它提供了一个简单而强大的界面来管理用户登录会话。
 
-+ greeter(lightdm-deepin-greeter)
+\begin{itemize}
+\item greeter(lightdm-deepin-greeter)
 
-+ deepin-authenticate(com.deepin.daemon.Authenticate)
+\item deepin-authenticate(com.deepin.daemon.Authenticate)
 
-+ systemd-logind(org.freedesktop.login1)
+\item systemd-logind(org.freedesktop.login1)
 
-+ dde-lockservice(org.deepin.dde.LockService1)
+\item dde-lockservice(org.deepin.dde.LockService1)
 
-+ dde-system-daemon(org.deepin.dde.Accounts1)
+\item dde-system-daemon(org.deepin.dde.Accounts1)
 
-+ accounts-daemon(org.freedesktop.Accounts)
+\item accounts-daemon(org.freedesktop.Accounts)
+\end{itemize}
 
 
 以上服务，基本都是 system bus，可以通过 d-feet 去看对应的接口。可以用 dbus-send，gdbus 和 qdus 来发送 dbus
 信号，信号的
 
 
-** dbus 接口的使用
+\section{dbus 接口的使用}
+\label{sec:org13d3661}
 
 我们有一个服务 deepin-authenticate 是用 golang 来实现的。golang 的 dbus 库的文档在这里：
 
-https://pkg.go.dev/github.com/godbus/dbus
+\url{https://pkg.go.dev/github.com/godbus/dbus}
 
 Kwin 中用的是 qdbus 的库。
 
@@ -182,37 +225,43 @@ dbus 的核心概念就是总线消息。
 
 
 
-* linux 图形学中的一些概念
+\chapter{linux 图形学中的一些概念}
+\label{sec:orgc978c47}
 
-** DM，WM 与 X Display Manager Control Protocol（XDMCP）
+\section{DM，WM 与 X Display Manager Control Protocol（XDMCP）}
+\label{sec:orgc7a7757}
 
-- 显示管理器 DM
-  又称为“登陆管理器”。有 lightdm，xdm（x display manager），sddm（Simple Desktop Display Manager），
-  gdm（gnome Display manager）。
+\begin{itemize}
+\item 显示管理器 DM
+又称为“登陆管理器”。有 lightdm，xdm（x display manager），sddm（Simple Desktop Display Manager），
+gdm（gnome Display manager）。
+\end{itemize}
 
 可以用登陆脚本代替 DM，比如 xinit + startx 的方式。xinit 程序允许用户手动启动 Xorg 显示服务器。startx 脚
 本是 xinit 的一个前端。
 
 xorg-xinit 这个包切换用户最终调用的是：
 
-- 窗口管理器
+\begin{itemize}
+\item 窗口管理器
+\end{itemize}
 kwin（dde，支持 X11 和 wayland）、sway（支持 wayland）、wayfire（支持 wayland）、hyperland（现在最火的 wayland wm）
-、awesome、i3wm、mutter（gnome）......
+、awesome、i3wm、mutter（gnome）\ldots{}\ldots{}
 
 在 uos 中可以安装 dde-dconfig-editor 可以选择用 kwin 来启动窗口管理器。
 
-https://www.x.org/releases/current/doc/
+\url{https://www.x.org/releases/current/doc/}
 
 man X，本地可以看到。关于 X11 的文档都在这个里面了，是英文，内容很多。
 
-lightdm 的配置文件在： =/etc/lightdm/= 里；
+lightdm 的配置文件在： \texttt{/etc/lightdm/} 里；
 
-xorg 的配置文件在这里： =/etc/X11/= 里；
+xorg 的配置文件在这里： \texttt{/etc/X11/} 里；
 
 通过 pstree 能看到图形的启动流程：
 
 
-#+begin_src
+\begin{verbatim}
 uos@guolongji:~$ pstree --ascii
 systemd-+ ......
         |-lightdm-+-Xorg---3*[{Xorg}]
@@ -265,28 +314,39 @@ systemd-+ ......
         |         |         `-2*[{lightdm}]
         |         `-2*[{lightdm}]
         |- ......
-#+end_src
+\end{verbatim}
+
+\section{vt 的切换流程}
+\label{sec:org6a60a6d}
+
+Ctrl-Alt-F2 在只有一个用户时，切换是切到 tty 的界面。但是如果有多个登陆的用户时就会切换到其它用户的图形界面。
+
+\chapter{AMD 显卡的架构演进}
+\label{sec:orgc3e36cb}
+
+\url{https://medium.com/high-tech-accessible/an-overview-of-amds-gpu-architectures-884432a717a6}
+
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231101_111732.jpg}
+\end{center}
 
 
-* AMD 显卡的架构演进
-
-https://medium.com/high-tech-accessible/an-overview-of-amds-gpu-architectures-884432a717a6
-
-[[file:tty-x-switch.org.assets/img_20231101_111732.jpg]]
 
 
-
-
-[[file:tty-x-switch.org.assets/img_20231101_111814.jpg]]
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231101_111814.jpg}
+\end{center}
 
 
 
 
-[[file:tty-x-switch.org.assets/img_20231101_111850.jpg]]
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231101_111850.jpg}
+\end{center}
 
 sudo apt install mesa-utils
 
-#+begin_src
+\begin{verbatim}
 uos@guolongji:~$ glxinfo -B
 name of display: :0
 display: :0  screen: 0
@@ -327,9 +387,11 @@ OpenGL context flags: (none)
 
 OpenGL ES profile version string: OpenGL ES 3.1 Mesa 19.2.6
 OpenGL ES profile shading language version string: OpenGL ES GLSL ES 3.10
-#+end_src
+\end{verbatim}
 
-- Caicos 和 TeraScale 是什么关系？
+\begin{itemize}
+\item Caicos 和 TeraScale 是什么关系？
+\end{itemize}
 
 Caicos 和 TeraScale 是 AMD 显卡架构中的两个不同概念，它们之间存在一定的关系。
 
@@ -347,9 +409,12 @@ DirectX 11 和 OpenGL 4.1 等新的标准。同时，TeraScale 2 架构还采用
 然 Caicos 和 TeraScale 有所区别，但它们都是 AMD 显卡架构中的重要部分，并共同推动了 AMD 显卡技术的发展。
 
 
-* AMD 驱动代码的模块划分和代码介绍
+\chapter{AMD 驱动代码的模块划分和代码介绍}
+\label{sec:orgf419686}
 
-- DCE
+\begin{itemize}
+\item DCE
+\end{itemize}
 
 AMD 的 DCE（Display Core Engine）模块是 AMD 显卡中的一个重要组件，它主要负责图形处理单元（GPU）和显示输出之
 间的通信和协调工作。DCE 模块具有以下功能：
@@ -369,7 +434,9 @@ AMD 的 DCE（Display Core Engine）模块是 AMD 显卡中的一个重要组件
 总的来说，DCE 模块在 AMD 显卡中扮演着重要的角色，它是 GPU 与显示输出之间的桥梁，负责管理、控制和增强显示功
 能，使用户能够获得良好的图形和显示效果。
 
-- DCE 模块和 display 模块是什么关系？
+\begin{itemize}
+\item DCE 模块和 display 模块是什么关系？
+\end{itemize}
 
 display 模块包含了 DCE 模块的所有功能，同时还集成了其他相关的硬件和软件组件，例如视频解码器、视频编码器、
 色彩管理等。它提供了一种精简和高效的架构，以便更好地支持多显示器配置和多种显示输出配置。
@@ -385,7 +452,9 @@ display 模块包含了 DCE 模块的所有功能，同时还集成了其他相�
 总之，DCE 模块是 AMD 显卡中的一个核心组件，而 display 模块则是一个集成了 DCE 模块功能的子系统，并提供了其
 他相关的硬件和软件组件，以实现更好的画质和用户体验。
 
-- UVD
+\begin{itemize}
+\item UVD
+\end{itemize}
 
 UVD（Unified Video Decoder）是一个硬件模块，用于在 AMD 显卡上进行视频解码的加速处理。UVD 模块主要用
 于解码高清视频和其他常见的视频格式，以减轻 CPU 的负担并提供更流畅的视频播放体验。
@@ -404,7 +473,9 @@ H.264、MPEG-2、VC-1 等，并能够快速解码高分辨率的视频内容。
 总之，UVD 模块是 AMD 显卡中的一个硬件加速模块，用于视频解码任务。它能够减轻 CPU 负担，提供更流畅的
 视频播放体验，并具有节能和热量控制的优化功能。
 
-- GMC
+\begin{itemize}
+\item GMC
+\end{itemize}
 
 GMC（Graphics Memory Controller）是一个重要的硬件模块，它负责显卡中的内存管理和数据传输。GMC 模
 块可以有效地管理 GPU 内部的显存，从而提高图形渲染性能和效率。
@@ -433,11 +504,11 @@ GMC 模块主要有以下功能：
 切换用户的时候一定是内核重新获取了 edid 的，内核当中获取 edid 的时间比较长。amdgpu 获取
 edid 主要涉及以下几个文件：
 
-x86-kernel/drivers/gpu/drm/amd/amdgpu/amdgpu_atombios.c
+x86-kernel/drivers/gpu/drm/amd/amdgpu/amdgpu\_atombios.c
 
-x86-kernel/drivers/gpu/drm/amd/amdgpu/amdgpu_i2c.c
+x86-kernel/drivers/gpu/drm/amd/amdgpu/amdgpu\_i2c.c
 
-x86-kernel/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
+x86-kernel/drivers/gpu/drm/amd/display/amdgpu\_dm/amdgpu\_dm.c
 
 因为 oland 显卡不用 display 的代码，所以要从前两个文件来分析代码的调用。
 
@@ -446,492 +517,146 @@ x86-kernel/drivers/gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c
 
 通过 dmesg|grep drm 可以查到：
 
-#+begin_src
- [    0.920573] [drm] radeon kernel modesetting enabled.
- [    0.965343] [drm] amdgpu kernel modesetting enabled.
- [    0.965343] [drm] amdgpu version: 5.11.32.40512
- [    0.965344] [drm] OS DRM version: 4.19.0
- [    0.967268] [drm] initializing kernel modesetting (OLAND 0x1002:0x6611 0x1462:0x3740 0x87).
- [    0.967277] [drm] register mmio base: 0xA0300000
- [    0.967278] [drm] register mmio size: 262144
- [    0.967283] [drm] add ip block number 0 <si_common>
- [    0.967284] [drm] add ip block number 1 <gmc_v6_0>
- [    0.967284] [drm] add ip block number 2 <si_ih>
- [    0.967284] [drm] add ip block number 3 <gfx_v6_0>
- [    0.967285] [drm] add ip block number 4 <si_dma>
- [    0.967285] [drm] add ip block number 5 <si_dpm>
- [    0.967286] [drm] add ip block number 6 <dce_v6_0>
- [    0.967286] [drm] add ip block number 7 <uvd_v3_1>
- [    0.975071] [drm] BIOS signature incorrect 5b 7
- [    0.975303] [drm] vm size is 64 GB, 2 levels, block size is 10-bit, fragment size is 9-bit
- [    0.975335] [drm] Detected VRAM RAM=2048M, BAR=256M
- [    0.975335] [drm] RAM width 64bits GDDR5
- [    0.975358] [drm] amdgpu: 2048M of VRAM memory ready
- [    0.975359] [drm] amdgpu: 7898M of GTT memory ready.
- [    0.975361] [drm] GART: num cpu pages 262144, num gpu pages 262144
- [    0.975901] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
- [    0.975902] [drm] Driver supports precise vblank timestamp query.
- [    0.976076] [drm] Internal thermal controller with fan control
- [    0.976082] [drm] amdgpu: dpm initialized
- [    0.976096] [drm] AMDGPU Display Connectors
- [    0.976096] [drm] Connector 0:
- [    0.976097] [drm]   HDMI-A-1
- [    0.976097] [drm]   HPD2
- [    0.976098] [drm]   DDC: 0x1950 0x1950 0x1951 0x1951 0x1952 0x1952 0x1953 0x1953
- [    0.976098] [drm]   Encoders:
- [    0.976098] [drm]     DFP1: INTERNAL_UNIPHY
- [    0.976099] [drm] Connector 1:
- [    0.976099] [drm]   VGA-1
- [    0.976099] [drm]   DDC: 0x194c 0x194c 0x194d 0x194d 0x194e 0x194e 0x194f 0x194f
- [    0.976100] [drm]   Encoders:
- [    0.976100] [drm]     CRT1: INTERNAL_KLDSCP_DAC1
- [    0.976141] [drm] Found UVD firmware Version: 64.0 Family ID: 13
- [    0.976809] [drm] PCIE gen 3 link speeds already enabled
- [    1.530160] [drm] UVD initialized successfully.
-#+end_src
+\begin{verbatim}
+[    0.920573] [drm] radeon kernel modesetting enabled.
+[    0.965343] [drm] amdgpu kernel modesetting enabled.
+[    0.965343] [drm] amdgpu version: 5.11.32.40512
+[    0.965344] [drm] OS DRM version: 4.19.0
+[    0.967268] [drm] initializing kernel modesetting (OLAND 0x1002:0x6611 0x1462:0x3740 0x87).
+[    0.967277] [drm] register mmio base: 0xA0300000
+[    0.967278] [drm] register mmio size: 262144
+[    0.967283] [drm] add ip block number 0 <si_common>
+[    0.967284] [drm] add ip block number 1 <gmc_v6_0>
+[    0.967284] [drm] add ip block number 2 <si_ih>
+[    0.967284] [drm] add ip block number 3 <gfx_v6_0>
+[    0.967285] [drm] add ip block number 4 <si_dma>
+[    0.967285] [drm] add ip block number 5 <si_dpm>
+[    0.967286] [drm] add ip block number 6 <dce_v6_0>
+[    0.967286] [drm] add ip block number 7 <uvd_v3_1>
+[    0.975071] [drm] BIOS signature incorrect 5b 7
+[    0.975303] [drm] vm size is 64 GB, 2 levels, block size is 10-bit, fragment size is 9-bit
+[    0.975335] [drm] Detected VRAM RAM=2048M, BAR=256M
+[    0.975335] [drm] RAM width 64bits GDDR5
+[    0.975358] [drm] amdgpu: 2048M of VRAM memory ready
+[    0.975359] [drm] amdgpu: 7898M of GTT memory ready.
+[    0.975361] [drm] GART: num cpu pages 262144, num gpu pages 262144
+[    0.975901] [drm] Supports vblank timestamp caching Rev 2 (21.10.2013).
+[    0.975902] [drm] Driver supports precise vblank timestamp query.
+[    0.976076] [drm] Internal thermal controller with fan control
+[    0.976082] [drm] amdgpu: dpm initialized
+[    0.976096] [drm] AMDGPU Display Connectors
+[    0.976096] [drm] Connector 0:
+[    0.976097] [drm]   HDMI-A-1
+[    0.976097] [drm]   HPD2
+[    0.976098] [drm]   DDC: 0x1950 0x1950 0x1951 0x1951 0x1952 0x1952 0x1953 0x1953
+[    0.976098] [drm]   Encoders:
+[    0.976098] [drm]     DFP1: INTERNAL_UNIPHY
+[    0.976099] [drm] Connector 1:
+[    0.976099] [drm]   VGA-1
+[    0.976099] [drm]   DDC: 0x194c 0x194c 0x194d 0x194d 0x194e 0x194e 0x194f 0x194f
+[    0.976100] [drm]   Encoders:
+[    0.976100] [drm]     CRT1: INTERNAL_KLDSCP_DAC1
+[    0.976141] [drm] Found UVD firmware Version: 64.0 Family ID: 13
+[    0.976809] [drm] PCIE gen 3 link speeds already enabled
+[    1.530160] [drm] UVD initialized successfully.
+\end{verbatim}
 
-oland 显卡用的是 dce_v6_0 这个模块：
+oland 显卡用的是 dce\_v6\_0 这个模块：
 
 
 
-** 激活 tty 的流程
+\section{激活 tty 的流程}
+\label{sec:org51834f1}
 
 分配新用户的 TTY 涉及到内核中几个关键的函数。以下是其中的一些函数：
 
-1.get_unused_tty_index()：用于获取一个未被使用的 TTY 索引。每个 TTY 都有一个唯一的索引号，
+1.get\_unused\_tty\_index()：用于获取一个未被使用的 TTY 索引。每个 TTY 都有一个唯一的索引号，
 内核使用这个索引号来标识不同的 TTY 设备。
 
-2.tty_alloc_driver()：用于为新的 TTY 实例分配一个 TTY 驱动结构体。TTY 驱动结构体保存了与
+2.tty\_alloc\_driver()：用于为新的 TTY 实例分配一个 TTY 驱动结构体。TTY 驱动结构体保存了与
 TTY 设备相关的信息和操作。
 
-3.tty_init_dev()：用于初始化新的 TTY 设备。这个函数会设置 TTY 的状态、配置串口传输参数以及注
+3.tty\_init\_dev()：用于初始化新的 TTY 设备。这个函数会设置 TTY 的状态、配置串口传输参数以及注
 册 TTY 设备到系统中。
 
-4.tty_open()：用于打开 TTY 设备。当一个用户切换到一个新的 TTY 时，内核会调用这个函数来打开对应的 TTY 设备。
+4.tty\_open()：用于打开 TTY 设备。当一个用户切换到一个新的 TTY 时，内核会调用这个函数来打开对应的 TTY 设备。
 
-5.vt_do_activate()：用于激活虚拟终端（Virtual Terminal，VT）。在 Linux 中，每个 TTY 都对应一个
+5.vt\_do\_activate()：用于激活虚拟终端（Virtual Terminal，VT）。在 Linux 中，每个 TTY 都对应一个
 VT，用于提供文本终端的功能。这个函数会激活新的 VT，并将其与对应的 TTY 关联起来。
 
 这些函数位于内核的 TTY 子系统中，负责管理和处理 TTY 设备。通过调用这些函数，内核能够分配和管理多个 TTY 设
 备，并在用户切换到不同的 TTY 时分配适当的资源和处理相应的操作。
 
-ioctl(fd, VT_ACTIVATE, vt)，通过这个调用内核。
+ioctl(fd, VT\_ACTIVATE, vt)，通过这个调用内核。
 
-对应的是内核的 drivers/tty/vt/vt_ioctl.c 里面的两个处理函数：
+对应的是内核的 drivers/tty/vt/vt\_ioctl.c 里面的两个处理函数：
 
-vt_ioctl 和 vt_compat_ioctl 两个处理函数：
+vt\_ioctl 和 vt\_compat\_ioctl 两个处理函数：
 
-#+begin_src c
+\begin{minted}[]{c}
 /*
  * ioctl(fd, VT_ACTIVATE, num) will cause us to switch to vt # num,
  * with num >= 1 (switches to vt 0, our console, are not allowed, just
  * to preserve sanity).
  */
 case VT_ACTIVATE:
-	if (!perm)
-		return -EPERM;
-	if (arg == 0 || arg > MAX_NR_CONSOLES)
-		ret =  -ENXIO;
-	else {
-		arg--;
-		console_lock();
-		ret = vc_allocate(arg);
-		console_unlock();
-		if (ret)
-			break;
-		set_console(arg);
-	}
-	break;
+        if (!perm)
+                return -EPERM;
+        if (arg == 0 || arg > MAX_NR_CONSOLES)
+                ret =  -ENXIO;
+        else {
+                arg--;
+                console_lock();
+                ret = vc_allocate(arg);
+                console_unlock();
+                if (ret)
+                        break;
+                set_console(arg);
+        }
+        break;
 
-#+end_src
+\end{minted}
 
 或者是：
-#+begin_src c
-	{
-	// ......
+\begin{minted}[]{c}
+        {
+        // ......
 
-	case VT_ACTIVATE:
-	case VT_WAITACTIVE:
-	case VT_RELDISP:
-	case VT_DISALLOCATE:
-	case VT_RESIZE:
-	case VT_RESIZEX:
-		goto fallback;
+        case VT_ACTIVATE:
+        case VT_WAITACTIVE:
+        case VT_RELDISP:
+        case VT_DISALLOCATE:
+        case VT_RESIZE:
+        case VT_RESIZEX:
+                goto fallback;
 
-	/*
-	 * the rest has a compatible data structure behind arg,
-	 * but we have to convert it to a proper 64 bit pointer.
-	 */
-	default:
-		arg = (unsigned long)compat_ptr(arg);
-		goto fallback;
-	}
+        /*
+         * the rest has a compatible data structure behind arg,
+         * but we have to convert it to a proper 64 bit pointer.
+         */
+        default:
+                arg = (unsigned long)compat_ptr(arg);
+                goto fallback;
+        }
 
-	return ret;
+        return ret;
 
 fallback:
-	return vt_ioctl(tty, cmd, arg);
-#+end_src
+        return vt_ioctl(tty, cmd, arg);
+\end{minted}
 
 黑屏并不是说这个系统调用导致的，而是切换至新的 xorg，新的 xorg 会从读 edid 导致的黑屏。
-这个我是花了一段时间才想明白的。上面的代码就不展开了。
+这个我是花了一段时间才想明白的。
 
-通过 perf 找到的调用堆栈如下：
 
-drm_ioctl
-
-drm_ioctl_kernel
-
-drm_mode_getconnector
-
-drm_helper_probe_single_connector_modes
-
-amdgpu_connector_dvi_detect
-
-amdgpu_connector_get_edid
-
-drm_get_edid
-
-drm_do_get_edid
-
-drm_do_probe_ddc_edid
-
-bit_xfer
-
-drivers/gpu/drm/amd/amdgpu/amdgpu_connectors.c
-
-#+begin_src c
-static void amdgpu_connector_get_edid(struct drm_connector *connector)
-{
-	struct drm_device *dev = connector->dev;
-	struct amdgpu_device *adev = dev->dev_private;
-	struct amdgpu_connector *amdgpu_connector = to_amdgpu_connector(connector);
-
-	if (amdgpu_connector->edid)
-		return;
-
-	/* on hw with routers, select right port */
-	if (amdgpu_connector->router.ddc_valid)
-		amdgpu_i2c_router_select_ddc_port(amdgpu_connector);
-
-	if ((amdgpu_connector_encoder_get_dp_bridge_encoder_id(connector) !=
-	     ENCODER_OBJECT_ID_NONE) &&
-	    amdgpu_connector->ddc_bus->has_aux) {
-		amdgpu_connector->edid = drm_get_edid(connector,
-						      &amdgpu_connector->ddc_bus->aux.ddc);
-	} else if ((connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort) ||
-		   (connector->connector_type == DRM_MODE_CONNECTOR_eDP)) {
-		struct amdgpu_connector_atom_dig *dig = amdgpu_connector->con_priv;
-
-		if ((dig->dp_sink_type == CONNECTOR_OBJECT_ID_DISPLAYPORT ||
-		     dig->dp_sink_type == CONNECTOR_OBJECT_ID_eDP) &&
-		    amdgpu_connector->ddc_bus->has_aux)
-			amdgpu_connector->edid = drm_get_edid(connector,
-							      &amdgpu_connector->ddc_bus->aux.ddc);
-		else if (amdgpu_connector->ddc_bus)
-			amdgpu_connector->edid = drm_get_edid(connector,
-							      &amdgpu_connector->ddc_bus->adapter);
-	} else if (amdgpu_connector->ddc_bus) {
-		amdgpu_connector->edid = drm_get_edid(connector,
-						      &amdgpu_connector->ddc_bus->adapter);
-	}
-
-	if (!amdgpu_connector->edid) {
-		/* some laptops provide a hardcoded edid in rom for LCDs */
-		if (((connector->connector_type == DRM_MODE_CONNECTOR_LVDS) ||
-		     (connector->connector_type == DRM_MODE_CONNECTOR_eDP)))
-			amdgpu_connector->edid = amdgpu_connector_get_hardcoded_edid(adev);
-	}
-}
-#+end_src
-
-drivers/gpu/drm/drm_edid.c
-
-#+begin_src c
-/**
- * drm_get_edid - get EDID data, if available
- * @connector: connector we're probing
- * @adapter: I2C adapter to use for DDC
- *
- * Poke the given I2C channel to grab EDID data if possible.  If found,
- * attach it to the connector.
- *
- * Return: Pointer to valid EDID or NULL if we couldn't find any.
- */
-struct edid *drm_get_edid(struct drm_connector *connector,
-			  struct i2c_adapter *adapter)
-{
-	struct edid *edid;
-
-	if (connector->force == DRM_FORCE_OFF)
-		return NULL;
-
-	if (connector->force == DRM_FORCE_UNSPECIFIED && !drm_probe_ddc(adapter))
-		return NULL;
-
-	edid = drm_do_get_edid(connector, drm_do_probe_ddc_edid, adapter);
-	if (edid)
-		drm_get_displayid(connector, edid);
-	return edid;
-}
-EXPORT_SYMBOL(drm_get_edid);
-#+end_src
-
-drivers/gpu/drm/drm_edid.c
-
-#+begin_src c
-/**
- * drm_do_get_edid - get EDID data using a custom EDID block read function
- * @connector: connector we're probing
- * @get_edid_block: EDID block read function
- * @data: private data passed to the block read function
- *
- * When the I2C adapter connected to the DDC bus is hidden behind a device that
- * exposes a different interface to read EDID blocks this function can be used
- * to get EDID data using a custom block read function.
- *
- * As in the general case the DDC bus is accessible by the kernel at the I2C
- * level, drivers must make all reasonable efforts to expose it as an I2C
- * adapter and use drm_get_edid() instead of abusing this function.
- *
- * The EDID may be overridden using debugfs override_edid or firmare EDID
- * (drm_load_edid_firmware() and drm.edid_firmware parameter), in this priority
- * order. Having either of them bypasses actual EDID reads.
- *
- * Return: Pointer to valid EDID or NULL if we couldn't find any.
- */
-struct edid *drm_do_get_edid(struct drm_connector *connector,
-	int (*get_edid_block)(void *data, u8 *buf, unsigned int block,
-			      size_t len),
-	void *data)
-{
-	int i, j = 0, valid_extensions = 0;
-	u8 *edid, *new;
-	struct edid *override;
-
-	override = drm_get_override_edid(connector);
-	if (override)
-		return override;
-
-	if ((edid = kmalloc(EDID_LENGTH, GFP_KERNEL)) == NULL)
-		return NULL;
-
-	/* base block fetch */
-	for (i = 0; i < 4; i++) {
-		if (get_edid_block(data, edid, 0, EDID_LENGTH))
-			goto out;
-		if (drm_edid_block_valid(edid, 0, false,
-					 &connector->edid_corrupt))
-			break;
-		if (i == 0 && drm_edid_is_zero(edid, EDID_LENGTH)) {
-			connector->null_edid_counter++;
-			goto carp;
-		}
-	}
-	if (i == 4)
-		goto carp;
-
-	/* if there's no extensions, we're done */
-	valid_extensions = edid[0x7e];
-	if (valid_extensions == 0)
-		return (struct edid *)edid;
-
-	new = krealloc(edid, (valid_extensions + 1) * EDID_LENGTH, GFP_KERNEL);
-	if (!new)
-		goto out;
-	edid = new;
-
-	for (j = 1; j <= edid[0x7e]; j++) {
-		u8 *block = edid + j * EDID_LENGTH;
-
-		for (i = 0; i < 4; i++) {
-			if (get_edid_block(data, block, j, EDID_LENGTH))
-				goto out;
-			if (drm_edid_block_valid(block, j, false, NULL))
-				break;
-		}
-
-		if (i == 4)
-			valid_extensions--;
-	}
-
-	if (valid_extensions != edid[0x7e]) {
-		u8 *base;
-
-		connector_bad_edid(connector, edid, edid[0x7e] + 1);
-
-		edid[EDID_LENGTH-1] += edid[0x7e] - valid_extensions;
-		edid[0x7e] = valid_extensions;
-
-		new = kmalloc_array(valid_extensions + 1, EDID_LENGTH,
-				    GFP_KERNEL);
-		if (!new)
-			goto out;
-
-		base = new;
-		for (i = 0; i <= edid[0x7e]; i++) {
-			u8 *block = edid + i * EDID_LENGTH;
-
-			if (!drm_edid_block_valid(block, i, false, NULL))
-				continue;
-
-			memcpy(base, block, EDID_LENGTH);
-			base += EDID_LENGTH;
-		}
-
-		kfree(edid);
-		edid = new;
-	}
-
-	return (struct edid *)edid;
-
-carp:
-	connector_bad_edid(connector, edid, 1);
-out:
-	kfree(edid);
-	return NULL;
-}
-EXPORT_SYMBOL_GPL(drm_do_get_edid);
-#+end_src
-
-drivers/gpu/drm/drm_edid.c
-
-#+begin_src c
-/**
- * drm_do_probe_ddc_edid() - get EDID information via I2C
- * @data: I2C device adapter
- * @buf: EDID data buffer to be filled
- * @block: 128 byte EDID block to start fetching from
- * @len: EDID data buffer length to fetch
- *
- * Try to fetch EDID information by calling I2C driver functions.
- *
- * Return: 0 on success or -1 on failure.
- */
-static int
-drm_do_probe_ddc_edid(void *data, u8 *buf, unsigned int block, size_t len)
-{
-	struct i2c_adapter *adapter = data;
-	unsigned char start = block * EDID_LENGTH;
-	unsigned char segment = block >> 1;
-	unsigned char xfers = segment ? 3 : 2;
-	int ret, retries = 5;
-
-	/*
-	 * The core I2C driver will automatically retry the transfer if the
-	 * adapter reports EAGAIN. However, we find that bit-banging transfers
-	 * are susceptible to errors under a heavily loaded machine and
-	 * generate spurious NAKs and timeouts. Retrying the transfer
-	 * of the individual block a few times seems to overcome this.
-	 */
-	do {
-		struct i2c_msg msgs[] = {
-			{
-				.addr	= DDC_SEGMENT_ADDR,
-				.flags	= 0,
-				.len	= 1,
-				.buf	= &segment,
-			}, {
-				.addr	= DDC_ADDR,
-				.flags	= 0,
-				.len	= 1,
-				.buf	= &start,
-			}, {
-				.addr	= DDC_ADDR,
-				.flags	= I2C_M_RD,
-				.len	= len,
-				.buf	= buf,
-			}
-		};
-
-		/*
-		 * Avoid sending the segment addr to not upset non-compliant
-		 * DDC monitors.
-		 */
-		ret = i2c_transfer(adapter, &msgs[3 - xfers], xfers);
-
-		if (ret == -ENXIO) {
-			DRM_DEBUG_KMS("drm: skipping non-existent adapter %s\n",
-					adapter->name);
-			break;
-		}
-	} while (ret != xfers && --retries);
-
-	return ret == xfers ? 0 : -1;
-}
-#+end_src
-
-drm/amd/amdgpu/amggpu_i2c.c
-
-#+begin_src c
-static void amdgpu_i2c_post_xfer(struct i2c_adapter *i2c_adap)
-{
-	struct amdgpu_i2c_chan *i2c = i2c_get_adapdata(i2c_adap);
-	struct amdgpu_device *adev = i2c->dev->dev_private;
-	struct amdgpu_i2c_bus_rec *rec = &i2c->rec;
-	uint32_t temp;
-
-	/* unmask the gpio pins for software use */
-	temp = RREG32(rec->mask_clk_reg) & ~rec->mask_clk_mask;
-	WREG32(rec->mask_clk_reg, temp);
-	temp = RREG32(rec->mask_clk_reg);
-
-	temp = RREG32(rec->mask_data_reg) & ~rec->mask_data_mask;
-	WREG32(rec->mask_data_reg, temp);
-	temp = RREG32(rec->mask_data_reg);
-
-	mutex_unlock(&i2c->mutex);
-}
-
-#+end_src
-
-之前高英杰的分享中 VGA 会隔 10s 循环读一下 edid。
-
-gpu/drm/drm_probe_helper.c
-
-#+begin_src c
-static void output_poll_execute(struct work_struct *work)
-{
-
-        drm_connector_list_iter_begin(dev, &conn_iter);
-        drm_for_each_connector_iter(connector, &conn_iter) {
-
-                repoll = true;
-
-                connector->status = drm_helper_probe_detect(connector, NULL, false);
-                if (old_status != connector->status) {
-                        const char *old, *new;
-
-                        if (connector->status == connector_status_unknown) {
-                                connector->status = old_status;
-                                continue;
-                        }
-                      changed = true;
-                }
-        }
-        drm_connector_list_iter_end(&conn_iter);
-
-        mutex_unlock(&dev->mode_config.mutex);
-
-out:
-        if (changed)
-                drm_kms_helper_hotplug_event(dev);
-
-        if (repoll)
-                schedule_delayed_work(delayed_work, DRM_OUTPUT_POLL_PERIOD);
-}
-
-#+end_src
-
-我对 edid 不太了解， *现在怀疑是 VGA 的循环读 edid 和切换用户时读 edid 同时进行的情况下在 i2c 的层面有了干扰*
-
-* 用户与系统 xorg 进程对应方法
+\chapter{用户与系统 xorg 进程对应方法}
+\label{sec:org5baa7dc}
 
 通过 pstree 可以查看系统的服务启动流程。系统的启动流程大体描述一下：
 
 创建多个用户，有的登陆，有的不登陆。
 
-#+begin_src
+\begin{verbatim}
 uos@uos-PC:~$ loginctl list-sessions
 SESSION  UID USER    SEAT  TTY
       1 1000 uos     seat0
@@ -979,18 +704,19 @@ root      8327   839  0 10月24 tty5   00:00:04 /usr/lib/xorg/Xorg -background n
 root      9802   839  0 10月24 tty6   00:00:07 /usr/lib/xorg/Xorg -background none :5
 root     25787   839  0 10月24 tty7   00:00:05 /usr/lib/xorg/Xorg -background none :6
 root     27291   839  0 10月24 tty8   00:00:05 /usr/lib/xorg/Xorg -background none :7
-#+end_src
+\end{verbatim}
 
 上面的“:0” 是 X Display Server 的名字。
 
-* 使用 perf 来调试
+\chapter{使用 perf 来调试}
+\label{sec:orgd16ec8a}
 
-关于 perf 的使用可以看另一篇博客： https://guolongji.xyz/post/use-perf-and-flame-graph/
+关于 perf 的使用可以看另一篇博客： \url{https://guolongji.xyz/post/use-perf-and-flame-graph/}
 
 目的是找两个己经登陆的用户的两个不同的 Xorg 进程，对这两个不同的进程用 perf 工具进行统计。
 这两个进程都是在运行当中的，如果 perf 能够同时对两个 xorg 的进程进行分析，那么就可以打到耗时的地方。
 
-#+begin_src
+\begin{verbatim}
 uos@uos-PC:~$ ps -ef|grep kwin|grep -v grep
 uos       1331  1172  0 10月24 ?      00:00:00 /bin/sh /usr/bin/kwin_no_scale
 uos       1387  1331  0 10月24 ?      00:00:18 kwin_x11 -platform dde-kwin-xcb:appFilePath=/usr/bin/kwin_no_scale
@@ -1008,7 +734,7 @@ test8    26225 26070  0 10月24 ?      00:00:00 /bin/sh /usr/bin/kwin_no_scale
 test8    26316 26225  0 10月24 ?      00:00:01 kwin_x11 -platform dde-kwin-xcb:appFilePath=/usr/bin/kwin_no_scale
 
 uos@uos-PC:~$ cat /proc/1387/environ |grep -a --color DISPLAY
-#+end_src
+\end{verbatim}
 
 观察两个变量分别是 :0 和 :6
 
@@ -1025,66 +751,71 @@ perf record -p 25787 -g  -- sleep 30
 
 生成的图如下：
 
-[[file:tty-x-switch.org.assets/img_20231026_172216.jpg]]
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231026_172216.jpg}
+\end{center}
 
-xorg 的时钟占比为 94%，而 drm_get_edid 的时钟占比高达 32%。
+xorg 的时钟占比为 94\%，而 drm\_get\_edid 的时钟占比高达 32\%。
 
-显然被测试的 oland 显卡 drm_do_probe_ddc_edid 这个过程是有时候比较慢的。一直切换会由“经常不黑屏”的状态变为经常
+显然被测试的 oland 显卡 drm\_do\_probe\_ddc\_edid 这个过程是有时候比较慢的。一直切换会由“经常不黑屏”的状态变为经常
 黑屏的状态。所以猜测是存在什么循环。
 
 
-* 为什么 xorg 的数量比登陆的用户数多一个？
+\chapter{为什么 xorg 的数量比登陆的用户数多一个？}
+\label{sec:org5b35b50}
 
 因为 lightdm-deepin-greeter 也会创建一个 xorg 用于过渡。
 
-#+begin_src
+\begin{verbatim}
 uos@uos-PC:~$ ps -ef|grep greeter|grep -v grep
 lightdm  27361 27344  0 10月24 ?      00:00:00 /bin/bash /usr/bin/deepin-greeter
 lightdm  27376 27361  0 10月24 ?      00:00:00 /bin/bash /usr/share/dde-session-shell/greeters.d/x/lightdm-deepin-greeter
 lightdm  27377 27376  0 10月24 ?      00:00:02 /usr/lib/deepin-daemon/greeter-display-daemon
 lightdm  27379 27376  0 10月24 ?      00:00:00 /bin/bash /usr/share/dde-session-shell/greeters.d/launch-binary
 lightdm  27407 27379  0 10月24 ?      00:00:33 /usr/bin/lightdm-deepin-greeter
-#+end_src
+\end{verbatim}
 
-* 能不能写一个切换用户的脚本呢？
+\chapter{能不能写一个切换用户的脚本呢？}
+\label{sec:org05a520d}
 
-#+begin_src bash
+\begin{minted}[]{bash}
 while true; do qdbus --system org.freedesktop.login1 /org/freedesktop/login1/seat/seat0 \
 org.freedesktop.login1.Seat.SwitchToNext; sleep 2; qdbus --system org.freedesktop.login1 \
 /org/freedesktop/login1/seat/seat0 org.freedesktop.login1.Seat.SwitchToPrevious; sleep 2; done
-#+end_src
+\end{minted}
 
 用 dbus 信号去切 tty 是没有问题的。与窗管的同事沟通了解到。dde-dock 可能是会刷新 edid 的状态，
 而用上面的命令不会刷新 edid 的状态，那么也就不会出现黑屏的问题了。那现在这个问题的的原因就基本上
 清晰了。
 
 之前廖元用的脚本是这个：
-#+begin_src bash
+\begin{minted}[]{bash}
 #!/bin/bash
 n=0
 while (($n<100))
 do
-	sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
+        sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
 --method org.freedesktop.login1.Manager.ActivateSession 2"
-	echo $n
-	n=$((n+1))
-	sleep 2
-	sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
+        echo $n
+        n=$((n+1))
+        sleep 2
+        sh -c "gdbus call --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1 \
 --method org.freedesktop.login1.Manager.ActivateSession c2"
-	sleep 2
+        sleep 2
 done
-#+end_src
+\end{minted}
 
 
-* 其它的相关 bug
+\chapter{其它的相关 bug}
+\label{sec:org807edf3}
 
 机缘巧合之下，在 4.19 内核里发现了 radeon 驱动一个很神奇的问题，插拔 hdmi 线时候，先拔出一半等 10s 左右再全
 部拔出。这时候，在 sys 下读到的 hdmi 连接状态还是 connected。这个感觉还是很神奇的。切到 amdgpu 之后，也有这个问题。
 
-https://blog.51cto.com/u_15155099/2767298
+\url{https://blog.51cto.com/u\_15155099/2767298}
 
 
-HDMI 拔出正常逻辑应该是：HPD 探测到电压变化触发中断，接下来 DDC 读取显示器 EDID 返回失败，最终到 dvi_detect 函数
+HDMI 拔出正常逻辑应该是：HPD 探测到电压变化触发中断，接下来 DDC 读取显示器 EDID 返回失败，最终到 dvi\_detect 函数
 中，通过 DDC 返回的失败，设置显示器连接状态为 disconnected。
 
 在这个问题中，HDMI 拔出，HPD 探测到电压变化中断触发，DDC 读取显示器 EDID 返回成功，detect 函数设置显示器连接状态
@@ -1093,32 +824,37 @@ HDMI 拔出正常逻辑应该是：HPD 探测到电压变化触发中断，接�
 oland 显卡读取 edid 的逻辑有大问题。
 
 
-* 什么是 EDID？
+\chapter{什么是 EDID？}
+\label{sec:org9d0f716}
 
 edid 核心的内容都在这里了：
 
-https://www.graniteriverlabs.com.cn/technical-blog/edid-overview/
+\url{https://www.graniteriverlabs.com.cn/technical-blog/edid-overview/}
 
-https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
+\url{https://en.wikipedia.org/wiki/Extended\_Display\_Identification\_Data}
 
-https://www.wpgdadatong.com.cn/blog/detail/72670
+\url{https://www.wpgdadatong.com.cn/blog/detail/72670}
 
 
-[[file:tty-x-switch.org.assets/img_20231027_145247.jpg]]
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231027_145247.jpg}
+\end{center}
 
 而目前我们所采用的是 EDID1.3 版本，EDID1.0、EDID1.1、EDID1.2 均已在 2001 年 1 月 1 日停止使用。
 
 
-#+begin_src
+\begin{verbatim}
 cat /sys/class/drm/card0-VGA-1/edid |hexdump -C
 # 或者：cat /sys/class/drm/card0-HDMI-A-1/edid | hexdump -C
-#+end_src
+\end{verbatim}
 
 view sonic 的显示器举例：
 
-- 下面是 VGA 的 edid：
+\begin{itemize}
+\item 下面是 VGA 的 edid：
+\end{itemize}
 
-#+begin_src
+\begin{verbatim}
 00000000  00 ff ff ff ff ff ff 00  5a 63 22 3a 01 01 01 01  |........Zc":....|
 00000010  29 1e 01 03 08 35 1d 78  2e e0 f5 a5 55 52 a0 27  |)....5.x....UR.'|
 00000020  0c 50 54 bf ef 80 b3 00  a9 40 a9 c0 95 00 90 40  |.PT......@.....@|
@@ -1128,10 +864,12 @@ view sonic 的显示器举例：
 00000060  4b 18 52 11 00 0a 20 20  20 20 20 20 00 00 00 fc  |K.R...      ....|
 00000070  00 56 41 32 34 33 31 2d  48 2d 32 0a 20 20 00 74  |.VA2431-H-2.  .t|
 00000080
-#+end_src
+\end{verbatim}
 
-- 下面是 HDMI 的 edid：
-#+begin_src
+\begin{itemize}
+\item 下面是 HDMI 的 edid：
+\end{itemize}
+\begin{verbatim}
 00000000  00 ff ff ff ff ff ff 00  5a 63 3a c6 01 01 01 01  |........Zc:.....|
 00000010  1e 1e 01 03 80 35 1d 78  2e b4 85 a3 56 50 a0 26  |.....5.x....VP.&|
 00000020  0f 50 54 bf ef 80 b3 00  a9 40 a9 c0 95 00 90 40  |.PT......@.....@|
@@ -1141,7 +879,7 @@ view sonic 的显示器举例：
 00000060  41 32 34 36 32 2d 48 0a  20 20 20 20 00 00 00 ff  |A2462-H.    ....|
 00000070  00 57 42 31 32 30 33 30  30 35 33 34 34 0a 00 17  |.WB1203005344...|
 00000080
-#+end_src
+\end{verbatim}
 
 重点看：
 
@@ -1153,11 +891,13 @@ view sonic 的显示器举例：
 1110 1111
 1000 0000
 
-[[file:tty-x-switch.org.assets/img_20231027_152110.jpg]]
+\begin{center}
+\includegraphics[width=.9\linewidth]{tty-x-switch.org.assets/img_20231027_152110.jpg}
+\end{center}
 
 通过 xrandr 看能对应上显示器的信息：
 
-#+begin_src
+\begin{verbatim}
 uos@guolongji:~/Desktop$ xrandr
 Screen 0: minimum 320 x 200, current 1920 x 1080, maximum 16384 x 16384
 HDMI-0 disconnected (normal left inverted right x axis y axis)
@@ -1173,7 +913,7 @@ VGA-0 connected primary 1920x1080+0+0 (normal left inverted right x axis y axis)
    800x600       72.19    75.00    60.32    56.25
    640x480       75.00    72.81    66.67    59.94
    720x400       70.08
-#+end_src
+\end{verbatim}
 
 3.从 26h 到 35h，16 个 bit，每两个 bit 表示一个标准分辨率，即：b3 00 a9 40 a9 c0 95 00 90 40 81 80 81 40 81 c0
 
@@ -1204,14 +944,16 @@ VGA-0 connected primary 1920x1080+0+0 (normal left inverted right x axis y axis)
 
 这个的解析比较麻烦，可以参考：
 
-https://winddoing.github.io/post/47714.html
+\url{https://winddoing.github.io/post/47714.html}
 
-有一个站可以解析 edid： http://www.edidreader.com/
+有一个站可以解析 edid： \url{http://www.edidreader.com/}
 
-开源的解析工具很多，https://github.com/dgallegos/edidreader ，供参考。
+开源的解析工具很多，\url{https://github.com/dgallegos/edidreader} ，供参考。
 
 
-- 是不是 e-edid
+\begin{itemize}
+\item 是不是 e-edid
+\end{itemize}
 
 edid 可能是 128 个 bit，也可能是 256 个 bit。分为 block0 和 block1 两部分。block1 叫 Extension block。
 
@@ -1221,9 +963,12 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 
 倒数第二个字节是 Extension Block(s)  : 0，就不是 e-edid，非 0 就是。
 
-* FQA
+\chapter{FQA}
+\label{sec:orgd694a9a}
 
-- 为什么系统下和芯片中都需要包含固件代码？（显卡 vbios 和系统下的 bin）
+\begin{itemize}
+\item 为什么系统下和芯片中都需要包含固件代码？（显卡 vbios 和系统下的 bin）
+\end{itemize}
 
 在很多硬件设备中，特别是芯片、固件和驱动程序之间的关系非常紧密。固件代码通常被设计用于与硬件交互，并为操作系
 统或其他软件提供硬件相关的功能和操作。因此，在某些情况下，固件代码需要同时存在于硬件设备中和操作系统文件系统中。
@@ -1238,5 +983,4 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 要时可以加载并使用它。这就是为什么在系统中也需要包含固件代码。操作系统中的这些固件文件通常放置在/lib/firmware 目录中。
 
 总之，固件代码需要同时存在于硬件设备中和操作系统文件系统中，因为它们在共同协作以使设备得以正常工作。
-
-
+\end{document}
