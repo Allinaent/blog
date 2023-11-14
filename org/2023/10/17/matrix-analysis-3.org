@@ -9,6 +9,8 @@
 #+HUGO_TAGS: ai
 #+HUGO_CATEGORIES: math
 
+第三章是矩阵的标准形
+
 * 哈密顿-卡莱定理
 
 数学的本质就是逻辑与设定，如果你觉得反常识那是对设定理解的不深刻。如果推导的速度慢，那是逻辑能力差。
@@ -57,3 +59,17 @@ https://zh.wikipedia.org/zh-hans/%E5%87%B1%E8%90%8A%E2%80%93%E5%93%88%E5%AF%86%E
 问题比较重要的地方。
 
 每门学科都是不容易的，因为都涉及到几个核心公式。
+
+
+
+[[file:matrix-analysis-3.org.assets/img_20231109_193208.jpg]]
+
+[[file:matrix-analysis-3.org.assets/img_20231109_194018.jpg]]
+
+上面这道题的求解公式非常的精彩。中国的是记公式，而不是求解公式。
+
+
+
+[[file:matrix-analysis-3.org.assets/img_20231109_194702.jpg]]
+
+最不多项式，重中之重。对矩阵求导有很重要的作用。

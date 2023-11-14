@@ -202,22 +202,25 @@ $L(Y|f(x))=\sqrt{\frac{1}{n}\sum_{i=1}^{N}{(Y_{i}-f(x_{i}))^{2}}}$
 
 + smooth L1 损失函数：
 
-\begin{equation}
+$$
 \notag
 L(Y|f(x)) =  \begin{cases}     \frac{1}{2}(Y-f(x))^{2} & \text{  |Y-f(x)|<1}  \\    |Y-f(x)|-\frac{1}{2}
 & \text{ |Y-f(x)|>=1}  \end{cases}
-\end{equation}
+$$
+
 
 Smooth L1 损失是由 Girshick R 在 Fast R-CNN 中提出的，主要用在目标检测中防止梯度爆炸。
 不懂的可以先不了解。后续再折回来看一下这个问题。
 
 + huber 损失函数
 
-\begin{equation}
-\nonumber
-L(Y|f(x)) =  \begin{cases}     \frac{1}{2}(Y-f(x))^{2} & \text{  |Y-f(x)|}  <= \delta
-\\    \delta|Y-f(x)|-\frac{1}{2}    \delta^{2}  & \text{ |Y-f(x)|} > \delta \label{YYb} \end{cases}
-\end{equation}
+$$
+\notag
+{\displaystyle L_{\delta }(y,f(x))=
+{\begin{cases}{\frac {1}{2}}(y-f(x))^{2}&{\text{for }}|y-f(x)|\leq \delta ,
+\\\delta \ \cdot \left(|y-f(x)|-{\frac {1}{2}}\delta \right),&{\text{otherwise.}}\end{cases}}}
+$$
+
 
 huber 损失是平方损失和绝对损失的综合，它克服了平方损失和绝对损失的缺点，不仅使损失函数具有连续的导数，而且利
 用 MSE 梯度随误差减小的特性，可取得更精确的最小值。尽管 huber 损失对异常点具有更好的鲁棒性，但是，它不仅引入

@@ -1,4 +1,4 @@
-% Created 2023-11-01 三 13:43
+% Created 2023-11-01 三 16:21
 % Intended LaTeX compiler: xelatex
 \documentclass[cn,10pt]{elegantbook}
 
@@ -53,16 +53,17 @@
  pdflang={Zh}}
 \begin{document}
 
-%\maketitle
+\maketitle
 \frontmatter
 \tableofcontents
 \mainmatter
 
 
+
 这篇文档可以在：\url{https://guolongji.xyz/post/tty-x-switch/} 这里看到更新。
 
 \chapter{概念}
-\label{sec:org18c1b08}
+\label{sec:orgc9711e3}
 
 \begin{itemize}
 \item Console
@@ -151,7 +152,7 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual\_init 函数
 
 
 \chapter{如何将一个 tty 和一个 xorg 关连起来？}
-\label{sec:org3d717a2}
+\label{sec:org0505a5c}
 
 分配新用户的 TTY 涉及到内核中几个关键的函数。以下是其中的一些函数：
 
@@ -172,9 +173,38 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual\_init 函数
 
 xorg 通过命令行参数 -vt 1 来绑定。
 
+\section{vt 的切换流程}
+\label{sec:org7971c97}
+
+Ctrl-Alt-F2 在只有一个用户时，切换是切到 tty 的界面。但是如果有多个登陆的用户时就会切换到其它用户的图形界面。
+
+当用户切换到新的 TTY 时，涉及到内核的一些操作来实现切换。下面是内核切换 TTY 的详细流程：
+
+用户请求切换 TTY：用户可以通过按下 Ctrl+Alt+F1 到 F6（一般情况下，Linux 系统提供了 6 个 TTY 终端）的组合键来
+请求切换到相应的 TTY。
+
+用户空间程序处理请求：当用户按下组合键后，一个特殊的信号（如 SIGINT）将发送给前台进程组中的所有进程。在这种
+情况下，TTY 驱动程序会接收到信号并执行相应的操作。
+
+TTY 驱动程序检测信号并通知内核：TTY 驱动程序会检测到信号，并将其传递给内核。内核会响应该信号，并开始进行 TTY 切换的操作。
+
+内核切换控制台：内核会根据信号中指定的 TTY 编号，将当前活动的 TTY 切换到新的 TTY。它会关闭当前 TTY 的输入和输
+出，并重新配置设备以与新的 TTY 关联。
+
+内核执行 TTY 切换操作：内核会执行以下操作来完成 TTY 切换：
+
+关闭当前 TTY 设备：内核将关闭当前 TTY 设备的输入和输出，在切换期间停止与 TTY 设备的通信。
+加载新 TTY 设备：内核会初始化和配置新的 TTY 设备，包括打开新 TTY 设备的输入和输出通道。
+切换虚拟终端结构：内核会更新虚拟终端结构，以反映当前活动的 TTY 设备。
+用户空间程序刷新屏幕：在 TTY 切换完成后，用户空间程序将被激活，并负责更新新 TTY 的屏幕内容。
+
+总体而言，内核切换 TTY 的过程涉及到信号处理、设备配置和数据传输等操作。内核负责管理和控制 TTY 设备的状态，以
+确保正确的 TTY 切换和用户体验。这样，用户可以在不同的 TTY 中进行并发的文本模式会话。
+
+
 
 \chapter{dbus}
-\label{sec:org76746d4}
+\label{sec:org3e88cdf}
 
 \begin{itemize}
 \item lightdm(org.freedesktop.DisplayManager)
@@ -212,7 +242,7 @@ xorg 通过命令行参数 -vt 1 来绑定。
 
 
 \section{dbus 接口的使用}
-\label{sec:org13d3661}
+\label{sec:orgb455959}
 
 我们有一个服务 deepin-authenticate 是用 golang 来实现的。golang 的 dbus 库的文档在这里：
 
@@ -226,10 +256,10 @@ dbus 的核心概念就是总线消息。
 
 
 \chapter{linux 图形学中的一些概念}
-\label{sec:orgc978c47}
+\label{sec:orgbd7870d}
 
 \section{DM，WM 与 X Display Manager Control Protocol（XDMCP）}
-\label{sec:orgc7a7757}
+\label{sec:org1744fec}
 
 \begin{itemize}
 \item 显示管理器 DM
@@ -316,13 +346,9 @@ systemd-+ ......
         |- ......
 \end{verbatim}
 
-\section{vt 的切换流程}
-\label{sec:org6a60a6d}
-
-Ctrl-Alt-F2 在只有一个用户时，切换是切到 tty 的界面。但是如果有多个登陆的用户时就会切换到其它用户的图形界面。
 
 \chapter{AMD 显卡的架构演进}
-\label{sec:orgc3e36cb}
+\label{sec:orgd2b21a8}
 
 \url{https://medium.com/high-tech-accessible/an-overview-of-amds-gpu-architectures-884432a717a6}
 
@@ -410,7 +436,7 @@ DirectX 11 和 OpenGL 4.1 等新的标准。同时，TeraScale 2 架构还采用
 
 
 \chapter{AMD 驱动代码的模块划分和代码介绍}
-\label{sec:orgf419686}
+\label{sec:orge5e82a0}
 
 \begin{itemize}
 \item DCE
@@ -566,7 +592,7 @@ oland 显卡用的是 dce\_v6\_0 这个模块：
 
 
 \section{激活 tty 的流程}
-\label{sec:org51834f1}
+\label{sec:orgc7a79f7}
 
 分配新用户的 TTY 涉及到内核中几个关键的函数。以下是其中的一些函数：
 
@@ -646,11 +672,359 @@ fallback:
 \end{minted}
 
 黑屏并不是说这个系统调用导致的，而是切换至新的 xorg，新的 xorg 会从读 edid 导致的黑屏。
-这个我是花了一段时间才想明白的。
+这个我是花了一段时间才想明白的。上面的代码就不展开了。
 
+通过 perf 找到的调用堆栈如下：
+
+drm\_ioctl
+
+drm\_ioctl\_kernel
+
+drm\_mode\_getconnector
+
+drm\_helper\_probe\_single\_connector\_modes
+
+amdgpu\_connector\_dvi\_detect
+
+amdgpu\_connector\_get\_edid
+
+drm\_get\_edid
+
+drm\_do\_get\_edid
+
+drm\_do\_probe\_ddc\_edid
+
+bit\_xfer
+
+drivers/gpu/drm/amd/amdgpu/amdgpu\_connectors.c
+
+\begin{minted}[]{c}
+static void amdgpu_connector_get_edid(struct drm_connector *connector)
+{
+        struct drm_device *dev = connector->dev;
+        struct amdgpu_device *adev = dev->dev_private;
+        struct amdgpu_connector *amdgpu_connector = to_amdgpu_connector(connector);
+
+        if (amdgpu_connector->edid)
+                return;
+
+        /* on hw with routers, select right port */
+        if (amdgpu_connector->router.ddc_valid)
+                amdgpu_i2c_router_select_ddc_port(amdgpu_connector);
+
+        if ((amdgpu_connector_encoder_get_dp_bridge_encoder_id(connector) !=
+             ENCODER_OBJECT_ID_NONE) &&
+            amdgpu_connector->ddc_bus->has_aux) {
+                amdgpu_connector->edid = drm_get_edid(connector,
+                                                      &amdgpu_connector->ddc_bus->aux.ddc);
+        } else if ((connector->connector_type == DRM_MODE_CONNECTOR_DisplayPort) ||
+                   (connector->connector_type == DRM_MODE_CONNECTOR_eDP)) {
+                struct amdgpu_connector_atom_dig *dig = amdgpu_connector->con_priv;
+
+                if ((dig->dp_sink_type == CONNECTOR_OBJECT_ID_DISPLAYPORT ||
+                     dig->dp_sink_type == CONNECTOR_OBJECT_ID_eDP) &&
+                    amdgpu_connector->ddc_bus->has_aux)
+                        amdgpu_connector->edid = drm_get_edid(connector,
+                                                              &amdgpu_connector->ddc_bus->aux.ddc);
+                else if (amdgpu_connector->ddc_bus)
+                        amdgpu_connector->edid = drm_get_edid(connector,
+                                                              &amdgpu_connector->ddc_bus->adapter);
+        } else if (amdgpu_connector->ddc_bus) {
+                amdgpu_connector->edid = drm_get_edid(connector,
+                                                      &amdgpu_connector->ddc_bus->adapter);
+        }
+
+        if (!amdgpu_connector->edid) {
+                /* some laptops provide a hardcoded edid in rom for LCDs */
+                if (((connector->connector_type == DRM_MODE_CONNECTOR_LVDS) ||
+                     (connector->connector_type == DRM_MODE_CONNECTOR_eDP)))
+                        amdgpu_connector->edid = amdgpu_connector_get_hardcoded_edid(adev);
+        }
+}
+\end{minted}
+
+drivers/gpu/drm/drm\_edid.c
+
+\begin{minted}[]{c}
+/**
+ * drm_get_edid - get EDID data, if available
+ * @connector: connector we're probing
+ * @adapter: I2C adapter to use for DDC
+ *
+ * Poke the given I2C channel to grab EDID data if possible.  If found,
+ * attach it to the connector.
+ *
+ * Return: Pointer to valid EDID or NULL if we couldn't find any.
+ */
+struct edid *drm_get_edid(struct drm_connector *connector,
+                          struct i2c_adapter *adapter)
+{
+        struct edid *edid;
+
+        if (connector->force == DRM_FORCE_OFF)
+                return NULL;
+
+        if (connector->force == DRM_FORCE_UNSPECIFIED && !drm_probe_ddc(adapter))
+                return NULL;
+
+        edid = drm_do_get_edid(connector, drm_do_probe_ddc_edid, adapter);
+        if (edid)
+                drm_get_displayid(connector, edid);
+        return edid;
+}
+EXPORT_SYMBOL(drm_get_edid);
+\end{minted}
+
+drivers/gpu/drm/drm\_edid.c
+
+\begin{minted}[]{c}
+/**
+ * drm_do_get_edid - get EDID data using a custom EDID block read function
+ * @connector: connector we're probing
+ * @get_edid_block: EDID block read function
+ * @data: private data passed to the block read function
+ *
+ * When the I2C adapter connected to the DDC bus is hidden behind a device that
+ * exposes a different interface to read EDID blocks this function can be used
+ * to get EDID data using a custom block read function.
+ *
+ * As in the general case the DDC bus is accessible by the kernel at the I2C
+ * level, drivers must make all reasonable efforts to expose it as an I2C
+ * adapter and use drm_get_edid() instead of abusing this function.
+ *
+ * The EDID may be overridden using debugfs override_edid or firmare EDID
+ * (drm_load_edid_firmware() and drm.edid_firmware parameter), in this priority
+ * order. Having either of them bypasses actual EDID reads.
+ *
+ * Return: Pointer to valid EDID or NULL if we couldn't find any.
+ */
+struct edid *drm_do_get_edid(struct drm_connector *connector,
+        int (*get_edid_block)(void *data, u8 *buf, unsigned int block,
+                              size_t len),
+        void *data)
+{
+        int i, j = 0, valid_extensions = 0;
+        u8 *edid, *new;
+        struct edid *override;
+
+        override = drm_get_override_edid(connector);
+        if (override)
+                return override;
+
+        if ((edid = kmalloc(EDID_LENGTH, GFP_KERNEL)) == NULL)
+                return NULL;
+
+        /* base block fetch */
+        for (i = 0; i < 4; i++) {
+                if (get_edid_block(data, edid, 0, EDID_LENGTH))
+                        goto out;
+                if (drm_edid_block_valid(edid, 0, false,
+                                         &connector->edid_corrupt))
+                        break;
+                if (i == 0 && drm_edid_is_zero(edid, EDID_LENGTH)) {
+                        connector->null_edid_counter++;
+                        goto carp;
+                }
+        }
+        if (i == 4)
+                goto carp;
+
+        /* if there's no extensions, we're done */
+        valid_extensions = edid[0x7e];
+        if (valid_extensions == 0)
+                return (struct edid *)edid;
+
+        new = krealloc(edid, (valid_extensions + 1) * EDID_LENGTH, GFP_KERNEL);
+        if (!new)
+                goto out;
+        edid = new;
+
+        for (j = 1; j <= edid[0x7e]; j++) {
+                u8 *block = edid + j * EDID_LENGTH;
+
+                for (i = 0; i < 4; i++) {
+                        if (get_edid_block(data, block, j, EDID_LENGTH))
+                                goto out;
+                        if (drm_edid_block_valid(block, j, false, NULL))
+                                break;
+                }
+
+                if (i == 4)
+                        valid_extensions--;
+        }
+
+        if (valid_extensions != edid[0x7e]) {
+                u8 *base;
+
+                connector_bad_edid(connector, edid, edid[0x7e] + 1);
+
+                edid[EDID_LENGTH-1] += edid[0x7e] - valid_extensions;
+                edid[0x7e] = valid_extensions;
+
+                new = kmalloc_array(valid_extensions + 1, EDID_LENGTH,
+                                    GFP_KERNEL);
+                if (!new)
+                        goto out;
+
+                base = new;
+                for (i = 0; i <= edid[0x7e]; i++) {
+                        u8 *block = edid + i * EDID_LENGTH;
+
+                        if (!drm_edid_block_valid(block, i, false, NULL))
+                                continue;
+
+                        memcpy(base, block, EDID_LENGTH);
+                        base += EDID_LENGTH;
+                }
+
+                kfree(edid);
+                edid = new;
+        }
+
+        return (struct edid *)edid;
+
+carp:
+        connector_bad_edid(connector, edid, 1);
+out:
+        kfree(edid);
+        return NULL;
+}
+EXPORT_SYMBOL_GPL(drm_do_get_edid);
+\end{minted}
+
+drivers/gpu/drm/drm\_edid.c
+
+\begin{minted}[]{c}
+/**
+ * drm_do_probe_ddc_edid() - get EDID information via I2C
+ * @data: I2C device adapter
+ * @buf: EDID data buffer to be filled
+ * @block: 128 byte EDID block to start fetching from
+ * @len: EDID data buffer length to fetch
+ *
+ * Try to fetch EDID information by calling I2C driver functions.
+ *
+ * Return: 0 on success or -1 on failure.
+ */
+static int
+drm_do_probe_ddc_edid(void *data, u8 *buf, unsigned int block, size_t len)
+{
+        struct i2c_adapter *adapter = data;
+        unsigned char start = block * EDID_LENGTH;
+        unsigned char segment = block >> 1;
+        unsigned char xfers = segment ? 3 : 2;
+        int ret, retries = 5;
+
+        /*
+         * The core I2C driver will automatically retry the transfer if the
+         * adapter reports EAGAIN. However, we find that bit-banging transfers
+         * are susceptible to errors under a heavily loaded machine and
+         * generate spurious NAKs and timeouts. Retrying the transfer
+         * of the individual block a few times seems to overcome this.
+         */
+        do {
+                struct i2c_msg msgs[] = {
+                        {
+                                .addr   = DDC_SEGMENT_ADDR,
+                                .flags  = 0,
+                                .len    = 1,
+                                .buf    = &segment,
+                        }, {
+                                .addr   = DDC_ADDR,
+                                .flags  = 0,
+                                .len    = 1,
+                                .buf    = &start,
+                        }, {
+                                .addr   = DDC_ADDR,
+                                .flags  = I2C_M_RD,
+                                .len    = len,
+                                .buf    = buf,
+                        }
+                };
+
+                /*
+                 * Avoid sending the segment addr to not upset non-compliant
+                 * DDC monitors.
+                 */
+                ret = i2c_transfer(adapter, &msgs[3 - xfers], xfers);
+
+                if (ret == -ENXIO) {
+                        DRM_DEBUG_KMS("drm: skipping non-existent adapter %s\n",
+                                        adapter->name);
+                        break;
+                }
+        } while (ret != xfers && --retries);
+
+        return ret == xfers ? 0 : -1;
+}
+\end{minted}
+
+drm/amd/amdgpu/amggpu\_i2c.c
+
+\begin{minted}[]{c}
+static void amdgpu_i2c_post_xfer(struct i2c_adapter *i2c_adap)
+{
+        struct amdgpu_i2c_chan *i2c = i2c_get_adapdata(i2c_adap);
+        struct amdgpu_device *adev = i2c->dev->dev_private;
+        struct amdgpu_i2c_bus_rec *rec = &i2c->rec;
+        uint32_t temp;
+
+        /* unmask the gpio pins for software use */
+        temp = RREG32(rec->mask_clk_reg) & ~rec->mask_clk_mask;
+        WREG32(rec->mask_clk_reg, temp);
+        temp = RREG32(rec->mask_clk_reg);
+
+        temp = RREG32(rec->mask_data_reg) & ~rec->mask_data_mask;
+        WREG32(rec->mask_data_reg, temp);
+        temp = RREG32(rec->mask_data_reg);
+
+        mutex_unlock(&i2c->mutex);
+}
+
+\end{minted}
+
+之前高英杰的分享中 VGA 会隔 10s 循环读一下 edid。
+
+gpu/drm/drm\_probe\_helper.c
+
+\begin{minted}[]{c}
+static void output_poll_execute(struct work_struct *work)
+{
+
+        drm_connector_list_iter_begin(dev, &conn_iter);
+        drm_for_each_connector_iter(connector, &conn_iter) {
+
+                repoll = true;
+
+                connector->status = drm_helper_probe_detect(connector, NULL, false);
+                if (old_status != connector->status) {
+                        const char *old, *new;
+
+                        if (connector->status == connector_status_unknown) {
+                                connector->status = old_status;
+                                continue;
+                        }
+                      changed = true;
+                }
+        }
+        drm_connector_list_iter_end(&conn_iter);
+
+        mutex_unlock(&dev->mode_config.mutex);
+
+out:
+        if (changed)
+                drm_kms_helper_hotplug_event(dev);
+
+        if (repoll)
+                schedule_delayed_work(delayed_work, DRM_OUTPUT_POLL_PERIOD);
+}
+
+\end{minted}
+
+我对 edid 不太了解， \textbf{现在怀疑是 VGA 的循环读 edid 和切换用户时读 edid 同时进行的情况下在 i2c 的层面有了干扰}
 
 \chapter{用户与系统 xorg 进程对应方法}
-\label{sec:org5baa7dc}
+\label{sec:orga19391c}
 
 通过 pstree 可以查看系统的服务启动流程。系统的启动流程大体描述一下：
 
@@ -709,7 +1083,7 @@ root     27291   839  0 10月24 tty8   00:00:05 /usr/lib/xorg/Xorg -background n
 上面的“:0” 是 X Display Server 的名字。
 
 \chapter{使用 perf 来调试}
-\label{sec:orgd16ec8a}
+\label{sec:orgb6b2420}
 
 关于 perf 的使用可以看另一篇博客： \url{https://guolongji.xyz/post/use-perf-and-flame-graph/}
 
@@ -762,7 +1136,7 @@ xorg 的时钟占比为 94\%，而 drm\_get\_edid 的时钟占比高达 32\%。
 
 
 \chapter{为什么 xorg 的数量比登陆的用户数多一个？}
-\label{sec:org5b35b50}
+\label{sec:orge9ee6e3}
 
 因为 lightdm-deepin-greeter 也会创建一个 xorg 用于过渡。
 
@@ -776,7 +1150,7 @@ lightdm  27407 27379  0 10月24 ?      00:00:33 /usr/bin/lightdm-deepin-greeter
 \end{verbatim}
 
 \chapter{能不能写一个切换用户的脚本呢？}
-\label{sec:org05a520d}
+\label{sec:org2e59c8b}
 
 \begin{minted}[]{bash}
 while true; do qdbus --system org.freedesktop.login1 /org/freedesktop/login1/seat/seat0 \
@@ -807,7 +1181,7 @@ done
 
 
 \chapter{其它的相关 bug}
-\label{sec:org807edf3}
+\label{sec:org7169057}
 
 机缘巧合之下，在 4.19 内核里发现了 radeon 驱动一个很神奇的问题，插拔 hdmi 线时候，先拔出一半等 10s 左右再全
 部拔出。这时候，在 sys 下读到的 hdmi 连接状态还是 connected。这个感觉还是很神奇的。切到 amdgpu 之后，也有这个问题。
@@ -825,7 +1199,7 @@ oland 显卡读取 edid 的逻辑有大问题。
 
 
 \chapter{什么是 EDID？}
-\label{sec:org9d0f716}
+\label{sec:orgad54044}
 
 edid 核心的内容都在这里了：
 
@@ -964,7 +1338,7 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 倒数第二个字节是 Extension Block(s)  : 0，就不是 e-edid，非 0 就是。
 
 \chapter{FQA}
-\label{sec:orgd694a9a}
+\label{sec:org19817ee}
 
 \begin{itemize}
 \item 为什么系统下和芯片中都需要包含固件代码？（显卡 vbios 和系统下的 bin）
@@ -984,3 +1358,7 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 
 总之，固件代码需要同时存在于硬件设备中和操作系统文件系统中，因为它们在共同协作以使设备得以正常工作。
 \end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

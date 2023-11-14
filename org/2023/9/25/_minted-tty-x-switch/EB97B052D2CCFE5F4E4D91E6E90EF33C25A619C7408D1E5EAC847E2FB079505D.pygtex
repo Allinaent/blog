@@ -1,0 +1,64 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * drm\PYGZus{}do\PYGZus{}probe\PYGZus{}ddc\PYGZus{}edid() \PYGZhy{} get EDID information via I2C}
+\PYG{c+cm}{ * @data: I2C device adapter}
+\PYG{c+cm}{ * @buf: EDID data buffer to be filled}
+\PYG{c+cm}{ * @block: 128 byte EDID block to start fetching from}
+\PYG{c+cm}{ * @len: EDID data buffer length to fetch}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Try to fetch EDID information by calling I2C driver functions.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Return: 0 on success or \PYGZhy{}1 on failure.}
+\PYG{c+cm}{ */}
+\PYG{k}{static}\PYG{+w}{ }\PYG{k+kt}{int}
+\PYG{n+nf}{drm\PYGZus{}do\PYGZus{}probe\PYGZus{}ddc\PYGZus{}edid}\PYG{p}{(}\PYG{k+kt}{void}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{data}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{u8}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{buf}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{unsigned}\PYG{+w}{ }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{block}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{size\PYGZus{}t}\PYG{+w}{ }\PYG{n}{len}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{i2c\PYGZus{}adapter}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{adapter}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{data}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{unsigned}\PYG{+w}{ }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{n}{start}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{block}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{EDID\PYGZus{}LENGTH}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{unsigned}\PYG{+w}{ }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{n}{segment}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{block}\PYG{+w}{ }\PYG{o}{\PYGZgt{}\PYGZgt{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{unsigned}\PYG{+w}{ }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{n}{xfers}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{segment}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kt}{int}\PYG{+w}{ }\PYG{n}{ret}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{retries}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{5}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{c+cm}{/*}
+\PYG{c+cm}{         * The core I2C driver will automatically retry the transfer if the}
+\PYG{c+cm}{         * adapter reports EAGAIN. However, we find that bit\PYGZhy{}banging transfers}
+\PYG{c+cm}{         * are susceptible to errors under a heavily loaded machine and}
+\PYG{c+cm}{         * generate spurious NAKs and timeouts. Retrying the transfer}
+\PYG{c+cm}{         * of the individual block a few times seems to overcome this.}
+\PYG{c+cm}{         */}
+\PYG{+w}{        }\PYG{k}{do}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{i2c\PYGZus{}msg}\PYG{+w}{ }\PYG{n}{msgs}\PYG{p}{[]}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                        }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{addr}\PYG{+w}{   }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{DDC\PYGZus{}SEGMENT\PYGZus{}ADDR}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{flags}\PYG{+w}{  }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{len}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{buf}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{segment}\PYG{p}{,}
+\PYG{+w}{                        }\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{addr}\PYG{+w}{   }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{DDC\PYGZus{}ADDR}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{flags}\PYG{+w}{  }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{len}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{buf}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{start}\PYG{p}{,}
+\PYG{+w}{                        }\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{addr}\PYG{+w}{   }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{DDC\PYGZus{}ADDR}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{flags}\PYG{+w}{  }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{I2C\PYGZus{}M\PYGZus{}RD}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{len}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{len}\PYG{p}{,}
+\PYG{+w}{                                }\PYG{p}{.}\PYG{n}{buf}\PYG{+w}{    }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{buf}\PYG{p}{,}
+\PYG{+w}{                        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{                }\PYG{p}{\PYGZcb{};}
+
+\PYG{+w}{                }\PYG{c+cm}{/*}
+\PYG{c+cm}{                 * Avoid sending the segment addr to not upset non\PYGZhy{}compliant}
+\PYG{c+cm}{                 * DDC monitors.}
+\PYG{c+cm}{                 */}
+\PYG{+w}{                }\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{i2c\PYGZus{}transfer}\PYG{p}{(}\PYG{n}{adapter}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{msgs}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{xfers}\PYG{p}{],}\PYG{+w}{ }\PYG{n}{xfers}\PYG{p}{);}
+
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n}{ENXIO}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                        }\PYG{n}{DRM\PYGZus{}DEBUG\PYGZus{}KMS}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}drm: skipping non\PYGZhy{}existent adapter \PYGZpc{}s}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s}{\PYGZdq{}}\PYG{p}{,}
+\PYG{+w}{                                        }\PYG{n}{adapter}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{name}\PYG{p}{);}
+\PYG{+w}{                        }\PYG{k}{break}\PYG{p}{;}
+\PYG{+w}{                }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{while}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{!=}\PYG{+w}{ }\PYG{n}{xfers}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{n}{retries}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{xfers}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{\PYGZhy{}1}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

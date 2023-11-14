@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/*}
+\PYG{c+cm}{ * ioctl(fd, VT\PYGZus{}ACTIVATE, num) will cause us to switch to vt \PYGZsh{} num,}
+\PYG{c+cm}{ * with num \PYGZgt{}= 1 (switches to vt 0, our console, are not allowed, just}
+\PYG{c+cm}{ * to preserve sanity).}
+\PYG{c+cm}{ */}
+\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}ACTIVATE}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n}{perm}\PYG{p}{)}
+\PYG{+w}{                }\PYG{k}{return}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n}{EPERM}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{arg}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n}{arg}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{n}{MAX\PYGZus{}NR\PYGZus{}CONSOLES}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{  }\PYG{o}{\PYGZhy{}}\PYG{n}{ENXIO}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{else}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{n}{arg}\PYG{o}{\PYGZhy{}\PYGZhy{}}\PYG{p}{;}
+\PYG{+w}{                }\PYG{n}{console\PYGZus{}lock}\PYG{p}{();}
+\PYG{+w}{                }\PYG{n}{ret}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{vc\PYGZus{}allocate}\PYG{p}{(}\PYG{n}{arg}\PYG{p}{);}
+\PYG{+w}{                }\PYG{n}{console\PYGZus{}unlock}\PYG{p}{();}
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{ret}\PYG{p}{)}
+\PYG{+w}{                        }\PYG{k}{break}\PYG{p}{;}
+\PYG{+w}{                }\PYG{n}{set\PYGZus{}console}\PYG{p}{(}\PYG{n}{arg}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{k}{break}\PYG{p}{;}
+
+\end{Verbatim}

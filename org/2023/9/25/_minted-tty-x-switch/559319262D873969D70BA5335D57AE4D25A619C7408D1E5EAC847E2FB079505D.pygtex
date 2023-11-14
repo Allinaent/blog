@@ -1,0 +1,26 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{+w}{        }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{c+c1}{// ......}
+
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}ACTIVATE}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}WAITACTIVE}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}RELDISP}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}DISALLOCATE}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}RESIZE}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{case}\PYG{+w}{ }\PYG{n+no}{VT\PYGZus{}RESIZEX}\PYG{p}{:}
+\PYG{+w}{                }\PYG{k}{goto}\PYG{+w}{ }\PYG{n}{fallback}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{c+cm}{/*}
+\PYG{c+cm}{         * the rest has a compatible data structure behind arg,}
+\PYG{c+cm}{         * but we have to convert it to a proper 64 bit pointer.}
+\PYG{c+cm}{         */}
+\PYG{+w}{        }\PYG{k}{default}\PYG{o}{:}
+\PYG{+w}{                }\PYG{n}{arg}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{unsigned}\PYG{+w}{ }\PYG{k+kt}{long}\PYG{p}{)}\PYG{n}{compat\PYGZus{}ptr}\PYG{p}{(}\PYG{n}{arg}\PYG{p}{);}
+\PYG{+w}{                }\PYG{k}{goto}\PYG{+w}{ }\PYG{n}{fallback}\PYG{p}{;}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{ret}\PYG{p}{;}
+
+\PYG{n+nl}{fallback}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{vt\PYGZus{}ioctl}\PYG{p}{(}\PYG{n}{tty}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{cmd}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{arg}\PYG{p}{);}
+\end{Verbatim}

@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/**}
+\PYG{c+cm}{ * drm\PYGZus{}get\PYGZus{}edid \PYGZhy{} get EDID data, if available}
+\PYG{c+cm}{ * @connector: connector we\PYGZsq{}re probing}
+\PYG{c+cm}{ * @adapter: I2C adapter to use for DDC}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Poke the given I2C channel to grab EDID data if possible.  If found,}
+\PYG{c+cm}{ * attach it to the connector.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Return: Pointer to valid EDID or NULL if we couldn\PYGZsq{}t find any.}
+\PYG{c+cm}{ */}
+\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{edid}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{drm\PYGZus{}connector}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{connector}\PYG{p}{,}
+\PYG{+w}{                          }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{i2c\PYGZus{}adapter}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{adapter}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{edid}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{edid}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{force}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}FORCE\PYGZus{}OFF}\PYG{p}{)}
+\PYG{+w}{                }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{NULL}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{force}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}FORCE\PYGZus{}UNSPECIFIED}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{o}{!}\PYG{n}{drm\PYGZus{}probe\PYGZus{}ddc}\PYG{p}{(}\PYG{n}{adapter}\PYG{p}{))}
+\PYG{+w}{                }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{NULL}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}do\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}do\PYGZus{}probe\PYGZus{}ddc\PYGZus{}edid}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{adapter}\PYG{p}{);}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{edid}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{drm\PYGZus{}get\PYGZus{}displayid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{edid}\PYG{p}{);}
+\PYG{+w}{        }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{edid}\PYG{p}{;}
+\PYG{p}{\PYGZcb{}}
+\PYG{n}{EXPORT\PYGZus{}SYMBOL}\PYG{p}{(}\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{);}
+\end{Verbatim}

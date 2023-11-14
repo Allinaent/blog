@@ -1,0 +1,44 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{static}\PYG{+w}{ }\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{amdgpu\PYGZus{}connector\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{drm\PYGZus{}connector}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{connector}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{drm\PYGZus{}device}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{dev}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{dev}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{amdgpu\PYGZus{}device}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{adev}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{dev}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{dev\PYGZus{}private}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{amdgpu\PYGZus{}connector}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{to\PYGZus{}amdgpu\PYGZus{}connector}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{p}{)}
+\PYG{+w}{                }\PYG{k}{return}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{c+cm}{/* on hw with routers, select right port */}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{router}\PYG{p}{.}\PYG{n}{ddc\PYGZus{}valid}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{amdgpu\PYGZus{}i2c\PYGZus{}router\PYGZus{}select\PYGZus{}ddc\PYGZus{}port}\PYG{p}{(}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{((}\PYG{n}{amdgpu\PYGZus{}connector\PYGZus{}encoder\PYGZus{}get\PYGZus{}dp\PYGZus{}bridge\PYGZus{}encoder\PYGZus{}id}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{!=}
+\PYG{+w}{             }\PYG{n}{ENCODER\PYGZus{}OBJECT\PYGZus{}ID\PYGZus{}NONE}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}
+\PYG{+w}{            }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{has\PYGZus{}aux}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}
+\PYG{+w}{                                                      }\PYG{o}{\PYGZam{}}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{aux}\PYG{p}{.}\PYG{n}{ddc}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{((}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{connector\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}MODE\PYGZus{}CONNECTOR\PYGZus{}DisplayPort}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{||}
+\PYG{+w}{                   }\PYG{p}{(}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{connector\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}MODE\PYGZus{}CONNECTOR\PYGZus{}eDP}\PYG{p}{))}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{amdgpu\PYGZus{}connector\PYGZus{}atom\PYGZus{}dig}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{dig}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{con\PYGZus{}priv}\PYG{p}{;}
+
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{((}\PYG{n}{dig}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{dp\PYGZus{}sink\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{CONNECTOR\PYGZus{}OBJECT\PYGZus{}ID\PYGZus{}DISPLAYPORT}\PYG{+w}{ }\PYG{o}{||}
+\PYG{+w}{                     }\PYG{n}{dig}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{dp\PYGZus{}sink\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{CONNECTOR\PYGZus{}OBJECT\PYGZus{}ID\PYGZus{}eDP}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}
+\PYG{+w}{                    }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{has\PYGZus{}aux}\PYG{p}{)}
+\PYG{+w}{                        }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}
+\PYG{+w}{                                                              }\PYG{o}{\PYGZam{}}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{aux}\PYG{p}{.}\PYG{n}{ddc}\PYG{p}{);}
+\PYG{+w}{                }\PYG{k}{else}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{p}{)}
+\PYG{+w}{                        }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}
+\PYG{+w}{                                                              }\PYG{o}{\PYGZam{}}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{adapter}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{else}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}get\PYGZus{}edid}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}
+\PYG{+w}{                                                      }\PYG{o}{\PYGZam{}}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{ddc\PYGZus{}bus}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{adapter}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{c+cm}{/* some laptops provide a hardcoded edid in rom for LCDs */}
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(((}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{connector\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}MODE\PYGZus{}CONNECTOR\PYGZus{}LVDS}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{||}
+\PYG{+w}{                     }\PYG{p}{(}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{connector\PYGZus{}type}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}MODE\PYGZus{}CONNECTOR\PYGZus{}eDP}\PYG{p}{)))}
+\PYG{+w}{                        }\PYG{n}{amdgpu\PYGZus{}connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{edid}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{amdgpu\PYGZus{}connector\PYGZus{}get\PYGZus{}hardcoded\PYGZus{}edid}\PYG{p}{(}\PYG{n}{adev}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\end{Verbatim}

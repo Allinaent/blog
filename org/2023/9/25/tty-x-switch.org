@@ -7,6 +7,25 @@
 #+TITLE: tty和x的切换流程
 #+HUGO_TAGS: gpu
 #+HUGO_CATEGORIES: technology
+#+AUTHOR:郭隆基
+#+LATEX_HEADER: \extrainfo{简单介绍一下概念和学习路线}
+#+LATEX_HEADER: \emergencystretch 3em
+#+LATEX_CLASS: elegantbook
+#+LATEX_COMPILER: xelatex
+#+OPTIONS: \n:nil
+#+OPTIONS: ^:nil
+#+OPTIONS: H:5  toc:nil  title:nil
+#+LANGUAGE: zh
+
+#+begin_export latex
+\maketitle
+\frontmatter
+\tableofcontents
+\mainmatter
+#+end_export
+#+begin_comment
+thinks for use, provided by allinaent
+#+end_comment
 
 
 
@@ -600,7 +619,7 @@ bit_xfer
 
 drivers/gpu/drm/amd/amdgpu/amdgpu_connectors.c
 
-#+begin_src c
+#+begin_src C
 static void amdgpu_connector_get_edid(struct drm_connector *connector)
 {
 	struct drm_device *dev = connector->dev;
@@ -1240,3 +1259,43 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 总之，固件代码需要同时存在于硬件设备中和操作系统文件系统中，因为它们在共同协作以使设备得以正常工作。
 
 
+* 分析有误，继续
+
+不是问题，之前分析有误，加一些打印就能发现，读取 edid 的时间根本就不长。要分析什么时候会调用和产生黑屏。
+这个黑屏遮罩的方法的调用者都有谁，这个问窗管应该就可以了。不行再问题闫博文。
+
+找到这些项目，申请代码树权限。后续，分析什么情况下调用黑屏遮罩的方法。
+
+* 继续
+
+lightdm-gtk-greeter（即是包名也是程序名）；dde-session-shell 的 dde-lock。看不懂这些应用是怎么放到一起组
+合起来的。系统是怎么组合起来的，这个是个相当复杂的问题。
+
+xset dpms force off，这个命令可以设置黑屏。
+
+#+begin_src bash
+cat /sys/class/drm/card*/dpms
+sudo nano /etc/default/grub
+GRUB_CMDLINE_LINUX="quiet splash drm.debug=0x04"
+sudo update-grub
+#+end_src
+
+在 Linux 内核中，drm.debug 参数用于控制 DRM（Direct Rendering Manager）子系统的调试输出。这个参数可以接受不同
+数值，每个数值代表一种不同的调试级别，通常使用十六进制表示。
+
+常见的 drm.debug 参数取值包括：
+
+0x01：启用基本的 DRM 调试信息
+
+0x04：启用详细的 DRM 调试信息
+
+0x10：启用扩展的 DRM 调试信息
+
+0x40：启用更多的 DRM 调试信息
+
+0x100：启用所有可用的 DRM 调试信息
+
+你可以根据需要将这些数值进行组合，以启用多个级别的调试信息。例如，如果你想同时启用基本的调试信息和详细的调
+试信息，可以将数值相加，如 0x01 + 0x04 = 0x05。
+
+在实际使用中，根据需求选择合适的调试级别，以便获取所需的调试信息，同时避免产生过多无关的日志输出。

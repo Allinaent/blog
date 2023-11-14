@@ -1,0 +1,17 @@
+\contentsline {chapter}{\numberline {1}概念}{2}{chapter.1}%
+\contentsline {chapter}{\numberline {2}如何将一个 tty 和一个 xorg 关连起来？}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}vt 的切换流程}{4}{section.2.1}%
+\contentsline {chapter}{\numberline {3}dbus}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}dbus 接口的使用}{5}{section.3.1}%
+\contentsline {chapter}{\numberline {4}linux 图形学中的一些概念}{6}{chapter.4}%
+\contentsline {section}{\numberline {4.1}DM，WM 与 X Display Manager Control Protocol（XDMCP）}{6}{section.4.1}%
+\contentsline {chapter}{\numberline {5}AMD 显卡的架构演进}{8}{chapter.5}%
+\contentsline {chapter}{\numberline {6}AMD 驱动代码的模块划分和代码介绍}{11}{chapter.6}%
+\contentsline {section}{\numberline {6.1}激活 tty 的流程}{13}{section.6.1}%
+\contentsline {chapter}{\numberline {7}用户与系统 xorg 进程对应方法}{22}{chapter.7}%
+\contentsline {chapter}{\numberline {8}使用 perf 来调试}{24}{chapter.8}%
+\contentsline {chapter}{\numberline {9}为什么 xorg 的数量比登陆的用户数多一个？}{26}{chapter.9}%
+\contentsline {chapter}{\numberline {10}能不能写一个切换用户的脚本呢？}{27}{chapter.10}%
+\contentsline {chapter}{\numberline {11}其它的相关 bug}{28}{chapter.11}%
+\contentsline {chapter}{\numberline {12}什么是 EDID？}{29}{chapter.12}%
+\contentsline {chapter}{\numberline {13}FQA}{32}{chapter.13}%

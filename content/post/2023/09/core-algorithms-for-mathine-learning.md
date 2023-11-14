@@ -1,7 +1,7 @@
 +++
 title = "深度学习必备核心算法"
 date = 2023-09-21T16:55:00+08:00
-lastmod = 2023-10-16T17:27:14+08:00
+lastmod = 2023-11-14T16:08:03+08:00
 tags = ["ai"]
 categories = ["learn"]
 draft = false
@@ -191,21 +191,22 @@ stretch pixels into single column，理解一下。
 
 -   smooth L1 损失函数：
 
-\begin{equation}
+\\[
 \notag
 L(Y|f(x)) =  \begin{cases}     \frac{1}{2}(Y-f(x))^{2} & \text{  |Y-f(x)|<1}  \\\    |Y-f(x)|-\frac{1}{2}
 & \text{ |Y-f(x)|>=1}  \end{cases}
-\end{equation}
+\\]
 
 Smooth L1 损失是由 Girshick R 在 Fast R-CNN 中提出的，主要用在目标检测中防止梯度爆炸。不懂的可以先不了解。后续再折回来看一下这个问题。
 
 -   huber 损失函数
 
-\begin{equation}
-\nonumber
-L(Y|f(x)) =  \begin{cases}     \frac{1}{2}(Y-f(x))^{2} & \text{  |Y-f(x)|}  <= \delta
-\\\    \delta|Y-f(x)|-\frac{1}{2}    \delta^{2}  & \text{ |Y-f(x)|} > \delta \label{YYb} \end{cases}
-\end{equation}
+\\[
+\notag
+{\displaystyle L\_{\delta }(y,f(x))=
+{\begin{cases}{\frac {1}{2}}(y-f(x))^{2}&{\text{for }}|y-f(x)|\leq \delta ,
+\\\\delta \ \cdot \left(|y-f(x)|-{\frac {1}{2}}\delta \right),&{\text{otherwise.}}\end{cases}}}
+\\]
 
 huber 损失是平方损失和绝对损失的综合，它克服了平方损失和绝对损失的缺点，不仅使损失函数具有连续的导数，而且利用 MSE 梯度随误差减小的特性，可取得更精确的最小值。尽管 huber 损失对异常点具有更好的鲁棒性，但是，它不仅引入了额外的参数，而且选择合适的参数比较困难，这也增加了训练和调试的工作量。
 

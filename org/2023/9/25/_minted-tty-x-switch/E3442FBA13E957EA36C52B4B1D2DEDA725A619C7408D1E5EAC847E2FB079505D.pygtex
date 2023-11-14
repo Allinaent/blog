@@ -1,0 +1,33 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{static}\PYG{+w}{ }\PYG{k+kt}{void}\PYG{+w}{ }\PYG{n+nf}{output\PYGZus{}poll\PYGZus{}execute}\PYG{p}{(}\PYG{k}{struct}\PYG{+w}{ }\PYG{n+nc}{work\PYGZus{}struct}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{work}\PYG{p}{)}
+\PYG{p}{\PYGZob{}}
+
+\PYG{+w}{        }\PYG{n}{drm\PYGZus{}connector\PYGZus{}list\PYGZus{}iter\PYGZus{}begin}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{conn\PYGZus{}iter}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n}{drm\PYGZus{}for\PYGZus{}each\PYGZus{}connector\PYGZus{}iter}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZam{}}\PYG{n}{conn\PYGZus{}iter}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+
+\PYG{+w}{                }\PYG{n}{repoll}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{;}
+
+\PYG{+w}{                }\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{drm\PYGZus{}helper\PYGZus{}probe\PYGZus{}detect}\PYG{p}{(}\PYG{n}{connector}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{NULL}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{false}\PYG{p}{);}
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{old\PYGZus{}status}\PYG{+w}{ }\PYG{o}{!=}\PYG{+w}{ }\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{status}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                        }\PYG{k}{const}\PYG{+w}{ }\PYG{k+kt}{char}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{old}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{*}\PYG{n}{new}\PYG{p}{;}
+
+\PYG{+w}{                        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{status}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{connector\PYGZus{}status\PYGZus{}unknown}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                                }\PYG{n}{connector}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{status}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{old\PYGZus{}status}\PYG{p}{;}
+\PYG{+w}{                                }\PYG{k}{continue}\PYG{p}{;}
+\PYG{+w}{                        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{                      }\PYG{n}{changed}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{;}
+\PYG{+w}{                }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{n}{drm\PYGZus{}connector\PYGZus{}list\PYGZus{}iter\PYGZus{}end}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{conn\PYGZus{}iter}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{n}{mutex\PYGZus{}unlock}\PYG{p}{(}\PYG{o}{\PYGZam{}}\PYG{n}{dev}\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{n}{mode\PYGZus{}config}\PYG{p}{.}\PYG{n}{mutex}\PYG{p}{);}
+
+\PYG{n+nl}{out}\PYG{p}{:}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{changed}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{drm\PYGZus{}kms\PYGZus{}helper\PYGZus{}hotplug\PYGZus{}event}\PYG{p}{(}\PYG{n}{dev}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{repoll}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{schedule\PYGZus{}delayed\PYGZus{}work}\PYG{p}{(}\PYG{n}{delayed\PYGZus{}work}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{DRM\PYGZus{}OUTPUT\PYGZus{}POLL\PYGZus{}PERIOD}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+
+\end{Verbatim}
