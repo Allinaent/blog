@@ -299,3 +299,9 @@ https://xrg.fj.cn/
 
 原来 hugo 和 hugo 的各种主题早就广为流传了。之前还想自己写一个博客框架或都完全把博客搞成一个自己的项目。现在感觉
 不是特别地有必要了。人生也有涯，没用人是无涯子。give up and turn to learn AI！
+
+* 修改了 katex.min.css 和 js 的 cdn
+
+e themes/hugo-theme-stack/data/external.yaml，选用了七牛云的 CDN。
+
+现在网页显示公式基本上是秒出了，这就很棒。以后多理解多学习吧。

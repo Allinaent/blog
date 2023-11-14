@@ -11,6 +11,13 @@
 
 https://www.bilibili.com/video/av6731067
 
+使用 katex 来规范公式的书写，比起 mathjax 和 latex 功能略少，要求公式的语法更为严格，
+但是渲染速度更快：
+
+https://katex.org/docs/supported.html
+
+以后写数学公式要多多参考这个网页，谢谢人类世界，提供了这么多免费的东西。
+
 * 向量是什么？
 
 物理空间中的向量；ai 中的数组（可以是任何东西，可以说 ai 中的向量是最抽像的东西）；
@@ -54,22 +61,22 @@ matrix 和线性变换（liner transformation）是什么关系？
 shear，剪切，用推移来翻译更为贴切。就是这个意思。
 
 $$
-\begin{bmatrix}
+\left[\begin{matrix}
 1 & 1 \\
 0 & 1
-\end{bmatrix}(\begin{bmatrix}
+\end{matrix}\right](\left[\begin{matrix}
 0 & -1 \\
 1 & 0
-\end{bmatrix}\begin{bmatrix}
+\end{matrix}\right]\left[\begin{matrix}
 x \\
 y
-\end{bmatrix})=\begin{bmatrix}
+\end{matrix}\right])=\left[\begin{matrix}
 1 & -1 \\
 1 & 0
-\end{bmatrix}\begin{bmatrix}
+\end{matrix}\right]\left[\begin{matrix}
 x \\
 y
-\end{bmatrix}
+\end{matrix}\right]
 $$
 
 分别称为 Shear（推移），Rotation（旋转），Composition（复合矩阵）。函数从右往左来读。
@@ -100,10 +107,10 @@ https://www.conf-aris.com/%E6%88%91%E4%BB%AC%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81
 的理解。
 
 $$
-\det(\begin{bmatrix}
+\det\Big(\left[\begin{matrix}
 3 & 2 \\
 0 & 2
-\end{bmatrix})=6
+\end{matrix}\right]\Big)=6
 $$
 
 如果一个行列式的值为 0，意味着他将整个平面压缩到了一条线上，甚至是一个点上。空间定向改变的
@@ -118,10 +125,10 @@ $$
 
 以线性变换的眼光来看：逆矩阵，列空间，秩和零空间这四个概念。
 
-$A^{-1}A$ ，$A^{-1}$ 是逆变换，inverse transformation。就是说结果是$$ \begin{bmatrix}
+$A^{-1}A$ ，$A^{-1}$ 是逆变换，inverse transformation。就是说结果是$$ \left[\begin{matrix}
 1 & 0 \\
 0 & 1
-\end{bmatrix} $$ ，现在的理解就很清楚了。
+\end{matrix}\right] $$ ，现在的理解就很清楚了。
 
 只要 $det(A) \neq 0$ ，则 $A^{-1}$ exists。如果 $det(A)=0$，那么就会压缩成一条线，你不能将一条线
 解压缩成一个平面。
@@ -154,30 +161,30 @@ $A^{-1}A$ ，$A^{-1}$ 是逆变换，inverse transformation。就是说结果是
 
 叉积是两个向量围成的面积。逆时针的相乘为正，叉积有顺序的区别。叉积的值也正是 det 将两个向量
 合为一个矩阵的值。叉积的结果扔然是一个向量，这个向量的长度是平行四边形的面积。方向由右手法
-则来表示。 ${\hat_{v}} \times {\hat_{w}} = \hat{p}$   右手食指指向 $\hat_{v}$ ，中指指向 $\hat_{w}$ ，大拇指的方向就是结果
+则来表示。 ${\hat{v}} \times {\hat{w}} = \hat{p}$   右手食指指向 $\hat{v}$ ，中指指向 $\hat{w}$ ，大拇指的方向就是结果
 的向。
 
 $$
-\begin{bmatrix}
+\left[\begin{matrix}
 v_{1} \\
 v_{2} \\
 v_{3}
-\end{bmatrix} \times
-\begin{bmatrix}
+\end{matrix}\right] \times
+\left[\begin{matrix}
 w_{1} \\
 w_{2} \\
 w_{3}
-\end{bmatrix}=det(\begin{bmatrix}
-\hat_{i} & v_{1} & w_{1} \\
-\hat_{j} & v_{2} & w_{2} \\
-\hat_{k} & v_{3} & w_{3}
-\end{bmatrix})
+\end{matrix}\right]=det(\left[\begin{matrix}
+\hat{i} & v_{1} & w_{1} \\
+\hat{j} & v_{2} & w_{2} \\
+\hat{k} & v_{3} & w_{3}
+\end{matrix}\right])
 $$
 
 也就是下面的：
 
 $$
-{\hat_{i}}(v_{2}w_{3}-v_{3}w_{2}+{\hat_{j}}(v_{3}w_{1}-v_{1}w_{3})+{\hat_{k}}(v_{1}w_{2}-v_{2}w_{1})
+{\hat{i}}(v_{2}w_{3}-v_{3}w_{2})+{\hat{j}}(v_{3}w_{1}-v_{1}w_{3})+{\hat{k}}(v_{1}w_{2}-v_{2}w_{1})
 $$
 
 那么叉积的意义到底是什么呢？其实看完这里还是想的不是很明白。
@@ -201,7 +208,7 @@ https://blog.csdn.net/nbl97/article/details/80582027
 
 [[file:line-algebra-nature.org.assets/img_20231114_092635.jpg]]
 
-牛顿是炼金术士，而不是一个基督徙。
+牛顿是炼金术士，而不是一个基督徒。
 
 [[file:line-algebra-nature.org.assets/img_20231114_092903.jpg]]
 
@@ -233,7 +240,7 @@ https://zh.wikipedia.org/zh-hans/%E5%8F%98%E5%88%86%E6%B3%95
 
 [[file:line-algebra-nature.org.assets/img_20231114_093604.jpg]]
 
-法国贵族。有的人一出生便什么都有。他还有一个徙弟是傅立叶。
+法国贵族。有的人一出生便什么都有。他还有一个徒弟是傅立叶。
 
 [[file:line-algebra-nature.org.assets/img_20231114_093740.jpg]]
 法国人。
@@ -244,9 +251,9 @@ https://zh.wikipedia.org/zh-hans/%E5%8F%98%E5%88%86%E6%B3%95
 柯西被称为最不可爱的数学家。间接导致了阿贝尔的死亡，埋没数学家伽罗瓦。剽窃弗拉德米尔·斯图普尼斯基长达
 四卷的著作。
 
-牛顿的徙子徙孙名声不显：https://www.zhihu.com/question/45437802/answer/102310081 ，但是是有的，没有消失。
+牛顿的徒子徒孙名声不显：https://www.zhihu.com/question/45437802/answer/102310081 ，但是是有的，没有消失。
 
-高斯是约翰·马丁·巴特尔斯的徙弟。高斯属于自己聪明，自学成才的人。高斯的徙弟是狄立克雷，狄立克雷的徙弟是
+高斯是约翰·马丁·巴特尔斯的徒弟。高斯属于自己聪明，自学成才的人。高斯的徒弟是狄立克雷，狄立克雷的徒弟是
 黎曼。高斯的这一个分支也很厉害。这几个都是德国人。另外希尔伯特也是德国人，那么
 
 
