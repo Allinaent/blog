@@ -1299,3 +1299,112 @@ sudo update-grub
 试信息，可以将数值相加，如 0x01 + 0x04 = 0x05。
 
 在实际使用中，根据需求选择合适的调试级别，以便获取所需的调试信息，同时避免产生过多无关的日志输出。
+
+现在要做的事就是打开 drm 的调整试信息，然后做测试，这个还是很简单的。
+
+打开了调式之后，发现 amdgpu_atombios_encoder_dpms 这个函数调用的次数是有区别的，没问题的时候调用一次，而有
+问题的时个会调用多次。
+
+现在要分析一下什么情况下会调用 amdgpu_atombios_encoder_dpms ，或者直接加上一个 WARN_ON(1) 来分析这个问题。
+
+调用的地方并不多，如下：
+
+#+begin_src
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3089:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3147:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_ON);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3158:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3217:	.dpms = amdgpu_atombios_encoder_dpms,
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3227:	.dpms = amdgpu_atombios_encoder_dpms,
+#+end_src
+
+下面这个函数是设置 mode set 的：
+
+#+begin_src c
+static void
+dce_v6_0_encoder_mode_set(struct drm_encoder *encoder,
+			  struct drm_display_mode *mode,
+			  struct drm_display_mode *adjusted_mode)
+{
+
+	struct amdgpu_encoder *amdgpu_encoder = to_amdgpu_encoder(encoder);
+	int em = amdgpu_atombios_encoder_get_encoder_mode(encoder);
+
+	amdgpu_encoder->pixel_clock = adjusted_mode->clock;
+
+	/* need to call this here rather than in prepare() since we need some crtc info */
+	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+
+	/* set scaler clears this on some chips */
+	dce_v6_0_set_interleave(encoder->crtc, mode);
+
+	if (em == ATOM_ENCODER_MODE_HDMI || ENCODER_MODE_IS_DP(em)) {
+		dce_v6_0_afmt_enable(encoder, true);
+		dce_v6_0_afmt_setmode(encoder, adjusted_mode);
+	}
+}
+#+end_src
+
+下面这个函数是提交的，难道设置完成之后需要再提交一下吗？
+
+#+begin_src c
+static void dce_v6_0_encoder_commit(struct drm_encoder *encoder)
+{
+
+	struct drm_device *dev = encoder->dev;
+	struct amdgpu_device *adev = dev->dev_private;
+
+	/* need to call this here as we need the crtc set up */
+	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_ON);
+	amdgpu_atombios_scratch_regs_lock(adev, false);
+}
+#+end_src
+
+encoder disable ，这个 encoder 是什么东西？
+
+#+begin_src c
+static void dce_v6_0_encoder_disable(struct drm_encoder *encoder)
+{
+
+	struct amdgpu_encoder *amdgpu_encoder = to_amdgpu_encoder(encoder);
+	struct amdgpu_encoder_atom_dig *dig;
+	int em = amdgpu_atombios_encoder_get_encoder_mode(encoder);
+
+	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+
+	if (amdgpu_atombios_encoder_is_digital(encoder)) {
+		if (em == ATOM_ENCODER_MODE_HDMI || ENCODER_MODE_IS_DP(em))
+			dce_v6_0_afmt_enable(encoder, false);
+		dig = amdgpu_encoder->enc_priv;
+		dig->dig_encoder = -1;
+	}
+	amdgpu_encoder->active_device = 0;
+}
+#+end_src
+
+dig_helper 这个又是什么东西？
+
+#+begin_src c
+static const struct drm_encoder_helper_funcs dce_v6_0_dig_helper_funcs = {
+	.dpms = amdgpu_atombios_encoder_dpms,
+	.mode_fixup = amdgpu_atombios_encoder_mode_fixup,
+	.prepare = dce_v6_0_encoder_prepare,
+	.mode_set = dce_v6_0_encoder_mode_set,
+	.commit = dce_v6_0_encoder_commit,
+	.disable = dce_v6_0_encoder_disable,
+	.detect = amdgpu_atombios_encoder_dig_detect,
+};
+#+end_src
+
+dac_helper ，这个又是什么东西？
+
+#+begin_src c
+static const struct drm_encoder_helper_funcs dce_v6_0_dac_helper_funcs = {
+	.dpms = amdgpu_atombios_encoder_dpms,
+	.mode_fixup = amdgpu_atombios_encoder_mode_fixup,
+	.prepare = dce_v6_0_encoder_prepare,
+	.mode_set = dce_v6_0_encoder_mode_set,
+	.commit = dce_v6_0_encoder_commit,
+	.detect = amdgpu_atombios_encoder_dac_detect,
+};
+#+end_src
+

@@ -1,0 +1,148 @@
++++
+title = "emacs kitty ranger rime 等的一些优化"
+date = 2023-11-17T11:43:00+08:00
+lastmod = 2023-11-17T13:17:21+08:00
+tags = ["emacs"]
+categories = ["technology"]
+draft = false
+toc = true
++++
+
+## emacs-rime 的“探针”中英文切换方法 {#emacs-rime-的-探针-中英文切换方法}
+
+<https://emacs-china.org/t/emacs-rime/12048/838?page=42>
+
+<https://emacs-china.org/t/emacs-rime/18305>
+
+设置了一下能用了，但是不是很好用。
+
+但是我想输入 \\(a^{2}+b^{2}=c^{2}\\) 这样的式子。不能频繁的切换输入法了。但是输入这种：测试 input test 还是不行。挺奇怪的。用 capslock 映射成 f1 键，用 f1 键绑定到 rime-inline-ascii ，可以解决这个痛点。emacs 内部的输入法和外部的一样好用。
+
+
+## rime 和 kitty 的配合使用 {#rime-和-kitty-的配合使用}
+
+
+### kitty 只有加入了下面 ibus 的环境变量才能用 fcitx5 输入中文 {#kitty-只有加入了下面-ibus-的环境变量才能用-fcitx5-输入中文}
+
+因为 kitty 好用，这个小毛病就尝试解决一下，还真是可以用。
+
+cat /etc/environment
+
+```bash
+OSFONTDIR="/usr/share/fonts/:/usr/local/share/fonts/"
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
+# SDL_IM_MODULE DEFAULT=fcitx
+GLFW_IM_MODULE=ibus
+```
+
+安装 fcitx5 的输入法。
+
+nix-env -iA nixpkgs.fcitx5-rime
+nix-env -iA nixpkgs.fcitx5
+
+为什么使用 kitty ，因为 kitty 好用：<https://askubuntu.com/questions/90214/how-do-i-set-the-default-program>
+
+kitty 可以使用 fcitx5 这个工具，在这里面找到：<https://github.com/kovidgoyal/kitty/releases> 0.28.0 这个版本。这个版本的 opengl 不要求 3.3 ，是 3.1 就足够了。
+
+sudo ln -s /usr/local/bin/kitty-0.28.0-x86_64/bin/kitty /usr/bin/kitty
+
+设置默认的 terminal app ，这些东西在 `/usr/share/applications/` 当中，也在编译好的两进制的同名目录当中，找到即可。
+
+系统可以选择这个 .desktop 文件来设置 kitty 为默认的终端程序。
+
+linux 下 emacs 和系统输入法的完美配合。现在我的 emacs 有点好的不像话了。
+
+设置 ranger 显示图片： <https://blog.51cto.com/u_15072778/4547963>
+
+gzip -d rc.conf.gz
+
+修改一下配置即可，把 rc.local 当中的 set preview_images 设置为 true 。这样问题就解决了。
+
+另外 kitty 也是有配置的，按下 Ctrl-Alt-F2 即可打开配置，我的配置无非是想弄一个透明色。
+
+<https://sw.kovidgoyal.net/kitty/conf/> ，这个里面有大量的配置可以选择，这个比之前的页面配置要好看多了。
+
+修改 background_opacity 为 0.8 即可，经过实验 0.8 的效果是最好的。
+
+现在我的 onlyconfig 配置又要多几个了。 kitty 的 rc.conf ， ranger 的配置。还有 fcitx5 的配置。这些配置组合在一起，让我的开发环境看起来很好看。当然最关键的还是好用。
+
+
+### 设置 fcitx5 的主题 {#设置-fcitx5-的主题}
+
+现在万事大吉了。需要把 fcitx5 的主题再配置一下才好看。
+
+按照这个来设置办输入法： <https://github.com/thep0y/fcitx5-themes>
+
+涉及到所有的配置文件有：
+
+```nil
+~/.config/ranger/rc.conf
+~/.config/kitty/kitty.conf
+~/.local/share/fcitx5/themes/transparent-green/
+~/.config/fcitx5/conf/classicui.conf
+~/.config/fcitx5/conf/rime.conf
+```
+
+这五个配置文件。好了，
+
+还涉及到一个输入法的优化这个还是 popup 更加的好用，frame 会挡住文字，看起来很烦人。
+
+还涉及到一个配置文件：
+
+```nil
+~/.local/share/fcitx5/rime/default.custom.yaml
+```
+
+linux 的 rime 切换输入法不上屏英文而是上屏中文，很不爽，可以改源码解决。但是我就不拆腾了。
+
+<https://github.com/rime/squirrel/issues/146>
+
+上屏直接按 enter 键，关键还是提高自己的速度和准确率，不能完全信赖工具，工具只是一时的。而知识才是无价的。工具只是一时的，而重要的知识才是无价的。所以现在这种程度就够了。
+
+
+### 终端里有户名和机器名的配色问题 {#终端里有户名和机器名的配色问题}
+
+将 .bashrc 当中的 force_color_prompt=yes 就可以了。这也是一个小 bug 的修复
+
+
+### emacs 中禁用系统 fcitx5 的 rime 输入法。 {#emacs-中禁用系统-fcitx5-的-rime-输入法}
+
+还有一个问题：在 emacs 内部不使用系统的输入法。
+
+```bash
+[Desktop Entry]
+Name=Emacs
+GenericName=Text Editor
+Comment=Edit text
+MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++;
+Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F
+Icon=emacs
+Type=Application
+Terminal=false
+Categories=Development;TextEditor;
+StartupNotify=true
+StartupWMClass=Emacs
+```
+
+emacs 启动时增加两个环境变量就可以了：GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs &amp;
+
+参见：<https://emacs-china.org/t/emacs/15948>
+
+这个优化很好，强制使用 emacs 内部的输入法。这个输入法没有一点的 bug ，这就使输入非常的流畅。
+
+
+## rime-inline-ascii-trigger 切换 emacs-rime 的中英文 {#rime-inline-ascii-trigger-切换-emacs-rime-的中英文}
+
+设置 rime-inline-ascii 的快捷键是 M-j ，使用这个快捷键可以切换中英文，但是一个痛点始终无法解决：用一个键比如左右 shift 键直接上屏英文，并且切换输入法。 enter 键可以上屏，但是无法切换输入法。C-\\ 可以上屏中文并且切换输入法。
+
+系统的改键，需要启动后手动执行一下，xmodmap ~/.Xmodmap ，有一点奇怪。后续再看。
+
+困难输入的情况现在已经几乎没有了，现在已经非常好好用了，目前到此为止。
+
+
+## 最终的优化 {#最终的优化}
+
+借助开源键盘或客制化键盘改键，可以把常用的快捷键做成一个键，这是最终的优化手段。关键还是要自己练习打字，打的多了。很长的一句话多一个或者两个键的输入根本不会影响打字的效率。你能做到
+10 分钟打 3000 字吗？很多人是可以做到的。
