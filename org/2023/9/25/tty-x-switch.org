@@ -1408,3 +1408,55 @@ static const struct drm_encoder_helper_funcs dce_v6_0_dac_helper_funcs = {
 };
 #+end_src
 
+- drm_encoder
+
+drm_encoder 在 Linux 系统中用于表示显示控制器的硬件模块，负责管理和控制显示信号的生成和传输，以确保图形数据能够
+正确地显示在相应的显示设备上。
+
+在这个 amdgpu_atombios_encoder_dpms 的函数里面加上 WARN_ON(1) 查看不同情况下的调用者是否有什么不同。
+
+使用 WARN_ON(1) 没有显示出来新的调用信息，难道这块不是内核的内容就无法打开吗？记的不对，那换成 dump_stack();
+这个重新编译一个内核试试。
+
+上层用的是这个函数设置的：
+
+extern Status DPMSForceLevel(Display *, CARD16);
+
+是 libxext 这个包。下载包，看这个函数的实现：
+
+在 src/DPMS.c 这个文件下：
+
+#+begin_src c
+Status
+DPMSForceLevel(Display *dpy, CARD16 level)
+{
+    XExtDisplayInfo *info = find_display (dpy);
+    register xDPMSForceLevelReq *req;
+
+    DPMSCheckExtension (dpy, info, 0);
+
+    if ((level != DPMSModeOn) &&
+	(level != DPMSModeStandby) &&
+	(level != DPMSModeSuspend) &&
+	(level != DPMSModeOff))
+	return BadValue;
+
+    LockDisplay(dpy);
+    GetReq(DPMSForceLevel, req);
+    req->reqType = info->codes->major_opcode;
+    req->dpmsReqType = X_DPMSForceLevel;
+    req->level = level;
+
+    UnlockDisplay(dpy);
+    SyncHandle();
+    return 1;
+}
+#+end_src
+
+这里面的 SyncHandle 在 X11/Xlibint.h 这个头文件当中：
+
+#+begin_src c
+#define SyncHandle() \
+	if (dpy->synchandler) (*dpy->synchandler)(dpy)
+
+#+end_src
