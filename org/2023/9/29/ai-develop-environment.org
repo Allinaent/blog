@@ -1,0 +1,105 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2023/11
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2023-11-29 三 17:06]
+#+TITLE: 一些机器学习的环境搭建记录
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: ai
+
+* 系统环境编译安装 python
+
+https://blog.csdn.net/skyyzq/article/details/131396104
+
+步骤清晰，过程简单
+
+* anaconda
+
+https://mirrors.tuna.tsinghua.edu.cn/anaconda/archive/
+
+bash Anaconda3-2023.09-0-Linux-x86_64.sh
+
+将 ~/anaconda3/bin/ 加入到 .bashrc 的 PATH 当中。
+
+conda init
+
+conda config --set auto_activate_base false
+
+一度使用 conda 报错，原来是 lsb_release 这个东西搞的鬼。
+
+sudo cp /usr/lib/python3/dist-packages/lsb_release.py /usr/bin
+
+这样之后能解决问题。不是清华源是问题，也不是 conda 的问题。
+
+设置两个别名，让进入环境和退出环境更快一些。比如 ci ， co 。
+
+
+* paddle
+
+https://www.paddlepaddle.org.cn/documentation/docs/zh/install/conda/linux-conda.html
+
+paddle 的安装过程在这个里面。
+
+这个就比较简单了。
+
+conda create -n paddle_env python=3.11
+
+conda activate paddle_env
+
+conda install paddlepaddle==2.5.2 --channel https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/Paddle/
+
+使用 ci paddle_env 进入 paddle 环境；使用 co 退出 conda 环境。
+
+做为国内最开放，也算是国内做的最好的 AI 框架，你了解其内容，并进行扬弃是非常有用的。
+
+百度的 AI 课程有什么呢？ https://aistudio.baidu.com 或者 https://bit.baidu.com 这两处都能找到。
+
+https://aistudio.baidu.com/course/list 飞桨有公众号，有 QQ 群。不过我不太想加入。自己看应该更好。
+
+做好 AI 实践，从小白教程开始。入门之后，在深入看论文。
+
+AI 应用的底层逻辑是差不多的，所以不管是 torch ， pytorch 还是 paddle ， caffe 这些大差不差，用起来的区别
+不是很大。以后会更深入的理解的。
+
+paddle 新手入门，可得到 100 小时的训练资源：
+
+https://aistudio.baidu.com/newbie
+
+看着还挺全面的。这个网站很值得探索，里面有很多质量很高的视频和内容。具备了基础知识的人可以很快的从中找
+到有价值的内容。能快速找到最佳的路线和学习中的关键点是非常重要的。
+
+* emacs
+
+在 emacs 中看 ai 的 python 代码，如何使用 anaconda 的环境呢？
+
+还有在本地的机器上运行和调试程序，用 emacs 可以方便地做到吗？
+
+这个里面有：https://emacs-china.org/t/conda/17117/6 通过这个帖子知道，原来真的有人用 emacs 开发 AI 的程序。
+
+conda.el 这个包可以解决问题，还有微软的 lsp-python-ms 这个 lsp 的 server ，配合起来就是用 emacs 开发项目
+代码。
+
+emacs 就是一个开发工具，只是用起来让我觉得一切皆可知。希望时间长了之后真的能比不用 emacs 的开发者多了解一
+些东西。
+
+这部分的工作流弄完了之后，我几乎可以解决目前一切困难。真正的剑指核心问题，核心问题就是算法与工程，还有对
+它们深入的理解。
+
+
+* mnist 举例
+
+git clone https://gitee.com/PaddlePaddle/PaddleOCR -b release/2.1 --depth 1
+
+conda install imgaug pyclipper lmdb python-Levenshtein
+
+wget -P ./pretrain_models/ https://paddleocr.bj.bcebos.com/dygraph_v2.0/ch/ch_ppocr_mobile_v2.0_rec_pre.tar
+
+cd pretrain_models && tar -xf ch_ppocr_mobile_v2.0_rec_pre.tar
+
+开始训练：
+
+python tools/train.py -c ../multi_mnist.yml
+
+

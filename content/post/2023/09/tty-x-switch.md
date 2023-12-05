@@ -1,8 +1,7 @@
 +++
-title = "tty和x的切换流程"
-author = ["Longji Guo"]
+author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2023-11-01T14:51:36+08:00
+lastmod = 2023-12-05T11:38:59+08:00
 tags = ["gpu"]
 categories = ["technology"]
 draft = false
@@ -530,7 +529,7 @@ bit_xfer
 
 drivers/gpu/drm/amd/amdgpu/amdgpu_connectors.c
 
-```c
+```C
 static void amdgpu_connector_get_edid(struct drm_connector *connector)
 {
         struct drm_device *dev = connector->dev;
@@ -1159,3 +1158,1298 @@ block1 可以没有。Block0 已对显示器的功能进行基本的描述，像
 为此，Linux 等操作系统提供了一种机制，允许将固件代码复制到操作系统文件系统中的某个位置，以便设备驱动程序在需要时可以加载并使用它。这就是为什么在系统中也需要包含固件代码。操作系统中的这些固件文件通常放置在/lib/firmware 目录中。
 
 总之，固件代码需要同时存在于硬件设备中和操作系统文件系统中，因为它们在共同协作以使设备得以正常工作。
+
+
+## 分析有误，继续 {#分析有误-继续}
+
+不是问题，之前分析有误，加一些打印就能发现，读取 edid 的时间根本就不长。要分析什么时候会调用和产生黑屏。这个黑屏遮罩的方法的调用者都有谁，这个问窗管应该就可以了。不行再问题闫博文。
+
+找到这些项目，申请代码树权限。后续，分析什么情况下调用黑屏遮罩的方法。
+
+
+## 继续 {#继续}
+
+lightdm-gtk-greeter（即是包名也是程序名）；dde-session-shell 的 dde-lock。看不懂这些应用是怎么放到一起组合起来的。系统是怎么组合起来的，这个是个相当复杂的问题。
+
+xset dpms force off，这个命令可以设置黑屏。
+
+```bash
+cat /sys/class/drm/card*/dpms
+sudo nano /etc/default/grub
+GRUB_CMDLINE_LINUX="quiet splash drm.debug=0x04"
+sudo update-grub
+```
+
+在 Linux 内核中，drm.debug 参数用于控制 DRM（Direct Rendering Manager）子系统的调试输出。这个参数可以接受不同数值，每个数值代表一种不同的调试级别，通常使用十六进制表示。
+
+常见的 drm.debug 参数取值包括：
+
+0x01：启用基本的 DRM 调试信息
+
+0x04：启用详细的 DRM 调试信息
+
+0x10：启用扩展的 DRM 调试信息
+
+0x40：启用更多的 DRM 调试信息
+
+0x100：启用所有可用的 DRM 调试信息
+
+你可以根据需要将这些数值进行组合，以启用多个级别的调试信息。例如，如果你想同时启用基本的调试信息和详细的调试信息，可以将数值相加，如 0x01 + 0x04 = 0x05。
+
+在实际使用中，根据需求选择合适的调试级别，以便获取所需的调试信息，同时避免产生过多无关的日志输出。
+
+现在要做的事就是打开 drm 的调整试信息，然后做测试，这个还是很简单的。
+
+打开了调式之后，发现 amdgpu_atombios_encoder_dpms 这个函数调用的次数是有区别的，没问题的时候调用一次，而有问题的时个会调用多次。
+
+打印的日志是：
+
+[ 1268.188110] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 3, devices 00000008,
+active_devices 00000008
+
+为什么打印一次的时候就闪一下屏，而打印多次的时候就会有黑屏的现象？是什么导致了这个日志有时候会打印多次呢？
+
+现在要分析一下什么情况下会调用 amdgpu_atombios_encoder_dpms ，或者直接加上一个 WARN_ON(1) 来分析这个问题。
+
+调用的地方并不多，如下：
+
+```nil
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3089:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3147:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_ON);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3158:	amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3217:	.dpms = amdgpu_atombios_encoder_dpms,
+drivers/gpu/drm/amd/amdgpu/dce_v6_0.c:3227:	.dpms = amdgpu_atombios_encoder_dpms,
+```
+
+下面这个函数是设置 mode set 的：
+
+```c
+static void
+dce_v6_0_encoder_mode_set(struct drm_encoder *encoder,
+                          struct drm_display_mode *mode,
+                          struct drm_display_mode *adjusted_mode)
+{
+
+        struct amdgpu_encoder *amdgpu_encoder = to_amdgpu_encoder(encoder);
+        int em = amdgpu_atombios_encoder_get_encoder_mode(encoder);
+
+        amdgpu_encoder->pixel_clock = adjusted_mode->clock;
+
+        /* need to call this here rather than in prepare() since we need some crtc info */
+        amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+
+        /* set scaler clears this on some chips */
+        dce_v6_0_set_interleave(encoder->crtc, mode);
+
+        if (em == ATOM_ENCODER_MODE_HDMI || ENCODER_MODE_IS_DP(em)) {
+                dce_v6_0_afmt_enable(encoder, true);
+                dce_v6_0_afmt_setmode(encoder, adjusted_mode);
+        }
+}
+```
+
+下面这个函数是提交的，难道设置完成之后需要再提交一下吗？
+
+```c
+static void dce_v6_0_encoder_commit(struct drm_encoder *encoder)
+{
+
+        struct drm_device *dev = encoder->dev;
+        struct amdgpu_device *adev = dev->dev_private;
+
+        /* need to call this here as we need the crtc set up */
+        amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_ON);
+        amdgpu_atombios_scratch_regs_lock(adev, false);
+}
+```
+
+encoder disable ，这个 encoder 是什么东西？
+
+```c
+static void dce_v6_0_encoder_disable(struct drm_encoder *encoder)
+{
+
+        struct amdgpu_encoder *amdgpu_encoder = to_amdgpu_encoder(encoder);
+        struct amdgpu_encoder_atom_dig *dig;
+        int em = amdgpu_atombios_encoder_get_encoder_mode(encoder);
+
+        amdgpu_atombios_encoder_dpms(encoder, DRM_MODE_DPMS_OFF);
+
+        if (amdgpu_atombios_encoder_is_digital(encoder)) {
+                if (em == ATOM_ENCODER_MODE_HDMI || ENCODER_MODE_IS_DP(em))
+                        dce_v6_0_afmt_enable(encoder, false);
+                dig = amdgpu_encoder->enc_priv;
+                dig->dig_encoder = -1;
+        }
+        amdgpu_encoder->active_device = 0;
+}
+```
+
+dig_helper 这个又是什么东西？
+
+```c
+static const struct drm_encoder_helper_funcs dce_v6_0_dig_helper_funcs = {
+        .dpms = amdgpu_atombios_encoder_dpms,
+        .mode_fixup = amdgpu_atombios_encoder_mode_fixup,
+        .prepare = dce_v6_0_encoder_prepare,
+        .mode_set = dce_v6_0_encoder_mode_set,
+        .commit = dce_v6_0_encoder_commit,
+        .disable = dce_v6_0_encoder_disable,
+        .detect = amdgpu_atombios_encoder_dig_detect,
+};
+```
+
+dac_helper ，这个又是什么东西？
+
+```c
+static const struct drm_encoder_helper_funcs dce_v6_0_dac_helper_funcs = {
+        .dpms = amdgpu_atombios_encoder_dpms,
+        .mode_fixup = amdgpu_atombios_encoder_mode_fixup,
+        .prepare = dce_v6_0_encoder_prepare,
+        .mode_set = dce_v6_0_encoder_mode_set,
+        .commit = dce_v6_0_encoder_commit,
+        .detect = amdgpu_atombios_encoder_dac_detect,
+};
+```
+
+-   drm_encoder
+
+drm_encoder 在 Linux 系统中用于表示显示控制器的硬件模块，负责管理和控制显示信号的生成和传输，以确保图形数据能够正确地显示在相应的显示设备上。
+
+在这个 amdgpu_atombios_encoder_dpms 的函数里面加上 WARN_ON(1) 查看不同情况下的调用者是否有什么不同。
+
+使用 WARN_ON(1) 没有显示出来新的调用信息，难道这块不是内核的内容就无法打开吗？记的不对，那换成 dump_stack();
+这个重新编译一个内核试试。
+
+上层用的是这个函数设置的：
+
+extern Status DPMSForceLevel(Display \*, CARD16);
+
+是 libxext 这个包。下载包，看这个函数的实现：
+
+在 src/DPMS.c 这个文件下：
+
+```c
+Status
+DPMSForceLevel(Display *dpy, CARD16 level)
+{
+    XExtDisplayInfo *info = find_display (dpy);
+    register xDPMSForceLevelReq *req;
+
+    DPMSCheckExtension (dpy, info, 0);
+
+    if ((level != DPMSModeOn) &&
+        (level != DPMSModeStandby) &&
+        (level != DPMSModeSuspend) &&
+        (level != DPMSModeOff))
+        return BadValue;
+
+    LockDisplay(dpy);
+    GetReq(DPMSForceLevel, req);
+    req->reqType = info->codes->major_opcode;
+    req->dpmsReqType = X_DPMSForceLevel;
+    req->level = level;
+
+    UnlockDisplay(dpy);
+    SyncHandle();
+    return 1;
+}
+```
+
+这里面的 SyncHandle 在 X11/Xlibint.h 这个头文件当中：
+
+```c
+#define SyncHandle() \
+        if (dpy->synchandler) (*dpy->synchandler)(dpy)
+
+```
+
+有 SyncHandle 那么是不是还有 AsyncHandle 呢？确实是有的：
+
+有两个，一个是 \_XDeqAsyncHandler ，另外一个是 DeqAsyncHandler 这两个一看就是出队列的。那谁是入队列的呢？
+
+我可以把 X11 的代码放到一个地方，用 tag 来查一下。所有的相关的代码包含哪些？
+
+在 X11 协议中，"dpmsReqType" 是用于控制显示器电源管理的请求类型。根据协议文档，有以下几种 dpmsReqType 的取值：
+
+DPMSGetVersion：获取 DPMS 扩展的版本信息。
+
+DPMSCapable：检查服务器是否支持 DPMS 扩展。
+
+DPMSGetTimeouts：获取当前的 DPMS 超时设置（激活、关闭和关闭后重新打开的超时时间）。
+
+DPMSSetTimeouts：设置 DPMS 的超时时间。
+
+DPMSEnable：启用 DPMS 功能。
+
+DPMSDisable：禁用 DPMS 功能。
+
+DPMSForceLevel：强制设置显示器的电源状态。
+
+DPMSInfo：获取关于显示器电源状态的信息。
+
+这些请求类型用于控制显示器的电源管理行为，例如启用或禁用 DPMS 功能、查询支持的功能和状态、设置超时时间以及强制改变显示器的电源状态等。
+
+需要注意的是，具体实现可能会有所不同，不同的 X11 服务器可能支持不同的请求类型或者有其他自定义的扩展类型。因此，对于特定的 X11 服务器或库，最好参考其相关文档以了解支持的 dpmsReqType 类型。
+
+设置显示器黑屏除了 DPMSForceLevel 外还有别的方法吗？有的。
+
+除了使用 DPMS 扩展的 DPMSForceLevel 命令外，还可以通过其他方式控制显示器黑屏。下面列出几种可能的方法。
+
+调用 XResetScreenSaver 函数：这个函数可以重置屏幕保护程序的计时器，防止显示器进入屏幕保护模式。如果需要让显示器立即停止显示内容，可以反复调用该函数并传入一个较小的时间值，例如 1 秒。
+
+使用 X11 的 RandR 扩展：RandR（Resize and Rotate）是 X11 的一个扩展，它可以让客户端程序在运行时改变显示器的分辨率和方向。RandR 扩展中包含了一些控制显示器电源管理的命令，例如 RROutputSetDPMSMode
+和 RROutputSetProperty。通过调用这些命令，可以实现关闭显示器或者使其进入省电模式。
+
+调用显卡驱动程序提供的 API：显卡驱动程序通常会提供一些 API，用于控制显示器的电源管理行为。例如，NVIDIA
+ 的 Linux 显卡驱动程序提供了 nvidia-settings 命令行工具，可以用于配置和控制 NVIDIA 显卡的各种设置，包括显示器电源管理。
+
+需要注意的是，这些方法的实现可能会因操作系统、显卡驱动程序和硬件配置等因素而异。在实际开发中，应该根据具体的需求选择最合适的方法，并参考相关文档以确保其在目标平台上的可用性。
+
+看现象有可能是调用了 XResetScreenSaver 这个函数。但是有的时候不调用，有的时候调用。
+
+x_all 下搜 XSetScreenSaver 这个函数：
+
+```c
+/** Initialize DPMS support.  We save the current settings and turn off
+ * DPMS.  The settings are restored in #dmxDPMSTerm. */
+int
+dmxDPMSInit(DMXScreenInfo * dmxScreen)
+{
+    int interval, preferBlanking, allowExposures;
+
+    /* Turn off DPMS */
+    if (!_dmxDPMSInit(dmxScreen))
+        return FALSE;
+
+    if (!dmxScreen->beDisplay)
+        return FALSE;
+
+    /* Turn off screen saver */
+    XGetScreenSaver(dmxScreen->beDisplay, &dmxScreen->savedTimeout, &interval,
+                    &preferBlanking, &allowExposures);
+    XSetScreenSaver(dmxScreen->beDisplay, 0, interval,
+                    preferBlanking, allowExposures);
+    XResetScreenSaver(dmxScreen->beDisplay);
+    dmxSync(dmxScreen, FALSE);
+    return TRUE;
+}
+```
+
+Distributed Multihead X（dmx）服务器是 X Window System 的一个组件，用于将多个物理显示器组合成一个虚拟的大显示器。它允许用户在多个计算机上连接多个显示器，并将它们视为一个逻辑上连续的显示区域。
+
+我怀疑是这里走到了不同的分支了，所以有时候黑屏，有时候不黑屏。那可以加个日志看看，但是 xorg 我不知道怎么编译和加日志，先尝试一下看看。
+
+xserver-xorg-core 这个是有 debug 包的，那我能不能安装了 debug 包用 gdb 来调试一下看看是进入了哪个分支呢？理论上应该是可以的。那能不能用 bpf-trace 呢？这个和内核有关，好像没什么关系。
+
+方向不对，这个 xdmx 这个是个 x11 的插件，并没有安装，方向是错的。
+
+在从 startdde 看一下：
+
+{{< figure src="/ox-hugo/img_20231122_175228.jpg" >}}
+
+dde_wldpms 这个东西不是在 X11 下使用的，这个也排除了。
+
+就省下一个函数要看了：
+
+```go
+func setDPMSMode(on bool) {
+        var err error
+        if _useWayland {
+                if !on {
+                        _, err = exec.Command("dde_wldpms", "-s", "Off").Output()
+                } else {
+                        _, err = exec.Command("dde_wldpms", "-s", "On").Output()
+                }
+        } else {
+                var mode = uint16(dpms.DPMSModeOn)
+                if !on {
+                        mode = uint16(dpms.DPMSModeOff)
+                }
+                err = dpms.ForceLevelChecked(_xConn, mode).Check(_xConn)
+        }
+
+        if err != nil {
+                logger.Warning("Failed to set dpms mode:", on, err)
+        }
+}
+```
+
+ForceLevelChecked 这个函数。这个函数调用了多次，可以在这个地方加一下打印？
+
+{{< figure src="/ox-hugo/img_20231122_175958.jpg" >}}
+
+看了 syslog 的日志中有 startdde 的，但是感觉又不像是上层导致的内核出现多次的打印，再继续分析 drm
+框架的调用过程吧。
+
+```c
+#ifdef CONFIG_LOCKDEP
+static struct lockdep_map connector_list_iter_dep_map = {
+        .name = "drm_connector_list_iter"
+};
+#endif
+
+// ......
+
+/**
+ * drm_connector_list_iter_begin - initialize a connector_list iterator
+ * @dev: DRM device
+ * @iter: connector_list iterator
+ *
+ * Sets @iter up to walk the &drm_mode_config.connector_list of @dev. @iter
+ * must always be cleaned up again by calling drm_connector_list_iter_end().
+ * Iteration itself happens using drm_connector_list_iter_next() or
+ * drm_for_each_connector_iter().
+ */
+void drm_connector_list_iter_begin(struct drm_device *dev,
+                                   struct drm_connector_list_iter *iter)
+{
+        iter->dev = dev;
+        iter->conn = NULL;
+        lock_acquire_shared_recursive(&connector_list_iter_dep_map, 0, 1, NULL, _RET_IP_);
+}
+EXPORT_SYMBOL(drm_connector_list_iter_begin);
+```
+
+```c
+/**
+ * drm_crtc_helper_set_config - set a new config from userspace
+ * @set: mode set configuration
+ * @ctx: lock acquire context, not used here
+ *
+ * The drm_crtc_helper_set_config() helper function implements the of
+ * &drm_crtc_funcs.set_config callback for drivers using the legacy CRTC
+ * helpers.
+ *
+ * It first tries to locate the best encoder for each connector by calling the
+ * connector @drm_connector_helper_funcs.best_encoder helper operation.
+ *
+ * After locating the appropriate encoders, the helper function will call the
+ * mode_fixup encoder and CRTC helper operations to adjust the requested mode,
+ * or reject it completely in which case an error will be returned to the
+ * application. If the new configuration after mode adjustment is identical to
+ * the current configuration the helper function will return without performing
+ * any other operation.
+ *
+ * If the adjusted mode is identical to the current mode but changes to the
+ * frame buffer need to be applied, the drm_crtc_helper_set_config() function
+ * will call the CRTC &drm_crtc_helper_funcs.mode_set_base helper operation.
+ *
+ * If the adjusted mode differs from the current mode, or if the
+ * ->mode_set_base() helper operation is not provided, the helper function
+ * performs a full mode set sequence by calling the ->prepare(), ->mode_set()
+ * and ->commit() CRTC and encoder helper operations, in that order.
+ * Alternatively it can also use the dpms and disable helper operations. For
+ * details see &struct drm_crtc_helper_funcs and struct
+ * &drm_encoder_helper_funcs.
+ *
+ * This function is deprecated.  New drivers must implement atomic modeset
+ * support, for which this function is unsuitable. Instead drivers should use
+ * drm_atomic_helper_set_config().
+ *
+ * Returns:
+ * Returns 0 on success, negative errno numbers on failure.
+ */
+int drm_crtc_helper_set_config(struct drm_mode_set *set,
+                               struct drm_modeset_acquire_ctx *ctx)
+{
+        struct drm_device *dev;
+        struct drm_crtc **save_encoder_crtcs, *new_crtc;
+        struct drm_encoder **save_connector_encoders, *new_encoder, *encoder;
+        bool mode_changed = false; /* if true do a full mode set */
+        bool fb_changed = false; /* if true and !mode_changed just do a flip */
+        struct drm_connector *connector;
+        struct drm_connector_list_iter conn_iter;
+        int count = 0, ro, fail = 0;
+        const struct drm_crtc_helper_funcs *crtc_funcs;
+        struct drm_mode_set save_set;
+        int ret;
+        int i;
+
+        DRM_DEBUG_KMS("\n");
+
+        BUG_ON(!set);
+        BUG_ON(!set->crtc);
+        BUG_ON(!set->crtc->helper_private);
+
+        /* Enforce sane interface api - has been abused by the fb helper. */
+        BUG_ON(!set->mode && set->fb);
+        BUG_ON(set->fb && set->num_connectors == 0);
+
+        crtc_funcs = set->crtc->helper_private;
+
+        if (!set->mode)
+                set->fb = NULL;
+
+        if (set->fb) {
+                DRM_DEBUG_KMS("[CRTC:%d:%s] [FB:%d] #connectors=%d (x y) (%i %i)\n",
+                              set->crtc->base.id, set->crtc->name,
+                              set->fb->base.id,
+                              (int)set->num_connectors, set->x, set->y);
+        } else {
+                DRM_DEBUG_KMS("[CRTC:%d:%s] [NOFB]\n",
+                              set->crtc->base.id, set->crtc->name);
+                drm_crtc_helper_disable(set->crtc);
+                return 0;
+        }
+
+        dev = set->crtc->dev;
+
+        drm_warn_on_modeset_not_all_locked(dev);
+
+        /*
+         * Allocate space for the backup of all (non-pointer) encoder and
+         * connector data.
+         */
+        save_encoder_crtcs = kcalloc(dev->mode_config.num_encoder,
+                                sizeof(struct drm_crtc *), GFP_KERNEL);
+        if (!save_encoder_crtcs)
+                return -ENOMEM;
+
+        save_connector_encoders = kcalloc(dev->mode_config.num_connector,
+                                sizeof(struct drm_encoder *), GFP_KERNEL);
+        if (!save_connector_encoders) {
+                kfree(save_encoder_crtcs);
+                return -ENOMEM;
+        }
+
+        /*
+         * Copy data. Note that driver private data is not affected.
+         * Should anything bad happen only the expected state is
+         * restored, not the drivers personal bookkeeping.
+         */
+        count = 0;
+        drm_for_each_encoder(encoder, dev) {
+                save_encoder_crtcs[count++] = encoder->crtc;
+        }
+
+        count = 0;
+        drm_connector_list_iter_begin(dev, &conn_iter);
+        drm_for_each_connector_iter(connector, &conn_iter)
+                save_connector_encoders[count++] = connector->encoder;
+        drm_connector_list_iter_end(&conn_iter);
+
+        save_set.crtc = set->crtc;
+        save_set.mode = &set->crtc->mode;
+        save_set.x = set->crtc->x;
+        save_set.y = set->crtc->y;
+        save_set.fb = set->crtc->primary->fb;
+
+        /* We should be able to check here if the fb has the same properties
+         * and then just flip_or_move it */
+        if (set->crtc->primary->fb != set->fb) {
+                /* If we have no fb then treat it as a full mode set */
+                if (set->crtc->primary->fb == NULL) {
+                        DRM_DEBUG_KMS("crtc has no fb, full mode set\n");
+                        mode_changed = true;
+                } else if (set->fb->format != set->crtc->primary->fb->format) {
+                        mode_changed = true;
+                } else
+                        fb_changed = true;
+        }
+
+        if (set->x != set->crtc->x || set->y != set->crtc->y)
+                fb_changed = true;
+
+        if (!drm_mode_equal(set->mode, &set->crtc->mode)) {
+                DRM_DEBUG_KMS("modes are different, full mode set\n");
+                drm_mode_debug_printmodeline(&set->crtc->mode);
+                drm_mode_debug_printmodeline(set->mode);
+                mode_changed = true;
+        }
+
+        /* take a reference on all unbound connectors in set, reuse the
+         * already taken reference for bound connectors
+         */
+        for (ro = 0; ro < set->num_connectors; ro++) {
+                if (set->connectors[ro]->encoder)
+                        continue;
+                drm_connector_get(set->connectors[ro]);
+        }
+
+        /* a) traverse passed in connector list and get encoders for them */
+        count = 0;
+        drm_connector_list_iter_begin(dev, &conn_iter);
+        drm_for_each_connector_iter(connector, &conn_iter) {
+                const struct drm_connector_helper_funcs *connector_funcs =
+                        connector->helper_private;
+                new_encoder = connector->encoder;
+                for (ro = 0; ro < set->num_connectors; ro++) {
+                        if (set->connectors[ro] == connector) {
+                                new_encoder = connector_funcs->best_encoder(connector);
+                                /* if we can't get an encoder for a connector
+                                   we are setting now - then fail */
+                                if (new_encoder == NULL)
+                                        /* don't break so fail path works correct */
+                                        fail = 1;
+
+                                if (connector->dpms != DRM_MODE_DPMS_ON) {
+                                        DRM_DEBUG_KMS("connector dpms not on, full mode switch\n");
+                                        mode_changed = true;
+                                }
+
+                                break;
+                        }
+                }
+
+                if (new_encoder != connector->encoder) {
+                        DRM_DEBUG_KMS("encoder changed, full mode switch\n");
+                        mode_changed = true;
+                        /* If the encoder is reused for another connector, then
+                         * the appropriate crtc will be set later.
+                         */
+                        if (connector->encoder)
+                                connector->encoder->crtc = NULL;
+                        connector->encoder = new_encoder;
+                }
+        }
+        drm_connector_list_iter_end(&conn_iter);
+
+        if (fail) {
+                ret = -EINVAL;
+                goto fail;
+        }
+
+        count = 0;
+        drm_connector_list_iter_begin(dev, &conn_iter);
+        drm_for_each_connector_iter(connector, &conn_iter) {
+                if (!connector->encoder)
+                        continue;
+
+                if (connector->encoder->crtc == set->crtc)
+                        new_crtc = NULL;
+                else
+                        new_crtc = connector->encoder->crtc;
+
+                for (ro = 0; ro < set->num_connectors; ro++) {
+                        if (set->connectors[ro] == connector)
+                                new_crtc = set->crtc;
+                }
+
+                /* Make sure the new CRTC will work with the encoder */
+                if (new_crtc &&
+                    !drm_encoder_crtc_ok(connector->encoder, new_crtc)) {
+                        ret = -EINVAL;
+                        drm_connector_list_iter_end(&conn_iter);
+                        goto fail;
+                }
+                if (new_crtc != connector->encoder->crtc) {
+                        DRM_DEBUG_KMS("crtc changed, full mode switch\n");
+                        mode_changed = true;
+                        connector->encoder->crtc = new_crtc;
+                }
+                if (new_crtc) {
+                        DRM_DEBUG_KMS("[CONNECTOR:%d:%s] to [CRTC:%d:%s]\n",
+                                      connector->base.id, connector->name,
+                                      new_crtc->base.id, new_crtc->name);
+                } else {
+                        DRM_DEBUG_KMS("[CONNECTOR:%d:%s] to [NOCRTC]\n",
+                                      connector->base.id, connector->name);
+                }
+        }
+        drm_connector_list_iter_end(&conn_iter);
+
+        /* mode_set_base is not a required function */
+        if (fb_changed && !crtc_funcs->mode_set_base)
+                mode_changed = true;
+
+        if (mode_changed) {
+                if (drm_helper_crtc_in_use(set->crtc)) {
+                        DRM_DEBUG_KMS("attempting to set mode from"
+                                        " userspace\n");
+                        drm_mode_debug_printmodeline(set->mode);
+                        set->crtc->primary->fb = set->fb;
+                        if (!drm_crtc_helper_set_mode(set->crtc, set->mode,
+                                                      set->x, set->y,
+                                                      save_set.fb)) {
+                                DRM_ERROR("failed to set mode on [CRTC:%d:%s]\n",
+                                          set->crtc->base.id, set->crtc->name);
+                                set->crtc->primary->fb = save_set.fb;
+                                ret = -EINVAL;
+                                goto fail;
+                        }
+                        DRM_DEBUG_KMS("Setting connector DPMS state to on\n");
+                        for (i = 0; i < set->num_connectors; i++) {
+                                DRM_DEBUG_KMS("\t[CONNECTOR:%d:%s] set DPMS on\n", set->connectors[i]->base.id,
+                                              set->connectors[i]->name);
+                                set->connectors[i]->funcs->dpms(set->connectors[i], DRM_MODE_DPMS_ON);
+                        }
+                }
+                __drm_helper_disable_unused_functions(dev);
+        } else if (fb_changed) {
+                set->crtc->x = set->x;
+                set->crtc->y = set->y;
+                set->crtc->primary->fb = set->fb;
+                ret = crtc_funcs->mode_set_base(set->crtc,
+                                                set->x, set->y, save_set.fb);
+                if (ret != 0) {
+                        set->crtc->x = save_set.x;
+                        set->crtc->y = save_set.y;
+                        set->crtc->primary->fb = save_set.fb;
+                        goto fail;
+                }
+        }
+
+        kfree(save_connector_encoders);
+        kfree(save_encoder_crtcs);
+        return 0;
+
+fail:
+        /* Restore all previous data. */
+        count = 0;
+        drm_for_each_encoder(encoder, dev) {
+                encoder->crtc = save_encoder_crtcs[count++];
+        }
+
+        count = 0;
+        drm_connector_list_iter_begin(dev, &conn_iter);
+        drm_for_each_connector_iter(connector, &conn_iter)
+                connector->encoder = save_connector_encoders[count++];
+        drm_connector_list_iter_end(&conn_iter);
+
+        /* after fail drop reference on all unbound connectors in set, let
+         * bound connectors keep their reference
+         */
+        for (ro = 0; ro < set->num_connectors; ro++) {
+                if (set->connectors[ro]->encoder)
+                        continue;
+                drm_connector_put(set->connectors[ro]);
+        }
+
+        /* Try to restore the config */
+        if (mode_changed &&
+            !drm_crtc_helper_set_mode(save_set.crtc, save_set.mode, save_set.x,
+                                      save_set.y, save_set.fb))
+                DRM_ERROR("failed to restore config after modeset failure\n");
+
+        kfree(save_connector_encoders);
+        kfree(save_encoder_crtcs);
+        return ret;
+}
+EXPORT_SYMBOL(drm_crtc_helper_set_config);
+```
+
+{{< figure src="/ox-hugo/img_20231123_104321.jpg" >}}
+
+现在就是要找什么时个会调用多次，这个很重要。
+
+```c
+static void dce_v6_0_crtc_dpms(struct drm_crtc *crtc, int mode)
+{
+        struct drm_device *dev = crtc->dev;
+        struct amdgpu_device *adev = dev->dev_private;
+        struct amdgpu_crtc *amdgpu_crtc = to_amdgpu_crtc(crtc);
+        unsigned type;
+
+        switch (mode) {
+        case DRM_MODE_DPMS_ON:
+                amdgpu_crtc->enabled = true;
+                amdgpu_atombios_crtc_enable(crtc, ATOM_ENABLE);
+                amdgpu_atombios_crtc_blank(crtc, ATOM_DISABLE);
+                /* Make sure VBLANK and PFLIP interrupts are still enabled */
+                type = amdgpu_display_crtc_idx_to_irq_type(adev,
+                                                amdgpu_crtc->crtc_id);
+                amdgpu_irq_update(adev, &adev->crtc_irq, type);
+                amdgpu_irq_update(adev, &adev->pageflip_irq, type);
+                drm_crtc_vblank_on(crtc);
+                dce_v6_0_crtc_load_lut(crtc);
+                break;
+        case DRM_MODE_DPMS_STANDBY:
+        case DRM_MODE_DPMS_SUSPEND:
+        case DRM_MODE_DPMS_OFF:
+                drm_crtc_vblank_off(crtc);
+                if (amdgpu_crtc->enabled)
+                        amdgpu_atombios_crtc_blank(crtc, ATOM_ENABLE);
+                amdgpu_atombios_crtc_enable(crtc, ATOM_DISABLE);
+                amdgpu_crtc->enabled = false;
+                break;
+        }
+        /* adjust pm to dpms */
+        amdgpu_pm_compute_clocks(adev);
+}
+```
+
+我看的代码是内核的代码，而机器上使用的是 amdgpu_dkms 的代码，在内核当中搜不到，那么从 dkms 的代码当中看看。如果还是没有，那就非常的奇怪了。
+
+最诡异的是找不到 drm_crtc_helper_set_config 这个函数的调用者是谁。
+
+使用 bpftrace 来分析一下这个工具。
+
+```nil
+uos@uos-PC:~$ sudo stackcount-bpfcc drm_crtc_helper_set_config
+请输入密码:
+验证成功
+Tracing 1 functions for "drm_crtc_helper_set_config"... Hit Ctrl-C to end.
+^C
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [3966]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [972]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [972]
+    1
+
+Detaching...
+```
+
+有问题的时候是这样的：
+
+```nil
+uos@uos-PC:~$ sudo stackcount-bpfcc drm_crtc_helper_set_config
+Tracing 1 functions for "drm_crtc_helper_set_config"... Hit Ctrl-C to end.
+^C
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [3966]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_crtc_force_disable
+  drm_framebuffer_remove
+  drm_mode_rmfb_work_fn
+  process_one_work
+  worker_thread
+  kthread
+  ret_from_fork
+    kworker/7:0 [14323]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [972]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [3966]
+    1
+
+Detaching...
+```
+
+经过多次测试，很明确的是 kworker 导致了多次的调用。drm_mode_rmfb_work_fn ，这个函数在什么情况下会触发？这个函数的调用者是 drm_mode_rmfb 和 drm_fb_release 这两个函数。再往上找应该就是真正的原因了。
+
+drm_mode_rmfb 的调用栈也可以用 bpftrace 来试一下。也可以 emacs 看代码分析一下。要不还 bpf 试一下吧。
+
+drm_client_buffer_rmfb
+
+drm_client_framebuffer_delete
+
+drm_fbdev_cleanup
+
+drm_fbdev_release 和 drm_fbdev_client_hotplug ，显然用的是 release 这个。
+
+drm_fbdev_fb_destroy
+
+```nil
+uos@uos-PC:~$ sudo stackcount-bpfcc drm_fb_release
+Tracing 1 functions for "drm_fb_release"... Hit Ctrl-C to end.
+^C
+  drm_fb_release
+  drm_file_free.part.5
+  drm_release
+  __fput
+  task_work_run
+  exit_to_usermode_loop
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  __close
+    dde-blackwidget [9780]
+    1
+
+  drm_fb_release
+  drm_file_free.part.5
+  drm_release
+  __fput
+  task_work_run
+  exit_to_usermode_loop
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  __close
+  [unknown]
+  [unknown]
+  [unknown]
+    dde-blackwidget [9780]
+    1
+
+Detaching...
+```
+
+现在现象有三种，不闪烁，闪一下，和黑屏一段时间，上面的这种是后两种情况出现的。看起来和 dde-blackwidget 这个有关系。
+
+通过 gdb 调试，发现多次调用 drmModeRmFB ，这个函数是 libdrm 的函数。调用者往前找是
+
+{{< figure src="/ox-hugo/img_20231124_164822.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 2: </span>/ 第一次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
+
+{{< figure src="/ox-hugo/img_20231124_165440.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 3: </span>/ 第二次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
+
+为什么会多次调用，我的目的始终是找到这个问题的源头。
+
+看代码，对比。
+
+问题好像找到了，if (!info-&gt;shadow_fb) 这个判断可能是问题的根因。在没有出错的情况下没有这个调用的话。
+AMDGPULeaveVT_KMS 每次离开的时候都会调用一次。这个怀疑的点是很好的，现在就是怎么编译一套代码做替换，这个不仅仅是 xorg ，还有别的包。有人绐了我一个编译的脚本，研究一下。
+
+编译 xserver-xorg-video-amdgpu 时报了一个奇怪的错误，syntax error near unexpected token \`RANDR,' ，这个错误居然是没有装 xorg-dev ，参见下面：
+
+<https://github.com/merge/xf86-input-tslib/issues/9>
+
+```bash
+CPU_PLATFORM="x86_64-linux-gnu"
+BIN_DEPLOY_PATH="/home/uos/xorg-deploy"
+modules_DEPLOY_PATH=$BIN_DEPLOY_PATH/lib/$CPU_PLATFORM/xorg/modules
+DRIVER_PATH=$modules_DEPLOY_PATH/drivers
+INPUT_PATH=$modules_DEPLOY_PATH/input
+
+SRC_PATH="/home/uos/wangxinbo/src/xorg-server"
+
+echo ">>>>>> modules_DEPLOY_PATH "$modules_DEPLOY_PATH
+echo ">>>>>> DRIVER_PATH "$DRIVER_PATH
+echo ">>>>>> INPUT_PATH "$INPUT_PATH
+
+#  编译xorg
+cd $SRC_PATH
+export PKG_CONFIG_PATH=$BIN_DEPLOY_PATH/share/pkgconfig:$BIN_DEPLOY_PATH/lib/pkgconfig:$PKG_CONFIG_PATH
+meson build --prefix=$BIN_DEPLOY_PATH
+cd build
+ninja
+ninja install
+
+echo ">>>>>> xorg build finished"
+
+# 安装XKB
+if [ ! -d "$BIN_DEPLOY_PATH/share/X11/" ]; then
+mkdir -p $BIN_DEPLOY_PATH/share/X11/
+cp -r /usr/share/X11/xkb/ $BIN_DEPLOY_PATH/share/X11/
+cd $BIN_DEPLOY_PATH/bin/
+ln -s /usr/bin/xkbcomp  ./xkbcomp
+echo ">>>>>> XKB installing finished"
+fi
+
+
+
+# 安装video driver
+if [ ! -d "$DRIVER_PATH" ]; then
+mkdir -p $DRIVER_PATH
+cp /usr/lib/xorg/modules/drivers/* $DRIVER_PATH
+echo ">>>>>> video driver installing finished"
+fi
+
+# 安装input driver
+if [ ! -d "$INPUT_PATH" ]; then
+mkdir -p $INPUT_PATH
+cp /usr/lib/xorg/modules/input/* $INPUT_PATH
+echo ">>>>>> input driver installing finished"
+fi
+
+# 创建log日志
+if [ ! -f "$BIN_DEPLOY_PATH" ]; then
+mkdir -p $BIN_DEPLOY_PATH/var/log
+echo ">>>>>> log path created"
+fi
+
+# 安装ddx驱动配置
+if [ ! -f "$BIN_DEPLOY_PATH/share/X11/xorg.conf.d" ]; then
+mkdir -p $BIN_DEPLOY_PATH/share/X11/xorg.conf.d
+cp /usr/share/X11/xorg.conf.d/* $BIN_DEPLOY_PATH/share/X11/xorg.conf.d
+echo ">>>>>> ddx config file installing finished"
+fi
+```
+
+用编译完成的 amdgpu_drv.so 替换系统下原有的：
+
+/usr/lib/xorg/modules/drivers/amdgpu_drv.so ，这样的话应该就能够对应的上代码了吧。
+
+替换完成后重启。用 gdb 调试，每次的调用是否是一样的呢？只针对 AMDGPULeaveVT_KM 这个函数确实每次都是一样的。
+
+intel 集显也会偶尔出现黑屏的现象。签于 amd 显卡测试的现象不稳定，可以用 intel 的分析一下。还有一个思路就是换早期版本的 UOS 镜像，下载下来测试一下，看看有没有问题。
+
+intel 显卡没有测试出来黑屏一段时间。
+
+回到之间的思路，还是一个问题。
+
+```nil
+uos@uos-PC:~$ sudo stackcount-bpfcc drm_crtc_helper_set_config
+Tracing 1 functions for "drm_crtc_helper_set_config"... Hit Ctrl-C to end.
+^C
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_crtc_force_disable
+  drm_framebuffer_remove
+  drm_mode_rmfb_work_fn
+  process_one_work
+  worker_thread
+  kthread
+  ret_from_fork
+    kworker/4:3 [8160]
+    1
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [893]
+    11
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [4491]
+    11
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [893]
+    22
+
+  drm_crtc_helper_set_config
+  amdgpu_display_crtc_set_config
+  __drm_mode_set_config_internal
+  drm_mode_setcrtc
+  drm_ioctl_kernel
+  drm_ioctl
+  amdgpu_drm_ioctl
+  do_vfs_ioctl
+  ksys_ioctl
+  __x64_sys_ioctl
+  do_syscall_64
+  entry_SYSCALL_64_after_hwframe
+  ioctl
+  [unknown]
+    Xorg [4491]
+    22
+
+Detaching...
+```
+
+
+## 关于 mesa 和 amdgpu umd 驱动 {#关于-mesa-和-amdgpu-umd-驱动}
+
+<https://cloud.tencent.com/developer/article/2206046>
+
+umd 的驱动在哪里？
+
+amdgpu 的 umd 驱动有两个包，一个是 libdrm 中的 amdgpu 部分，一个是 xserver-xorg-video-amdgpu 这个部分。切换用户的时候不会从新加载驱动程序，只会只需要进行与 UMD 驱动的交互，以获取 GPU 访问权限并使用已初始化好的 UMD 库进行图形操作。
+
+
+## 这个函数的 WARN 没有显示出来新的调用信息 {#这个函数的-warn-没有显示出来新的调用信息}
+
+```c
+void drm_framebuffer_remove(struct drm_framebuffer *fb)
+{
+        struct drm_device *dev;
+
+        if (!fb)
+                return;
+
+        dev = fb->dev;
+
+        WARN_ON(!list_empty(&fb->filp_head));
+
+        /*
+         * drm ABI mandates that we remove any deleted framebuffers from active
+         * useage. But since most sane clients only remove framebuffers they no
+         * longer need, try to optimize this away.
+         *
+         * Since we're holding a reference ourselves, observing a refcount of 1
+         * means that we're the last holder and can skip it. Also, the refcount
+         * can never increase from 1 again, so we don't need any barriers or
+         * locks.
+         *
+         * Note that userspace could try to race with use and instate a new
+         * usage _after_ we've cleared all current ones. End result will be an
+         * in-use fb with fb-id == 0. Userspace is allowed to shoot its own foot
+         * in this manner.
+         */
+        if (drm_framebuffer_read_refcount(fb) > 1) {
+                if (drm_drv_uses_atomic_modeset(dev)) {
+                        int ret = atomic_remove_fb(fb);
+                        WARN(ret, "atomic remove_fb failed with %i\n", ret);
+                } else
+                        legacy_remove_fb(fb);
+        }
+
+        drm_framebuffer_put(fb);
+}
+EXPORT_SYMBOL(drm_framebuffer_remove);
+```
+
+
+## 模拟错误的产生 {#模拟错误的产生}
+
+(1) 看看是不是走到了这个分支里面去，理解代码。
+
+```c
+static void legacy_remove_fb(struct drm_framebuffer *fb)
+{
+        struct drm_device *dev = fb->dev;
+        struct drm_crtc *crtc;
+        struct drm_plane *plane;
+
+        drm_modeset_lock_all(dev);
+        /* remove from any CRTC */
+        drm_for_each_crtc(crtc, dev) {
+                if (crtc->primary->fb == fb) {
+                        /* should turn off the crtc */
+                        if (drm_crtc_force_disable(crtc))
+                                DRM_ERROR("failed to reset crtc %p when fb was deleted\n", crtc);
+                }
+        }
+
+        drm_for_each_plane(plane, dev) {
+                if (plane->fb == fb)
+                        drm_plane_force_disable(plane);
+        }
+        drm_modeset_unlock_all(dev);
+}
+```
+
+(2) 看看是不是走到了分支 legacy_remove_fb(fb) 这里去了，加一下打印。是的。
+
+```c
+void drm_framebuffer_remove(struct drm_framebuffer *fb)
+{
+        struct drm_device *dev;
+
+        if (!fb)
+                return;
+
+        dev = fb->dev;
+
+        WARN_ON(!list_empty(&fb->filp_head));
+
+        /*
+         * drm ABI mandates that we remove any deleted framebuffers from active
+         * useage. But since most sane clients only remove framebuffers they no
+         * longer need, try to optimize this away.
+         *
+         * Since we're holding a reference ourselves, observing a refcount of 1
+         * means that we're the last holder and can skip it. Also, the refcount
+         * can never increase from 1 again, so we don't need any barriers or
+         * locks.
+         *
+         * Note that userspace could try to race with use and instate a new
+         * usage _after_ we've cleared all current ones. End result will be an
+         * in-use fb with fb-id == 0. Userspace is allowed to shoot its own foot
+         * in this manner.
+         */
+        if (drm_framebuffer_read_refcount(fb) > 1) {
+                if (drm_drv_uses_atomic_modeset(dev)) {
+                        int ret = atomic_remove_fb(fb);
+                        WARN(ret, "atomic remove_fb failed with %i\n", ret);
+                } else
+                        legacy_remove_fb(fb);
+        }
+
+        drm_framebuffer_put(fb);
+}
+EXPORT_SYMBOL(drm_framebuffer_remove);
+```
+
+bpf 查一下 legacy_remove_fb 这个函数的调用。不能查，加打印，发现确实是调用的 legacy 接口。
+
+问题是解释清楚这个过程出现的原因。这样这个 bug 才能说明清楚。
+
+
+## 用加延时的方法来测试 {#用加延时的方法来测试}
+
+(1) 加延时的意思是什么？
+
+(2) 删除所有的 fb 的原因是什么？
+
+```c
+static void drm_mode_rmfb_work_fn(struct work_struct *w)
+{
+        struct drm_mode_rmfb_work *arg = container_of(w, typeof(*arg), work);
+
+        while (!list_empty(&arg->fbs)) {
+                struct drm_framebuffer *fb =
+                        list_first_entry(&arg->fbs, typeof(*fb), filp_head);
+
+                list_del_init(&fb->filp_head);
+                drm_framebuffer_remove(fb);
+        }
+}
+```
+
+正常的情况下只会删除自己的一个 fb 。异常的时候才会删除所有的 fb 。
+
+把这些 fb 打印出来，找到这些 fb 的上层是谁在持有。
+
+(3) gdb 调试的时候 xorg 会收到信号，是什么信号呢？
+
+Thread 1 "Xorg" received signal SIGUSR1, User defined signal 1.
+0x00007f662a834aff in epoll_wait (epfd=3, events=0x7ffdbe20c8b0, maxevents=256, timeout=-1)
+    at ../sysdeps/unix/sysv/linux/epoll_wait.c:30
+30	in ../sysdeps/unix/sysv/linux/epoll_wait.c
+
+这个信号是 xorg 重新加载配置的信号。这个时候要看 xorg 的代码了。
+
+(4) 怎么模拟 xorg 处理信号？
+
+kill -SIGUSR1 915
+
+用这个命令有的时候可以模拟出来黑屏的效果，可以认为是这个信号调用有时候会引起黑屏。
+
+用 CRASH 来处理一下。或者用 gdb 跟一下看一下这个信号来怎么处理的，内核态返回用户态的时候会有信号。
+
+(5) 再往下分析的话要分析，什么情况下会出现“信号”处理不过来的情况。
+
+是真的信号处理不过来了吗？还是其它的原因？
+
+在 Linux 内核中，work_struct 结构体是表示工作队列（work queue）中的一个工作项（work item）。工作队列是一种异步执行任务的机制，在后台执行耗时的操作或延迟处理。它是内核中非常常用的一种机制，广泛应用于各种驱动程序和子系统中。
+
+一直搞不清楚，rm 的 fb 到底是哪里来的。先不管怎么来的，先打印一下，看看有几个 fb ，这之后再分析。也是一个 fb ，并没有多个 fb 需要销毁。所以应该和个数没有什么关系。
+
+内核进程销毁是通过调用这三行：
+
+```c
+struct drm_framebuffer *fb =
+                        list_first_entry(&arg->fbs, typeof(*fb), filp_head);
+
+                list_del_init(&fb->filp_head);
+                drm_framebuffer_remove(fb);
+```
+
+这个函数： void drm_framebuffer_put(struct drm_framebuffer \*fb); 他的作用是将 framebuffer 的引用计数加 1 ，如果引用计数是 0 的话就释放 framebuffer 。
+
+上面的逻辑看清楚了之后，就明白了。
+
+如何找到 fb 的引用者？这个信息怎么获取到？
+
+占老板让看：/sys/kernel/debug/dri/0/clients 这个文件。
+
+GPT 让我看： _sys/kernel/debug/fb_ 但是这个文件没有找到。
+
+又查到可以用 SystemTap 来追踪 fb 的引用者。需要安装内核的 debug 包。
+
+这个追踪遇到了一点问题。
+
+用 drgn 或者 gdb 的调试脚本，找一下，可能申请 fb 引用的地方，这些地方还是看代码。
+
+用 systemtap 调试要写一些调试脚本，不是太好用的样子，尝试 probe 写了几个 drm fb 相关的函数都不能用。
+
+/sys/kernel/debug/dri/0/framebuffer 这个中的内容看起来很像是有东西。
+
+sudo apt-get install inotify-tools
+
+用这个工具来监视文件的变化。inotifywait -m -r _sys/kernel_ ，发现在切换用户的时候这个文件没有变化。
+
+那要想其它的办法了。
+
+能通过 gdb 或都 ebpf 找到更多的信息吗？gdb 加脚本，或者是
