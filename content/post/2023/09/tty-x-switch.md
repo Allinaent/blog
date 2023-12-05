@@ -2,7 +2,7 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2023-12-05T11:43:42+08:00
+lastmod = 2023-12-05T11:46:29+08:00
 tags = ["gpu"]
 categories = ["technology"]
 draft = false
@@ -2433,9 +2433,9 @@ struct drm_framebuffer *fb =
 
 如何找到 fb 的引用者？这个信息怎么获取到？
 
-占老板让看：/sys/kernel/debug/dri/0/clients 这个文件。
+占老板让看： `= /sys/kernel/debug/dri/0/clients =` 这个文件。
 
-GPT 让我看： _sys/kernel/debug/fb_ 但是这个文件没有找到。
+GPT 让我看： `= /sys/kernel/debug/fb/ =` 但是这个文件没有找到。
 
 又查到可以用 SystemTap 来追踪 fb 的引用者。需要安装内核的 debug 包。
 
@@ -2445,11 +2445,11 @@ GPT 让我看： _sys/kernel/debug/fb_ 但是这个文件没有找到。
 
 用 systemtap 调试要写一些调试脚本，不是太好用的样子，尝试 probe 写了几个 drm fb 相关的函数都不能用。
 
-/sys/kernel/debug/dri/0/framebuffer 这个中的内容看起来很像是有东西。
+`= /sys/kernel/debug/dri/0/framebuffer =` 这个中的内容看起来很像是有东西。
 
 sudo apt-get install inotify-tools
 
-用这个工具来监视文件的变化。inotifywait -m -r _sys/kernel_ ，发现在切换用户的时候这个文件没有变化。
+用这个工具来监视文件的变化。inotifywait -m -r `= /sys/kernel/ =` ，发现在切换用户的时候这个文件没有变化。
 
 那要想其它的办法了。
 
