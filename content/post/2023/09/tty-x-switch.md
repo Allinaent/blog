@@ -1,7 +1,8 @@
 +++
+title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2023-12-05T11:38:59+08:00
+lastmod = 2023-12-05T11:43:42+08:00
 tags = ["gpu"]
 categories = ["technology"]
 draft = false

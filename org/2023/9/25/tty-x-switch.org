@@ -8,14 +8,14 @@
 #+HUGO_TAGS: gpu
 #+HUGO_CATEGORIES: technology
 #+AUTHOR:郭隆基
-#+LATEX_HEADER: \extrainfo{简单介绍一下概念和学习路线}
-#+LATEX_HEADER: \emergencystretch 3em
-#+LATEX_CLASS: elegantbook
-#+LATEX_COMPILER: xelatex
-#+OPTIONS: \n:nil
-#+OPTIONS: ^:nil
-#+OPTIONS: H:5  toc:nil  title:nil
-#+LANGUAGE: zh
+# #+LATEX_HEADER: \extrainfo{简单介绍一下概念和学习路线}
+# #+LATEX_HEADER: \emergencystretch 3em
+# #+LATEX_CLASS: elegantbook
+# #+LATEX_COMPILER: xelatex
+# #+OPTIONS: \n:nil
+# #+OPTIONS: ^:nil
+# #+OPTIONS: H:5  toc:nil  title:nil
+# #+LANGUAGE: zh
 
 #+begin_export latex
 \maketitle
