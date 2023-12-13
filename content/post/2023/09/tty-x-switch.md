@@ -2,7 +2,7 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2023-12-05T11:46:29+08:00
+lastmod = 2023-12-11T17:30:03+08:00
 tags = ["gpu"]
 categories = ["technology"]
 draft = false
@@ -2433,9 +2433,9 @@ struct drm_framebuffer *fb =
 
 如何找到 fb 的引用者？这个信息怎么获取到？
 
-占老板让看： `= /sys/kernel/debug/dri/0/clients =` 这个文件。
+占老板让看： `/sys/kernel/debug/dri/0/clients` 这个文件。
 
-GPT 让我看： `= /sys/kernel/debug/fb/ =` 但是这个文件没有找到。
+GPT 让我看： `/sys/kernel/debug/fb/` 但是这个文件没有找到。
 
 又查到可以用 SystemTap 来追踪 fb 的引用者。需要安装内核的 debug 包。
 
@@ -2445,12 +2445,435 @@ GPT 让我看： `= /sys/kernel/debug/fb/ =` 但是这个文件没有找到。
 
 用 systemtap 调试要写一些调试脚本，不是太好用的样子，尝试 probe 写了几个 drm fb 相关的函数都不能用。
 
-`= /sys/kernel/debug/dri/0/framebuffer =` 这个中的内容看起来很像是有东西。
+`/sys/kernel/debug/dri/0/framebuffer` 这个中的内容看起来很像是有东西。
 
 sudo apt-get install inotify-tools
 
-用这个工具来监视文件的变化。inotifywait -m -r `= /sys/kernel/ =` ，发现在切换用户的时候这个文件没有变化。
+用这个工具来监视文件的变化。inotifywait -m -r `/sys/kernel/` ，发现在切换用户的时候这个文件没有变化。
 
 那要想其它的办法了。
 
-能通过 gdb 或都 ebpf 找到更多的信息吗？gdb 加脚本，或者是
+能通过 gdb 或都 ebpf 找到更多的信息吗？gdb 加脚本。
+
+sudo strace -p 881 -e trace=signal -e 'signal=SIGUSR1'
+
+--- SIGUSR1 {si_signo=SIGUSR1, si_code=SI_KERNEL} ---
+rt_sigaction(SIGUSR1, {sa_handler=0x49d450, sa_mask=[USR1], sa_flags=SA_RESTORER, sa_restorer=0x7f8e8bc3a730}, {sa_handler=0x49d450, sa_mask=[USR1], sa_flags=SA_RESTORER, sa_restorer=0x7f8e8bc3a730}, 8) = 0
+rt_sigreturn({mask=[]})                 = -1 EINTR (被中断的系统调用)
+
+这个信号是内核发出的，可以看一下内核那里会发这个信号。信号都是内核发送绐用户态进程的。所以这个没什么意义。
+
+找内核的代码没有找到。不知道怎么找，可以先不纠结，先再 libdrm 当中加 setcrtc 屏蔽 SIGUSR1 信号的东西，设置完成之后再关屏蔽。
+
+如何编译和替换 libdrm ，ldd /usr/lib/xorg/Xorg ，按照上面的思路先修改一下 libdrm 。
+
+```c
+/**
+ * drm_framebuffer_lookup - look up a drm framebuffer and grab a reference
+ * @dev: drm device
+ * @file_priv: drm file to check for lease against.
+ * @id: id of the fb object
+ *
+ * If successful, this grabs an additional reference to the framebuffer -
+ * callers need to make sure to eventually unreference the returned framebuffer
+ * again, using drm_framebuffer_put().
+ */
+struct drm_framebuffer *drm_framebuffer_lookup(struct drm_device *dev,
+                                               struct drm_file *file_priv,
+                                               uint32_t id)
+{
+        struct drm_mode_object *obj;
+        struct drm_framebuffer *fb = NULL;
+
+        obj = __drm_mode_object_find(dev, file_priv, id, DRM_MODE_OBJECT_FB);
+        if (obj)
+                fb = obj_to_fb(obj);
+        return fb;
+}
+EXPORT_SYMBOL(drm_framebuffer_lookup);
+```
+
+这个函数可以增加引用数。查他的调用的话，值得怀疑的就是这么一个函数：int drm_mode_setcrtc ，这个通过 ioctl 来调用。
+
+DRM_IOCTL_DEF(DRM_IOCTL_MODE_SETCRTC, drm_mode_setcrtc, DRM_MASTER|DRM_UNLOCKED)
+
+在 libdrm 当中搜一下这个函数的调用，看看能不能关信号。在内核当中屏蔽信号；或者在用户态当中屏蔽信号。这个信号的作用是什么，内核为什么会发，如果屏蔽的话会不会有问题呢？
+
+```c
+drm_public int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
+                   uint32_t x, uint32_t y, uint32_t *connectors, int count,
+                   drmModeModeInfoPtr mode)
+{
+        struct drm_mode_crtc crtc;
+
+        memclear(crtc);
+        crtc.x             = x;
+        crtc.y             = y;
+        crtc.crtc_id       = crtcId;
+        crtc.fb_id         = bufferId;
+        crtc.set_connectors_ptr = VOID2U64(connectors);
+        crtc.count_connectors = count;
+        if (mode) {
+          memcpy(&crtc.mode, mode, sizeof(struct drm_mode_modeinfo));
+          crtc.mode_valid = 1;
+        }
+
+        return DRM_IOCTL(fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
+}
+```
+
+libdrm 中是上面的样子。
+
+要修改的话还是要在 xorg 里面，也就是
+
+查一下这个函数：xf86Sigusr1Handler ，这个是处理刷新的时间配置的一个函数。没找到这个函数。
+
+用 signal(SIGUSR1, SIG_IGN); 来设置关闭自定义信号；恢复怎么写？找恢复的地方。
+
+```c
+#include <stdio.h>
+#include <signal.h>
+
+int main() {
+    sigset_t mask;
+    sigset_t prev_mask;
+
+    // 定义要屏蔽的信号集
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGINT); // 屏蔽 SIGINT 信号
+
+    // 关闭信号
+    if (sigprocmask(SIG_BLOCK, &mask, &prev_mask) == -1) {
+        perror("sigprocmask");
+        return 1;
+    }
+
+    // 在这里执行一些需要屏蔽信号的操作
+
+    // 恢复信号
+    if (sigprocmask(SIG_SETMASK, &prev_mask, NULL) == -1) {
+        perror("sigprocmask");
+        return 1;
+    }
+
+    // 在这里执行一些不需要屏蔽信号的操作
+
+    return 0;
+}
+```
+
+上面是恢复和关闭信号集的例子。
+
+setcrtc 是不是有一人默认的延时时间。
+
+
+## 观察例子 {#观察例子}
+
+没有问题的时候是这个样子的：
+
+```nil
+2023-12-06 15:09:16 uos-PC kernel: [77256.505105] [drm:drm_mode_addfb2 [drm]] [FB:48]
+2023-12-06 15:09:16 uos-PC kernel: [77256.506734] [drm:drm_mode_setcrtc [drm]] [CRTC:37:crtc-0]
+2023-12-06 15:09:16 uos-PC kernel: [77256.506758] [drm:drm_mode_setcrtc [drm]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:09:16 uos-PC kernel: [77256.506769] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:09:16 uos-PC kernel: [77256.506778] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:37:crtc-0] [FB:48] #connectors=1 (x y) (0 0)
+2023-12-06 15:09:16 uos-PC kernel: [77256.506788] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] to [CRTC:37:crtc-0]
+2023-12-06 15:09:16 uos-PC kernel: [77256.506955] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:09:16 uos-PC kernel: [77256.509859] [drm:drm_mode_setcrtc [drm]] [CRTC:39:crtc-1]
+2023-12-06 15:09:16 uos-PC kernel: [77256.509878] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:09:16 uos-PC kernel: [77256.509886] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:39:crtc-1] [NOFB]
+2023-12-06 15:09:16 uos-PC kernel: [77256.510069] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 21 to mode 3, devices 00000001, active_devices 00000000
+2023-12-06 15:09:16 uos-PC kernel: [77256.510266] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:09:16 uos-PC kernel: [77256.510563] [drm:drm_mode_addfb2 [drm]] [FB:44]
+2023-12-06 15:09:16 uos-PC kernel: [77256.510696] [drm:drm_mode_addfb2 [drm]] [FB:70]
+2023-12-06 15:09:16 uos-PC kernel: [77256.513253] [drm:drm_mode_setcrtc [drm]] [CRTC:37:crtc-0]
+2023-12-06 15:09:16 uos-PC kernel: [77256.513271] [drm:drm_mode_setcrtc [drm]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:09:16 uos-PC kernel: [77256.513280] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:09:16 uos-PC kernel: [77256.513286] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:37:crtc-0] [FB:44] #connectors=1 (x y) (0 0)
+2023-12-06 15:09:16 uos-PC kernel: [77256.513293] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] to [CRTC:37:crtc-0]
+2023-12-06 15:09:16 uos-PC kernel: [77256.513467] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:09:16 uos-PC kernel: [77256.513647] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+2023-12-06 15:09:16 uos-PC kernel: [77256.513725] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:09:16 uos-PC kernel: [77256.547971] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] DFP1 connected
+2023-12-06 15:09:16 uos-PC kernel: [77256.547988] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:09:16 uos-PC kernel: [77256.547996] [drm:drm_add_edid_modes [drm]] ELD: no CEA Extension found
+2023-12-06 15:09:16 uos-PC kernel: [77256.548002] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:09:16 uos-PC kernel: [77256.548075] [drm:drm_mode_debug_printmodeline [drm]] Modeline 75:"1600x1200" 0 162000 1600 1664 1856 2160 1200 1201 1204 1250 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548080] [drm:drm_mode_prune_invalid [drm]] Not using 1600x1200 mode: BAD_WIDTH
+2023-12-06 15:09:16 uos-PC kernel: [77256.548086] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] probed modes :
+2023-12-06 15:09:16 uos-PC kernel: [77256.548092] [drm:drm_mode_debug_printmodeline [drm]] Modeline 45:"1920x1080" 60 148500 1920 2008 2052 2200 1080 1084 1089 1125 0x48 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548098] [drm:drm_mode_debug_printmodeline [drm]] Modeline 46:"1680x1050" 60 119000 1680 1728 1760 1840 1050 1053 1059 1080 0x40 0x9
+2023-12-06 15:09:16 uos-PC kernel: [77256.548103] [drm:drm_mode_debug_printmodeline [drm]] Modeline 51:"1400x1050" 60 101000 1400 1448 1480 1560 1050 1053 1057 1080 0x40 0x9
+2023-12-06 15:09:16 uos-PC kernel: [77256.548108] [drm:drm_mode_debug_printmodeline [drm]] Modeline 49:"1600x900" 60 108000 1600 1624 1704 1800 900 901 904 1000 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548113] [drm:drm_mode_debug_printmodeline [drm]] Modeline 62:"1280x1024" 75 135000 1280 1296 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548119] [drm:drm_mode_debug_printmodeline [drm]] Modeline 52:"1280x1024" 60 108000 1280 1328 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548124] [drm:drm_mode_debug_printmodeline [drm]] Modeline 50:"1440x900" 60 88750 1440 1488 1520 1600 900 903 909 926 0x40 0x9
+2023-12-06 15:09:16 uos-PC kernel: [77256.548129] [drm:drm_mode_debug_printmodeline [drm]] Modeline 53:"1280x960" 60 108000 1280 1376 1488 1800 960 961 964 1000 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548134] [drm:drm_mode_debug_printmodeline [drm]] Modeline 72:"1152x864" 75 108000 1152 1216 1344 1600 864 865 868 900 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548139] [drm:drm_mode_debug_printmodeline [drm]] Modeline 54:"1280x720" 60 74250 1280 1390 1430 1650 720 725 730 750 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548144] [drm:drm_mode_debug_printmodeline [drm]] Modeline 63:"1024x768" 75 78750 1024 1040 1136 1312 768 769 772 800 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548149] [drm:drm_mode_debug_printmodeline [drm]] Modeline 64:"1024x768" 70 75000 1024 1048 1184 1328 768 771 777 806 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548154] [drm:drm_mode_debug_printmodeline [drm]] Modeline 65:"1024x768" 60 65000 1024 1048 1184 1344 768 771 777 806 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548159] [drm:drm_mode_debug_printmodeline [drm]] Modeline 66:"832x624" 75 57284 832 864 928 1152 624 625 628 667 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548164] [drm:drm_mode_debug_printmodeline [drm]] Modeline 67:"800x600" 75 49500 800 816 896 1056 600 601 604 625 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548170] [drm:drm_mode_debug_printmodeline [drm]] Modeline 68:"800x600" 72 50000 800 856 976 1040 600 637 643 666 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548175] [drm:drm_mode_debug_printmodeline [drm]] Modeline 55:"800x600" 60 40000 800 840 968 1056 600 601 605 628 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548180] [drm:drm_mode_debug_printmodeline [drm]] Modeline 56:"800x600" 56 36000 800 824 896 1024 600 601 603 625 0x40 0x5
+2023-12-06 15:09:16 uos-PC kernel: [77256.548185] [drm:drm_mode_debug_printmodeline [drm]] Modeline 57:"640x480" 75 31500 640 656 720 840 480 481 484 500 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548190] [drm:drm_mode_debug_printmodeline [drm]] Modeline 58:"640x480" 73 31500 640 664 704 832 480 489 492 520 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548195] [drm:drm_mode_debug_printmodeline [drm]] Modeline 59:"640x480" 67 30240 640 704 768 864 480 483 486 525 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548200] [drm:drm_mode_debug_printmodeline [drm]] Modeline 60:"640x480" 60 25175 640 656 752 800 480 490 492 525 0x40 0xa
+2023-12-06 15:09:16 uos-PC kernel: [77256.548205] [drm:drm_mode_debug_printmodeline [drm]] Modeline 61:"720x400" 70 28320 720 738 846 900 400 412 414 449 0x40 0x6
+2023-12-06 15:09:16 uos-PC kernel: [77256.548481] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1]
+2023-12-06 15:09:16 uos-PC kernel: [77256.564415] [drm:amdgpu_atombios_encoder_dac_detect [amdgpu]] Bios 0 scratch 10000 00000001
+2023-12-06 15:09:16 uos-PC kernel: [77256.564559] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] CRT1 disconnected
+2023-12-06 15:09:16 uos-PC kernel: [77256.564574] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1] disconnected
+2023-12-06 15:09:16 uos-PC kernel: [77256.564820] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+```
+
+有问题的时候是这个样子的：
+
+```nil
+2023-12-06 15:24:38 uos-PC kernel: [78177.919158] [drm:drm_mode_addfb2 [drm]] [FB:45]
+2023-12-06 15:24:38 uos-PC kernel: [78177.920802] [drm:drm_mode_setcrtc [drm]] [CRTC:37:crtc-0]
+2023-12-06 15:24:38 uos-PC kernel: [78177.920842] [drm:drm_mode_setcrtc [drm]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:24:38 uos-PC kernel: [78177.920858] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:24:38 uos-PC kernel: [78177.920872] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:37:crtc-0] [FB:45] #connectors=1 (x y) (0 0)
+2023-12-06 15:24:38 uos-PC kernel: [78177.920888] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] to [CRTC:37:crtc-0]
+2023-12-06 15:24:38 uos-PC kernel: [78177.921183] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.921473] [drm:drm_mode_rmfb_work_fn [drm]] *ERROR* guolongji drm_mode_rmfb_work_fn
+2023-12-06 15:24:38 uos-PC kernel: [78177.921505] [drm:drm_framebuffer_remove [drm]] *ERROR* guolongji before legacy_remove_fb
+2023-12-06 15:24:38 uos-PC kernel: [78177.921528] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:24:38 uos-PC kernel: [78177.921539] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:37:crtc-0] [NOFB]
+2023-12-06 15:24:38 uos-PC kernel: [78177.921748] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 3, devices 00000008, active_devices 00000008
+2023-12-06 15:24:38 uos-PC kernel: [78177.930791] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 21 to mode 3, devices 00000001, active_devices 00000000
+2023-12-06 15:24:38 uos-PC kernel: [78177.957678] [drm:drm_framebuffer_remove [drm]] *ERROR* guolongji after legacy_remove_fb
+2023-12-06 15:24:38 uos-PC kernel: [78177.958575] [drm:drm_mode_setcrtc [drm]] [CRTC:39:crtc-1]
+2023-12-06 15:24:38 uos-PC kernel: [78177.958581] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:24:38 uos-PC kernel: [78177.958584] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:39:crtc-1] [NOFB]
+2023-12-06 15:24:38 uos-PC kernel: [78177.958642] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 3, devices 00000008, active_devices 00000000
+2023-12-06 15:24:38 uos-PC kernel: [78177.958688] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 21 to mode 3, devices 00000001, active_devices 00000000
+2023-12-06 15:24:38 uos-PC kernel: [78177.958847] [drm:drm_mode_addfb2 [drm]] [FB:45]
+2023-12-06 15:24:38 uos-PC kernel: [78177.958881] [drm:drm_mode_addfb2 [drm]] [FB:70]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961160] [drm:drm_mode_setcrtc [drm]] [CRTC:37:crtc-0]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961174] [drm:drm_mode_setcrtc [drm]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961181] [drm:drm_crtc_helper_set_config [drm_kms_helper]]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961185] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CRTC:37:crtc-0] [FB:45] #connectors=1 (x y) (0 0)
+2023-12-06 15:24:38 uos-PC kernel: [78177.961190] [drm:drm_crtc_helper_set_config [drm_kms_helper]] crtc has no fb, full mode set
+2023-12-06 15:24:38 uos-PC kernel: [78177.961194] [drm:drm_crtc_helper_set_config [drm_kms_helper]] connector dpms not on, full mode switch
+2023-12-06 15:24:38 uos-PC kernel: [78177.961197] [drm:drm_crtc_helper_set_config [drm_kms_helper]] encoder changed, full mode switch
+2023-12-06 15:24:38 uos-PC kernel: [78177.961201] [drm:drm_crtc_helper_set_config [drm_kms_helper]] crtc changed, full mode switch
+2023-12-06 15:24:38 uos-PC kernel: [78177.961205] [drm:drm_crtc_helper_set_config [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] to [CRTC:37:crtc-0]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961209] [drm:drm_crtc_helper_set_config [drm_kms_helper]] attempting to set mode from userspace
+2023-12-06 15:24:38 uos-PC kernel: [78177.961219] [drm:drm_mode_debug_printmodeline [drm]] Modeline 73:"" 0 148500 1920 2008 2052 2200 1080 1084 1089 1125 0x0 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78177.961299] [drm:amdgpu_encoder_set_active_device [amdgpu]] setting active device to 00000008 from 00000008 00000008 for encoder 2
+2023-12-06 15:24:38 uos-PC kernel: [78177.961309] [drm:drm_crtc_helper_set_mode [drm_kms_helper]] [CRTC:37:crtc-0]
+2023-12-06 15:24:38 uos-PC kernel: [78177.961390] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 21 to mode 3, devices 00000001, active_devices 00000000
+2023-12-06 15:24:38 uos-PC kernel: [78177.961507] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.961590] [drm:amdgpu_pll_compute [amdgpu]] 148500 - 148500, pll dividers - fb: 88.0 ref: 2, post 8
+2023-12-06 15:24:38 uos-PC kernel: [78177.970783] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.970806] [drm:drm_crtc_helper_set_mode [drm_kms_helper]] [ENCODER:40:TMDS-40] set [MODE:73:]
+2023-12-06 15:24:38 uos-PC kernel: [78177.970866] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 3, devices 00000008, active_devices 00000008
+2023-12-06 15:24:38 uos-PC kernel: [78177.970928] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+2023-12-06 15:24:38 uos-PC kernel: [78177.970983] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.987659] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 0, devices 00000008, active_devices 00000008
+2023-12-06 15:24:38 uos-PC kernel: [78177.988881] [drm:drm_crtc_helper_set_config [drm_kms_helper]] Setting connector DPMS state to on
+2023-12-06 15:24:38 uos-PC kernel: [78177.988883] [drm:drm_crtc_helper_set_config [drm_kms_helper]]     [CONNECTOR:41:HDMI-A-1] set DPMS on
+2023-12-06 15:24:38 uos-PC kernel: [78177.988961] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+2023-12-06 15:24:38 uos-PC kernel: [78177.989016] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.989072] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 30 to mode 0, devices 00000008, active_devices 00000008
+2023-12-06 15:24:38 uos-PC kernel: [78177.989128] [drm:amdgpu_atombios_encoder_dpms [amdgpu]] encoder dpms 21 to mode 3, devices 00000001, active_devices 00000000
+2023-12-06 15:24:38 uos-PC kernel: [78177.989179] [drm:dce_v6_0_program_watermarks [amdgpu]] force priority to high
+2023-12-06 15:24:38 uos-PC kernel: [78177.989257] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+2023-12-06 15:24:38 uos-PC kernel: [78177.989286] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.023683] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] DFP1 connected
+2023-12-06 15:24:38 uos-PC kernel: [78178.023694] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.023702] [drm:drm_add_edid_modes [drm]] ELD: no CEA Extension found
+2023-12-06 15:24:38 uos-PC kernel: [78178.023708] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.023779] [drm:drm_mode_debug_printmodeline [drm]] Modeline 75:"1600x1200" 0 162000 1600 1664 1856 2160 1200 1201 1204 1250 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023785] [drm:drm_mode_prune_invalid [drm]] Not using 1600x1200 mode: BAD_WIDTH
+2023-12-06 15:24:38 uos-PC kernel: [78178.023790] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] probed modes :
+2023-12-06 15:24:38 uos-PC kernel: [78178.023795] [drm:drm_mode_debug_printmodeline [drm]] Modeline 46:"1920x1080" 60 148500 1920 2008 2052 2200 1080 1084 1089 1125 0x48 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023801] [drm:drm_mode_debug_printmodeline [drm]] Modeline 48:"1680x1050" 60 119000 1680 1728 1760 1840 1050 1053 1059 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.023806] [drm:drm_mode_debug_printmodeline [drm]] Modeline 52:"1400x1050" 60 101000 1400 1448 1480 1560 1050 1053 1057 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.023811] [drm:drm_mode_debug_printmodeline [drm]] Modeline 50:"1600x900" 60 108000 1600 1624 1704 1800 900 901 904 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023817] [drm:drm_mode_debug_printmodeline [drm]] Modeline 63:"1280x1024" 75 135000 1280 1296 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023822] [drm:drm_mode_debug_printmodeline [drm]] Modeline 53:"1280x1024" 60 108000 1280 1328 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023827] [drm:drm_mode_debug_printmodeline [drm]] Modeline 51:"1440x900" 60 88750 1440 1488 1520 1600 900 903 909 926 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.023832] [drm:drm_mode_debug_printmodeline [drm]] Modeline 54:"1280x960" 60 108000 1280 1376 1488 1800 960 961 964 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023837] [drm:drm_mode_debug_printmodeline [drm]] Modeline 72:"1152x864" 75 108000 1152 1216 1344 1600 864 865 868 900 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023842] [drm:drm_mode_debug_printmodeline [drm]] Modeline 55:"1280x720" 60 74250 1280 1390 1430 1650 720 725 730 750 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023847] [drm:drm_mode_debug_printmodeline [drm]] Modeline 64:"1024x768" 75 78750 1024 1040 1136 1312 768 769 772 800 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023852] [drm:drm_mode_debug_printmodeline [drm]] Modeline 65:"1024x768" 70 75000 1024 1048 1184 1328 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023857] [drm:drm_mode_debug_printmodeline [drm]] Modeline 66:"1024x768" 60 65000 1024 1048 1184 1344 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023862] [drm:drm_mode_debug_printmodeline [drm]] Modeline 67:"832x624" 75 57284 832 864 928 1152 624 625 628 667 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023868] [drm:drm_mode_debug_printmodeline [drm]] Modeline 68:"800x600" 75 49500 800 816 896 1056 600 601 604 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023873] [drm:drm_mode_debug_printmodeline [drm]] Modeline 71:"800x600" 72 50000 800 856 976 1040 600 637 643 666 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023878] [drm:drm_mode_debug_printmodeline [drm]] Modeline 56:"800x600" 60 40000 800 840 968 1056 600 601 605 628 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023883] [drm:drm_mode_debug_printmodeline [drm]] Modeline 57:"800x600" 56 36000 800 824 896 1024 600 601 603 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.023889] [drm:drm_mode_debug_printmodeline [drm]] Modeline 58:"640x480" 75 31500 640 656 720 840 480 481 484 500 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023894] [drm:drm_mode_debug_printmodeline [drm]] Modeline 59:"640x480" 73 31500 640 664 704 832 480 489 492 520 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023899] [drm:drm_mode_debug_printmodeline [drm]] Modeline 60:"640x480" 67 30240 640 704 768 864 480 483 486 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023904] [drm:drm_mode_debug_printmodeline [drm]] Modeline 61:"640x480" 60 25175 640 656 752 800 480 490 492 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.023909] [drm:drm_mode_debug_printmodeline [drm]] Modeline 62:"720x400" 70 28320 720 738 846 900 400 412 414 449 0x40 0x6
+2023-12-06 15:24:38 uos-PC kernel: [78178.024163] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.039107] [drm:amdgpu_atombios_encoder_dac_detect [amdgpu]] Bios 0 scratch 10000 00000001
+2023-12-06 15:24:38 uos-PC kernel: [78178.039261] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] CRT1 disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.039279] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1] disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.039529] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.051695] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.085953] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] DFP1 connected
+2023-12-06 15:24:38 uos-PC kernel: [78178.085964] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.085972] [drm:drm_add_edid_modes [drm]] ELD: no CEA Extension found
+2023-12-06 15:24:38 uos-PC kernel: [78178.085978] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.086049] [drm:drm_mode_debug_printmodeline [drm]] Modeline 75:"1600x1200" 0 162000 1600 1664 1856 2160 1200 1201 1204 1250 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086055] [drm:drm_mode_prune_invalid [drm]] Not using 1600x1200 mode: BAD_WIDTH
+2023-12-06 15:24:38 uos-PC kernel: [78178.086060] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] probed modes :
+2023-12-06 15:24:38 uos-PC kernel: [78178.086066] [drm:drm_mode_debug_printmodeline [drm]] Modeline 46:"1920x1080" 60 148500 1920 2008 2052 2200 1080 1084 1089 1125 0x48 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086072] [drm:drm_mode_debug_printmodeline [drm]] Modeline 48:"1680x1050" 60 119000 1680 1728 1760 1840 1050 1053 1059 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.086077] [drm:drm_mode_debug_printmodeline [drm]] Modeline 52:"1400x1050" 60 101000 1400 1448 1480 1560 1050 1053 1057 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.086083] [drm:drm_mode_debug_printmodeline [drm]] Modeline 50:"1600x900" 60 108000 1600 1624 1704 1800 900 901 904 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086088] [drm:drm_mode_debug_printmodeline [drm]] Modeline 63:"1280x1024" 75 135000 1280 1296 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086093] [drm:drm_mode_debug_printmodeline [drm]] Modeline 53:"1280x1024" 60 108000 1280 1328 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086099] [drm:drm_mode_debug_printmodeline [drm]] Modeline 51:"1440x900" 60 88750 1440 1488 1520 1600 900 903 909 926 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.086104] [drm:drm_mode_debug_printmodeline [drm]] Modeline 54:"1280x960" 60 108000 1280 1376 1488 1800 960 961 964 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086109] [drm:drm_mode_debug_printmodeline [drm]] Modeline 72:"1152x864" 75 108000 1152 1216 1344 1600 864 865 868 900 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086114] [drm:drm_mode_debug_printmodeline [drm]] Modeline 55:"1280x720" 60 74250 1280 1390 1430 1650 720 725 730 750 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086119] [drm:drm_mode_debug_printmodeline [drm]] Modeline 64:"1024x768" 75 78750 1024 1040 1136 1312 768 769 772 800 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086124] [drm:drm_mode_debug_printmodeline [drm]] Modeline 65:"1024x768" 70 75000 1024 1048 1184 1328 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086129] [drm:drm_mode_debug_printmodeline [drm]] Modeline 66:"1024x768" 60 65000 1024 1048 1184 1344 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086134] [drm:drm_mode_debug_printmodeline [drm]] Modeline 67:"832x624" 75 57284 832 864 928 1152 624 625 628 667 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086139] [drm:drm_mode_debug_printmodeline [drm]] Modeline 68:"800x600" 75 49500 800 816 896 1056 600 601 604 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086144] [drm:drm_mode_debug_printmodeline [drm]] Modeline 71:"800x600" 72 50000 800 856 976 1040 600 637 643 666 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086149] [drm:drm_mode_debug_printmodeline [drm]] Modeline 56:"800x600" 60 40000 800 840 968 1056 600 601 605 628 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086154] [drm:drm_mode_debug_printmodeline [drm]] Modeline 57:"800x600" 56 36000 800 824 896 1024 600 601 603 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.086159] [drm:drm_mode_debug_printmodeline [drm]] Modeline 58:"640x480" 75 31500 640 656 720 840 480 481 484 500 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086164] [drm:drm_mode_debug_printmodeline [drm]] Modeline 59:"640x480" 73 31500 640 664 704 832 480 489 492 520 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086169] [drm:drm_mode_debug_printmodeline [drm]] Modeline 60:"640x480" 67 30240 640 704 768 864 480 483 486 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086175] [drm:drm_mode_debug_printmodeline [drm]] Modeline 61:"640x480" 60 25175 640 656 752 800 480 490 492 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.086180] [drm:drm_mode_debug_printmodeline [drm]] Modeline 62:"720x400" 70 28320 720 738 846 900 400 412 414 449 0x40 0x6
+2023-12-06 15:24:38 uos-PC kernel: [78178.086208] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.103073] [drm:amdgpu_atombios_encoder_dac_detect [amdgpu]] Bios 0 scratch 10000 00000001
+2023-12-06 15:24:38 uos-PC kernel: [78178.103228] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] CRT1 disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.103245] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1] disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.103319] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.138981] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] DFP1 connected
+2023-12-06 15:24:38 uos-PC kernel: [78178.138993] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.139002] [drm:drm_add_edid_modes [drm]] ELD: no CEA Extension found
+2023-12-06 15:24:38 uos-PC kernel: [78178.139009] [drm:drm_add_display_info [drm]] non_desktop set to 0
+2023-12-06 15:24:38 uos-PC kernel: [78178.139095] [drm:drm_mode_debug_printmodeline [drm]] Modeline 75:"1600x1200" 0 162000 1600 1664 1856 2160 1200 1201 1204 1250 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139102] [drm:drm_mode_prune_invalid [drm]] Not using 1600x1200 mode: BAD_WIDTH
+2023-12-06 15:24:38 uos-PC kernel: [78178.139107] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:41:HDMI-A-1] probed modes :
+2023-12-06 15:24:38 uos-PC kernel: [78178.139114] [drm:drm_mode_debug_printmodeline [drm]] Modeline 46:"1920x1080" 60 148500 1920 2008 2052 2200 1080 1084 1089 1125 0x48 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139121] [drm:drm_mode_debug_printmodeline [drm]] Modeline 48:"1680x1050" 60 119000 1680 1728 1760 1840 1050 1053 1059 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.139127] [drm:drm_mode_debug_printmodeline [drm]] Modeline 52:"1400x1050" 60 101000 1400 1448 1480 1560 1050 1053 1057 1080 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.139134] [drm:drm_mode_debug_printmodeline [drm]] Modeline 50:"1600x900" 60 108000 1600 1624 1704 1800 900 901 904 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139140] [drm:drm_mode_debug_printmodeline [drm]] Modeline 63:"1280x1024" 75 135000 1280 1296 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139147] [drm:drm_mode_debug_printmodeline [drm]] Modeline 53:"1280x1024" 60 108000 1280 1328 1440 1688 1024 1025 1028 1066 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139153] [drm:drm_mode_debug_printmodeline [drm]] Modeline 51:"1440x900" 60 88750 1440 1488 1520 1600 900 903 909 926 0x40 0x9
+2023-12-06 15:24:38 uos-PC kernel: [78178.139160] [drm:drm_mode_debug_printmodeline [drm]] Modeline 54:"1280x960" 60 108000 1280 1376 1488 1800 960 961 964 1000 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139166] [drm:drm_mode_debug_printmodeline [drm]] Modeline 72:"1152x864" 75 108000 1152 1216 1344 1600 864 865 868 900 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139172] [drm:drm_mode_debug_printmodeline [drm]] Modeline 55:"1280x720" 60 74250 1280 1390 1430 1650 720 725 730 750 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139179] [drm:drm_mode_debug_printmodeline [drm]] Modeline 64:"1024x768" 75 78750 1024 1040 1136 1312 768 769 772 800 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139185] [drm:drm_mode_debug_printmodeline [drm]] Modeline 65:"1024x768" 70 75000 1024 1048 1184 1328 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139191] [drm:drm_mode_debug_printmodeline [drm]] Modeline 66:"1024x768" 60 65000 1024 1048 1184 1344 768 771 777 806 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139198] [drm:drm_mode_debug_printmodeline [drm]] Modeline 67:"832x624" 75 57284 832 864 928 1152 624 625 628 667 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139204] [drm:drm_mode_debug_printmodeline [drm]] Modeline 68:"800x600" 75 49500 800 816 896 1056 600 601 604 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139211] [drm:drm_mode_debug_printmodeline [drm]] Modeline 71:"800x600" 72 50000 800 856 976 1040 600 637 643 666 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139217] [drm:drm_mode_debug_printmodeline [drm]] Modeline 56:"800x600" 60 40000 800 840 968 1056 600 601 605 628 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139224] [drm:drm_mode_debug_printmodeline [drm]] Modeline 57:"800x600" 56 36000 800 824 896 1024 600 601 603 625 0x40 0x5
+2023-12-06 15:24:38 uos-PC kernel: [78178.139230] [drm:drm_mode_debug_printmodeline [drm]] Modeline 58:"640x480" 75 31500 640 656 720 840 480 481 484 500 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139237] [drm:drm_mode_debug_printmodeline [drm]] Modeline 59:"640x480" 73 31500 640 664 704 832 480 489 492 520 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139243] [drm:drm_mode_debug_printmodeline [drm]] Modeline 60:"640x480" 67 30240 640 704 768 864 480 483 486 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139249] [drm:drm_mode_debug_printmodeline [drm]] Modeline 61:"640x480" 60 25175 640 656 752 800 480 490 492 525 0x40 0xa
+2023-12-06 15:24:38 uos-PC kernel: [78178.139255] [drm:drm_mode_debug_printmodeline [drm]] Modeline 62:"720x400" 70 28320 720 738 846 900 400 412 414 449 0x40 0x6
+2023-12-06 15:24:38 uos-PC kernel: [78178.139558] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1]
+2023-12-06 15:24:38 uos-PC kernel: [78178.155136] [drm:amdgpu_atombios_encoder_dac_detect [amdgpu]] Bios 0 scratch 10000 00000001
+2023-12-06 15:24:38 uos-PC kernel: [78178.155305] [drm:amdgpu_atombios_encoder_set_bios_scratch_regs [amdgpu]] CRT1 disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.155323] [drm:drm_helper_probe_single_connector_modes [drm_kms_helper]] [CONNECTOR:43:VGA-1] disconnected
+2023-12-06 15:24:38 uos-PC kernel: [78178.170911] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
+```
+
+{{< figure src="/ox-hugo/example1.png" >}}
+
+```nil
+deepin-elf-veri -> 11073-deepin-elf-veri:23
+dde-system-daem -> 965-dde-system-daem:23
+uos-resource-ma -> 711-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+deepin-elf-veri -> 2883-deepin-elf-veri:23
+uos-resource-ma -> 748-uos-resource-ma:23
+deepin-elf-veri -> 2883-deepin-elf-veri:23
+pidof -> 2427-fcitx-helper:17
+dde-system-daem -> 947-dde-system-daem:23
+dde-system-daem -> 958-dde-system-daem:23
+deepin-elf-veri -> 11073-deepin-elf-veri:23
+uos-resource-ma -> 711-uos-resource-ma:23
+dde-session-dae -> 1864-dde-session-dae:23
+startdde -> 1809-startdde:23
+pidof -> 2427-fcitx-helper:17
+dde-lock -> 2418-dde-lock:17
+dde-lockservice -> 5604-dde-lockservice:23
+dbus-daemon -> 5598-dbus-daemon:9
+dbus-daemon -> 714-dbus-daemon:17
+kworker/3:0 -> 889-Xorg:10
+Xorg -> 3723-Xorg:10
+dde-switchtogre -> 1-systemd:17
+uos-resource-ma -> 711-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+deepin-authenti -> 2948-deepin-authenti:23
+uos-resource-ma -> 711-uos-resource-ma:23
+deepin-elf-veri -> 11073-deepin-elf-veri:23
+dde-session-dae -> 1260-dde-session-dae:23
+startdde -> 1809-startdde:23
+uos-resource-ma -> 766-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+^Ckworker/u16:0 -> 4240-bpftrace:2
+uos-resource-ma -> 711-uos-resource-ma:23
+dde-session-dae -> 1260-dde-session-dae:23
+^Ckworker/u16:2 -> 4240-bpftrace:2
+^Ckworker/u16:0 -> 4240-bpftrace:2
+uos-resource-ma -> 748-uos-resource-ma:23
+^Ckworker/u16:2 -> 4240-bpftrace:2
+uos-resource-ma -> 711-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+dde-session-dae -> 1694-dde-session-dae:23
+uos-resource-ma -> 711-uos-resource-ma:23
+dde-session-dae -> 1694-dde-session-dae:23
+^Ckworker/u16:0 -> 4240-bpftrace:2
+pidof -> 2427-fcitx-helper:17
+dde-session-dae -> 1260-dde-session-dae:23
+^Ckworker/u16:2 -> 4240-bpftrace:2
+startdde -> 2363-startdde:23
+uos-resource-ma -> 711-uos-resource-ma:23
+uos-resource-ma -> 766-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+dde-system-daem -> 948-dde-system-daem:23
+uos-resource-ma -> 748-uos-resource-ma:23
+^Ckworker/u16:0 -> 4240-bpftrace:2
+^Ckworker/u16:2 -> 4240-bpftrace:2
+^Ckworker/u16:0 -> 4240-bpftrace:2
+^Ckworker/u16:2 -> 4240-bpftrace:2
+^Ckworker/u16:0 -> 4240-bpftrace:2
+^Ckworker/u16:2 -> 4240-bpftrace:2
+^Ckworker/u16:0 -> 4240-bpftrace:2
+uos-resource-ma -> 766-uos-resource-ma:23
+pidof -> 2427-fcitx-helper:17
+dde-session-dae -> 1694-dde-session-dae:23
+uos-resource-ma -> 766-uos-resource-ma:23
+uos-resource-ma -> 711-uos-resource-ma:23
+dde-system-daem -> 958-dde-system-daem:23
+startdde -> 2397-startdde:23
+pidof -> 2427-fcitx-helper:17
+deepin-elf-veri -> 2883-deepin-elf-veri:23
+dde-session-dae -> 1260-dde-session-dae:23
+pidof -> 2427-fcitx-helper:17
+uos-resource-ma -> 766-uos-resource-ma:23
+uos-resource-ma -> 711-uos-resource-ma:23
+dde-session-dae -> 1260-dde-session-dae:23
+```
+
+kworker/3:0 -&gt; 889-Xorg:10
+Xorg -&gt; 3723-Xorg:10
+
+看看这两个，信号就是从内核的进程发出来的。那这个信号到底是什么含义呢？如何通过代码找到发送信号的地方呢？
