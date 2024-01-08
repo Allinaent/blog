@@ -1,5 +1,0 @@
-\begin{Verbatim}[commandchars=\\\{\}]
-\PYG{k}{while} true\PYG{p}{;} \PYG{k}{do} qdbus \PYGZhy{}\PYGZhy{}system org.freedesktop.login1 /org/freedesktop/login1/seat/seat0 \PYG{l+s+se}{\PYGZbs{}}
-org.freedesktop.login1.Seat.SwitchToNext\PYG{p}{;} sleep \PYG{l+m}{2}\PYG{p}{;} qdbus \PYGZhy{}\PYGZhy{}system org.freedesktop.login1 \PYG{l+s+se}{\PYGZbs{}}
-/org/freedesktop/login1/seat/seat0 org.freedesktop.login1.Seat.SwitchToPrevious\PYG{p}{;} sleep \PYG{l+m}{2}\PYG{p}{;} \PYG{k}{done}
-\end{Verbatim}

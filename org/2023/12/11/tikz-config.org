@@ -165,9 +165,9 @@ https://tikz.dev/
 
 * 举一些例子
 
-
+#+HEADER: :fit yes :imagemagick yes :iminoptions -density 150
 #+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\pgfplotsset{compat=newest}")
-#+BEGIN_SRC latex :file ltximg/example_0.png :results raw file :exports both
+#+BEGIN_SRC latex :file ltximg/example_0.png :results raw file :exports both :imoutoptions -flatten -fill white
 \begin{tikzpicture}
 \begin{axis}[
     xmin=-3,   xmax=3,
@@ -197,7 +197,7 @@ https://tikz.dev/
 #+RESULTS:
 [[file:ltximg/example_0.png]]
 
-
+#+HEADER: :fit yes :imagemagick yes :iminoptions -density 150
 #+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\pgfplotsset{compat=newest}")
 #+begin_src latex :file ltximg/demo0.png :results raw file :exports both
 \begin{tikzpicture}
@@ -210,6 +210,7 @@ https://tikz.dev/
 #+RESULTS:
 [[file:ltximg/demo0.png]]
 
+#+HEADER: :fit yes :dvipng yes :iminoptions -density 150
 #+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\pgfplotsset{compat=newest}")
 #+HEADER: :headers '("\\usetikzlibrary{patterns}")
 #+begin_src latex :file ltximg/demo1.png :results raw file :exports both :imoutoptions -flatten -fill white
@@ -226,11 +227,11 @@ https://tikz.dev/
 #+RESULTS:
 [[file:ltximg/demo1.png]]
 
-
+#+HEADER: :fit yes :dvipng yes :iminoptions -density 70
 #+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\pgfplotsset{compat=newest}")
 #+begin_src latex :file ltximg/demo2.png :results raw file :exports both
-  \begin{tikzpicture}[background rectangle/.style={fill=white}, show background rectangle, scale=0.7]
-    % \begin{tikzpicture}[scale=0.6]
+  %\begin{tikzpicture}[background rectangle/.style={fill=white}, show background rectangle, scale=0.4]
+    \begin{tikzpicture}[scale=0.4]
     \usetikzlibrary{shapes.geometric,shapes.symbols,fit,positioning,shadows}
     \usetikzlibrary{backgrounds}
     % https://tex.stackexchange.com/a/12039/121799
@@ -327,58 +328,102 @@ https://tikz.dev/
           \draw[fill=blue!60,opacity=0.2] (0,0.5) -- (-0.5,0.25) -- (0,0) -- (0.5,0.25) -- cycle;
         }}}
 
-\resizebox {\textwidth} {!}{
-    [font=\sffamily,every label/.append
-    style={font=\small\sffamily,align=center}]
-    \node[cylinder, cylinder uses custom fill, cylinder end fill=blue!25,
-    cylinder body fill=blue!50,shape border rotate=90,text=white,
-    aspect=0.4,minimum width=1cm,minimum height=1.4cm](Store){Store};
-    \node[right=1cm of Store,regular polygon,regular polygon sides=6,fill=orange,
-    xscale=1.2,text=white] (Router) {Router};
-    \node[fit=(Store) (Router)](fit1){};
-    \node[below=1cm of fit1,tape, draw,thin, tape bend top=none,fill=purple,
-    text=white,minimum width=2.2cm,double copy shadow,minimum height=1.5cm]
-    (Components) {Components};
-    \node[draw,dashed,rounded corners,fit=(Store) (Router) (Components),inner
-    sep=10pt,label={above:{Universal\\ Application Code}}](fit2){};
-    \node[right=1cm of fit2,doc] (js) {app.js};
-    \node[above right=1cm of js,doc] (Server) {Server\\ entity};
-    \node[below right=1cm of js,doc] (Client) {Client\\ entry};
-    \draw(fit2.east) -- (js);
-    \draw[-latex] (js) |- (Server);
-    \draw[-latex] (js) |- (Client);
-    \draw[-] (Client) -- ++ (1,0) |- (Server) coordinate[pos=0.25] (aux1);
-    \node[draw,dashed,rounded corners,fit=(fit2) (aux1),inner
-    xsep=10pt,inner ysep=30pt,label={above:{Source}}](fit3){};
-    % 
-    \pic[right=2cm of aux1,local bounding box=Webpack,scale=2] (Webpack) {pack};
-    \node[below=1mm of Webpack,font=\small\sffamily,align=center]{Webpack\\ build};
-    % 
-    \node[above right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ServerBundle)
-    {Server\\ bundle};
-    \node[below right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ClientBundle) {Client\\
-      bundle};
-    \node[right=2cm of ServerBundle,parallelepiped,draw=yellow,fill=red!80,
-    minimum width=2cm,minimum height=1.5cm,align=center,text=white]
-    (BundleRenderer)   {Bundle\\ Renderer};
-    \node[right=2cm of ClientBundle,doc,fill=yellow,minimum width=2cm,minimum height=1.5cm] (HTML) {HTML};
-    \draw[-latex] (aux1) -- (Webpack);
-    \draw[-latex] (Webpack) -- ++ (2,0) coordinate(aux2) |- (ServerBundle);
-    \draw[-latex] (aux2) |- (ClientBundle);
-    \draw[-latex] (ClientBundle) -- (HTML) node[midway,below,font=\small\sffamily]{Hydrate};
-    \draw (ServerBundle) -- (BundleRenderer);
-    \draw[-latex] (BundleRenderer) -- (HTML) node[midway,right,font=\small\sffamily]{Render};
-    % 
-    \node[draw,dashed,rounded corners,fit=(ServerBundle) (BundleRenderer),inner
-    sep=10pt,label={above:{Node server}}](fit4){};
-    \node[draw,dashed,rounded corners,fit=(ClientBundle) (HTML),inner
-    sep=10pt,label={below:{Browser}}](fit5){};
-}
+    \resizebox {\textwidth} {!}{
+      [font=\sffamily,every label/.append
+      style={font=\small\sffamily,align=center}]
+      \node[cylinder, cylinder uses custom fill, cylinder end fill=blue!25,
+      cylinder body fill=blue!50,shape border rotate=90,text=white,
+      aspect=0.4,minimum width=1cm,minimum height=1.4cm](Store){Store};
+      \node[right=1cm of Store,regular polygon,regular polygon sides=6,fill=orange,
+      xscale=1.2,text=white] (Router) {Router};
+      \node[fit=(Store) (Router)](fit1){};
+      \node[below=1cm of fit1,tape, draw,thin, tape bend top=none,fill=purple,
+      text=white,minimum width=2.2cm,double copy shadow,minimum height=1.5cm]
+      (Components) {Components};
+      \node[draw,dashed,rounded corners,fit=(Store) (Router) (Components),inner
+      sep=10pt,label={above:{Universal\\ Application Code}}](fit2){};
+      \node[right=1cm of fit2,doc] (js) {app.js};
+      \node[above right=1cm of js,doc] (Server) {Server\\ entity};
+      \node[below right=1cm of js,doc] (Client) {Client\\ entry};
+      \draw(fit2.east) -- (js);
+      \draw[-latex] (js) |- (Server);
+      \draw[-latex] (js) |- (Client);
+      \draw[-] (Client) -- ++ (1,0) |- (Server) coordinate[pos=0.25] (aux1);
+      \node[draw,dashed,rounded corners,fit=(fit2) (aux1),inner
+      xsep=10pt,inner ysep=30pt,label={above:{Source}}](fit3){};
+
+      \pic[right=2cm of aux1,local bounding box=Webpack,scale=2] (Webpack) {pack};
+      \node[below=1mm of Webpack,font=\small\sffamily,align=center]{Webpack\\ build};
+
+      \node[above right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ServerBundle)
+      {Server\\ bundle};
+      \node[below right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ClientBundle) {Client\\
+        bundle};
+      \node[right=2cm of ServerBundle,parallelepiped,draw=yellow,fill=red!80,
+      minimum width=2cm,minimum height=1.5cm,align=center,text=white]
+      (BundleRenderer)   {Bundle\\ Renderer};
+      \node[right=2cm of ClientBundle,doc,fill=yellow,minimum width=2cm,minimum height=1.5cm] (HTML) {HTML};
+      \draw[-latex] (aux1) -- (Webpack);
+      \draw[-latex] (Webpack) -- ++ (2,0) coordinate(aux2) |- (ServerBundle);
+      \draw[-latex] (aux2) |- (ClientBundle);
+      \draw[-latex] (ClientBundle) -- (HTML) node[midway,below,font=\small\sffamily]{Hydrate};
+      \draw (ServerBundle) -- (BundleRenderer);
+      \draw[-latex] (BundleRenderer) -- (HTML) node[midway,right,font=\small\sffamily]{Render};
+
+      \node[draw,dashed,rounded corners,fit=(ServerBundle) (BundleRenderer),inner
+      sep=10pt,label={above:{Node server}}](fit4){};
+      \node[draw,dashed,rounded corners,fit=(ClientBundle) (HTML),inner
+      sep=10pt,label={below:{Browser}}](fit5){};
+    }
   \end{tikzpicture}
 #+end_src
 
 #+RESULTS:
 [[file:ltximg/demo2.png]]
+
+#+OPTIONS: html-postamble:nil
+#+HEADER: :fit yes :imagemagick yes :iminoptions -density 150
+#+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\pgfplotsset{compat=newest}")
+#+HEADER: :exports (when (eq org-export-current-backend 'latex) "none")
+#+begin_src latex :file ltximg/example1.png :results raw file :exports both
+\begin{tikzpicture}
+  \draw (0,0) to (3,2);
+  \draw (0,0) to[out=90,in=180] (3,2);
+  \draw (0,0) to[bend right] (3,2);
+\end{tikzpicture}
+#+end_src
+
+#+RESULTS:
+[[file:ltximg/example1.png]]
+
+下面是一个中文的示例，这个例子之所以可以导出中文是因为 HEADER 的设置增加了 \usepackage{fontspec} ，并在代码
+中设置了 font ，并且 HEADER 中指定使用 imagemagick 进行导出，代码中也设置了中文字体：
+
+#+OPTIONS: html-postamble:nil
+#+HEADER: :fit yes :imagemagick yes :iminoptions -density 150
+#+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\usepackage{fontspec} \\pgfplotsset{compat=newest}")
+#+begin_src latex :file ltximg/process1.png :results raw file :exports both
+  \begin{tikzpicture}[
+    rec/.style={rectangle, thick,minimum width=1.5cm,minimum height=0.5cm,text centered,draw=#1,fill=#1!15,UTF8},
+    arrow/.style={ ->,>=stealth,very thick,red!80!black},
+    ]
+    \setmainfont{FandolSong-Regular.otf}
+    \node(rec1)     [rec=blue]                          {现实问题};
+    \node(rec2)     [rec=purple,right = of rec1]        {数学模型};
+    \node(rec3)     [rec=green,right = of rec2]         {数学结论};
+    \node(rec4)     [rec=orange,right = of rec3]        {解释 \& 预测};
+    \draw[arrow]   (rec1)  --node[above]{建模}    (rec2);
+    \draw[arrow]   (rec2)  --node[above]{求解}    (rec3);
+    \draw[arrow]   (rec3)  --node[above]{解释}    (rec4);
+    \draw[arrow]   (rec4.south)--($(rec4.south)+(0,-1)$)
+    --node[above]{检验}  ($(rec1.south)+(0,-1cm)$)
+    -- (rec1.south);
+  \end{tikzpicture}
+#+end_src
+
+#+RESULTS:
+[[file:ltximg/process1.png]]
+
 
 * 总结
 

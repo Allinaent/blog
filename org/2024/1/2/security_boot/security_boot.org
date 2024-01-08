@@ -1,0 +1,140 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/01
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-01-02 二 14:07]
+#+TITLE: UOS 安全启动
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: system
+
+* bios 启动
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_140844.jpg]]
+
+
+* uefi 启动
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_141054.jpg]]
+
+efibootmanager 这个工具可以修改启动项。
+
+
+* 系统启动
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_141647.jpg]]
+
+* 开源固件
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_141928.jpg]]
+
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_142015.jpg]]
+
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_142203.jpg]]
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_142742.jpg]]
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_142852.jpg]]
+
+把 shim 提交绐微软，微软绐其它厂商提供签名。
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_143521.jpg]]
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_143921.jpg]]
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_144328.jpg]]
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_144520.jpg]]
+
+昆仑，百敖，华为。
+
+都封装成 PE 结构的列表，只要有一个验证通过就是可信的。这是一种保护安全性的手段。
+
+shim-signed 这个包有一个我们自己的签名。
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[file:security_boot.org.assets/img_20240102_145150.jpg]]
+
+TPM 是可信安全模块的意思，这个是芯片。变化太快，越来越多的系统服务，使得
+很难做到这个可信启动。做了 grub 的摘要值，TPM 做了。磁盘加密相关的。还有
+一个 TCM ，和 TPM 类似。

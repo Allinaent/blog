@@ -1,0 +1,526 @@
+\documentclass[8pt,aspectratio=43,mathserif,table]{beamer}
+% 设置为 Beamer 文档类型，设置字体为 10pt，长宽比为16:9，数学字体为 serif 风格
+\batchmode
+
+\usepackage{graphicx}
+\usepackage{animate}
+\usepackage{hyperref}
+
+% 导入一些用到的宏包
+\usepackage{amsmath,bm,amsfonts,amssymb,enumerate,epsfig,bbm,calc,color,ifthen,capt-of,multimedia,hyperref}
+\usepackage{xeCJK} %导入中文包
+\setCJKmainfont{SimHei} %字体采用黑体  Microsoft YaHei
+
+\usetheme{Berlin} %主题
+\usecolortheme{sustech} %主题颜色
+
+\usepackage[ruled,linesnumbered]{algorithm2e}
+
+\usepackage{fancybox}
+\usepackage{xcolor}
+\usepackage{times}
+\usepackage{listings}
+
+\usepackage{booktabs}
+\usepackage{colortbl}
+
+\newcommand{\Console}{Console}
+
+
+%\setsansfont{Microsoft YaHei}
+%\setmainfont{Microsoft YaHei}
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+\definecolor{mygray}{gray}{.9}
+\definecolor{mypink}{rgb}{.99,.91,.95}
+\definecolor{mycyan}{cmyk}{.3,0,0,0}
+
+\lstset{ %
+  basicstyle=\tiny
+  backgroundcolor=\color{white},   % choose the background color
+  basicstyle=\footnotesize\rmfamily,     % size of fonts used for the code
+  columns=fullflexible,
+  breaklines=true,                 % automatic line breaking only at whitespace
+  captionpos=b,                    % sets the caption-position to bottom
+  tabsize=4,
+  commentstyle=\color{mygreen},    % comment style
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  keywordstyle=\color{blue},       % keyword style
+  stringstyle=\color{mymauve}\ttfamily,     % string literal style
+  % numbers=left, 
+  % frame=single,
+  rulesepcolor=\color{red!20!green!20!blue!20},
+  % identifierstyle=\color{red},
+  language=c
+}
+
+
+% 题目，作者，学校，日期
+\title{ 闪屏花屏问题分析}
+\subtitle{\fontsize{9pt}{14pt}\textbf{ 内核与用户态显示切换用户涉及的知识点}}
+\author{ 演讲人：郭隆基  \newline \newline }
+\institute{\fontsize{5pt}{14pt} 统信软件技术有限公司}
+\date{\today}
+
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+% 学校Logo
+% \pgfdeclareimage[height=0.5cm]{sustech-logo}{sustech-logo.pdf}
+% \logo{\pgfuseimage{sustech-logo}\hspace*{0.3cm}}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \frametitle{\textbf{目录}}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+\beamerdefaultoverlayspecification{<+->}
+% -----------------------------------------------------------------------------
+\begin{document}
+% -----------------------------------------------------------------------------
+
+\frame{\titlepage}
+
+\section[目录]{}   %目录
+\begin{frame}{目录}
+  \frametitle{目录}
+  \tableofcontents
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\section{引言}  %引言
+\subsection{问题背景}
+\begin{frame}{问题背景}
+  \begin{columns}[T] % align columns
+    \begin{column}<0->{.30\textwidth}
+      \begin{figure}[thpb]
+        \centering
+        \resizebox{1\linewidth}{!}{
+          \includegraphics{figures/question.pdf}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+      \end{figure}
+    \end{column}%
+    \hfill%
+    \begin{column}<0->{.75\textwidth}
+      \begin{itemize}
+      \item<1-> 切换用户、锁屏界面登陆系统时，使用Raedon Oland 显卡机型性能劣化
+        \begin{itemize}
+        \item<1-> 为什么切换用户的时候有概率会黑一下屏？
+        \end{itemize}
+      \item<2-> 多用户切换测试高概率闪屏
+        \begin{itemize}
+        \item<2-> 和上面是同一个问题，极快的闪屏没有找到问题可以分析的路径
+        \end{itemize}
+      \end{itemize}
+    \end{column}%
+  \end{columns}
+\end{frame}
+
+\subsection{分析思路}
+\begin{frame}{分析思路}
+  分析闪屏问题的一般思路
+  \begin{block}{具体步骤}
+    \begin{itemize}
+    \item<0->  扫盲；了解内核和应用层相关的模块
+    \item<0->  猜；跟据了解的知识猜测可能的方向，不一定准确。现象多而且复杂一定要
+      做排除，很多现象是干扰，甚至和调式环境有关。
+    \item<0->  复现；找多种复现方式和手段，找到出问题与不出问题的区别
+    \item<0->  分析；方向准确后分析内核和应用层模块代码逻辑。也用一些手段做验证
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection{调试手段}
+\begin{frame}{调试手段}
+  %\frametitle{调式手段}
+  \begin{figure}[!t]
+    \centering
+    \includegraphics[width=2in]{figures/debug.pdf}
+    \caption{bpftrace 真好用}
+    \label{figure3_debug}
+  \end{figure}
+  \begin{center}
+    在分析我这个问题时我用的调试方法有 bpftrace gdb strace  \\
+  \end{center}
+    熟练应用 bpftrace 编程和gdb 的调试是解决问题提速的加分项，要学会写bpfrace 程序。
+    如果是主要看内核中的流程，那qemu 也能提高效率。
+\end{frame}
+
+
+\section{误入迷途}  %自我介绍
+\subsection{ 举例}
+\begin{frame}{Edid}
+  在 Oland 的显卡中有一个 VGA 循环读取 Edid 检测VGA 是否有插拔的内核进程，一度
+  以为是用户切换调用 drm\_ctrc\_set\_config 也读取edid ，两个读取edid 冲突时就
+  会造成黑屏。
+  证伪的方法很简单，把这个循环时间调长。从10s 调到3600s ，发现问题仍然存在。
+  之前的分析在：\\ https://guolongji.xyz/post/tty-x-switch/
+\end{frame}
+
+\begin{frame}{ 其它干扰}
+  \begin{block}{ 举例}
+    \begin{itemize}
+    \item<0->  在drm\_do\_probe\_dde\_edid 调用栈的函数中加一些打印，会影响问题
+      复现的概率。
+    \item<0->  安装相关的 gdb 调式包会影响问题复现的概率，有时会让问题完全不复现。
+    \item<0->  因为切入，切出的 xorg 都会收到 SIGUSR1 信号。用 {\tiny kill -SIGUSR1 pid} 来模
+      拟。这样测试有时也会黑屏，但与问题关系不大。
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\subsection{总结}
+\begin{frame}{总结}
+  \begin{block}{总结}
+    EEPROM 的读速度
+    \begin{itemize}
+    \item<0-> EEPROM 的读取速度和 FLASH 、SRAM 相比虽然慢一点，但是也差不了多少，只
+      是写的速度很慢。
+    \end{itemize}
+
+    两个读取都是通过DDC 读 EDID
+    \begin{itemize}
+    \item<0-> VGA 的{\tiny INIT\_DELAYED\_WORK(&dev->mode\_config.output\_poll\_work, output\_poll\_execute);}
+      可以修改 {\tiny \#define DRM\_OUTPUT\_POLL\_PERIOD (10*HZ)} 将10 改成 3600 。
+    \item<0-> 另一个是通过{\tiny drm\_do\_probe\_dde\_edid} 读取。
+    \item<0-> 因为同步导致的花屏闪屏，调整上下文的时序，增加延时会导致现象的不同。
+    \end{itemize}
+    例子中的干扰项有一点迷惑性，要排除这些干扰需要经验的积累。
+  \end{block}
+\end{frame}
+
+\section{切中要害}
+\subsection{bpftrace 分析关键函数}
+\begin{frame}{bpftrace 分析关键函数}
+  使用{\tiny sudo stackcount-bpfcc drm\_crtc\_helper\_set\_config} 多次测试，使用 bpf 分析
+  调用，发现出问题的时候就出现下面的调用栈：
+  \begin{block}{调用栈}
+    {\tiny
+      drm\_crtc\_helper\_set\_config \\
+      amdgpu\_display\_crtc\_set\_config \\
+      \_\_drm\_mode\_set\_config\_internal \\
+      drm\_crtc\_force\_disable \\
+      drm\_framebuffer\_remove \\
+      drm\_mode\_rmfb\_work\_fn \\
+      process\_one\_work \\
+      worker\_thread \\
+      kthread \\
+      ret\_from\_fork \\
+      \ \ kworker/4:3 [8160] \\
+    }
+  \end{block}
+  \begin{center}
+    \textcolor{mymauve}{ 问题很容易复现，关键就是解释这个逻辑的过程}
+  \end{center}
+\end{frame}
+
+\subsection{ 逻辑分析}
+\begin{frame}{ 一句话}
+  用一句话来解释的话就是 setcrtc 是异步的，而Oland 显卡执行这个的时间不确定。
+  Oland 显卡使用的 {\tiny DRM\_IOCTL\_MODE\_RMFB} 这个ioctl不是原子性的，drm\_framebuffer\_remove 调用的legacy\_remove\_fb也不是
+  原子性的，所以无法失败回退。不能重新调用执行正确的逻辑怎么办？可以为内核增加容错的逻辑用一种有不太好的方式掩盖更大的问题。 \\
+  ~\\
+
+  xorg 收到信号后会调用 setcrtc 的ioctl，整体执行的时间比较长且此函数异步，下面又调用 rmfb 的ioctl，导致 sigusr1 处于pending
+  状态的时间也比较长。rmfb 的ioctl如要使用 drm\_framebuffer\_remove 的话，会返回 -EINTR 。xorg 没有重新调用
+  rmfb 这个ioctl 的逻辑那就不用这个函数，另外写一个处理过程，再内核空间做完 rmfb 的动作。
+
+  不支持原子setcrtc 的旧架构的显卡，可能读写寄存器有时快一点有时慢一点，就会有时导致  drm\_framebuffer\_read\_refcount(fb) > 1
+  在这种情况下就不是调用 drm\_framebuffer\_put(fb) 做释放。而是
+  让内核在内核空间的共享任务队列当中创建一个任务，以解决可能的逻辑问题。这个函数执行的时间比
+  较长，就会黑屏。\\
+  ~\\
+
+  具体细节在drm\_mode\_rmfb这个函数当中。这个问题是机制的问题，并不好解决。
+\end{frame}
+
+\begin{frame}{ xorg 断点一}
+  下面是切出的 xorg 收到信号和 drmModeSetCrtc 断点的堆栈。切出的时候会调用 setcrtc 的
+  ioctl 一次。会调用三次rmfb （和创建的有户数相等）。所以是切出的时候导致的黑屏。
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{1\linewidth}{!}{
+          \includegraphics[width=6in]{figures/gdb1.pdf}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  %\begin{figure}[!t]
+  %  \centering
+  %  \includegraphics[width=5in]{figures/gdb1.pdf}
+  %  \caption{退出的xorg}
+  %  \label{gdb1}
+  \end{figure}
+\end{frame}
+
+\begin{frame}{ xorg 断点二}
+  下面是切入的 xorg 收到信号和 drmModeSetCrtc 断点的堆栈，有黑屏切入的时候会调用setcrtc 的
+  ioctl 两次，不会调用rmfb 。
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{1\linewidth}{!}{
+          \includegraphics[width=6in]{figures/gdb2.pdf}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+  这里有一个比较绕的 fbs 参数传递的地方。
+  \lstinputlisting[
+  basicstyle=\tiny,
+  %lastline=11,
+  language=C,
+  frame=single,
+  %caption=First ten lines of some Python code,
+  label=c]
+  {demo1.c}
+
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+
+  用户态每open 一个 fb 并创建一个fd 的时候，内核都会创建一个 drm\_file 用于关联
+  用户空间的 fd 。drm\_file 有一个成员是 fbs ，用于存储与用户态的fd 相关联的全
+  部fb 。
+  \lstinputlisting[
+  basicstyle=\tiny,
+  %lastline=11,
+  language=C,
+  frame=single,
+  %caption=First ten lines of some Python code,
+  label=c]
+  {demo2.c}
+
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+  直接调用 drm\_framebuffer\_remove 去删除fb 的话，会被信号打断。
+  \lstinputlisting[
+  basicstyle=\tiny,
+  %lastline=11,
+  language=C,
+  frame=single,
+  %caption=First ten lines of some Python code,
+  label=c]
+  {demo3.c}
+
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+  对 crtc 和 plane 这些资源做释放。
+  \lstinputlisting[
+  basicstyle=\tiny,
+  %lastline=11,
+  language=C,
+  frame=single,
+  %caption=First ten lines of some Python code,
+  label=c]
+  {demo4.c}
+
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+  setcrtc 的ioctl 过程当中会增加 fb 的refcount 。
+  \lstinputlisting[
+  basicstyle=\tiny,
+  %lastline=11,
+  language=C,
+  frame=single,
+  %caption=First ten lines of some Python code,
+  label=c]
+  {demo5.c}
+
+\end{frame}
+
+\begin{frame}{ 内核逻辑}
+  在 drm 框架当中，framebuffer 的引用计数在 drm\_framebuffer\_lookup 的时候会用，
+  在用户空间open 的时候会用，还有在内核drm\_client 做渲染的时候也会用。drm\_mode\_rmfb
+  的时候也要引用计数变为零之后才会释放。为了防止内核或系统卡死，framebuffer refcount 的处
+  理要比较小心。
+\end{frame}
+
+
+\section{ ioctl的过程}
+\begin{frame}{ 切出的 xorg IOCTL 过程}
+  % {\tiny strace -e ioctl -p 899}
+  切出会调用rmfb ioctl 三次（和创建的用户数相等），不论是否黑屏。
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{0.7\linewidth}{!}{
+          \includegraphics[width=0.5\textwidth]{figures/ioctl.pdf}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+\begin{frame}{ 切入的 xorg IOCTL 过程}
+  %{\tiny strace -e ioctl -p 899}
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{0.7\linewidth}{!}{
+          \includegraphics[width=2in]{figures/ioctl2.pdf}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+\begin{frame}{ 交互的过程}
+  \begin{block}{\textbf{ 流程}}
+     \begin{itemize}
+     \item<0-> 上层应用切换用户一是用户按下 Ctrl+Alt+F1 到 F12 快捷键，触发键盘中断
+       ；二是通过 dde-session-shell （switchToUser) - lightdm - systemd-logind （用户会话与tty 关联）
+  \item<0-> 切换用户的本质是资源的切换，主要是 systemd-logind 分配 cgroup 的切换和 tty 的切换。
+  \item<0-> tty 驱动程序检查输入的按键是否是 VT 切换快捷键。如果是，则调用 vt\_ioctl() 函数进行 VT 切换。
+  \item<0-> vt\_ioctl() 函数将 VT 切换请求转发给 console 驱动程序进行处理。
+  \item<0-> console 驱动程序根据请求切换到对应的 VT，并更新对应的 tty 和终端设备状态。
+  \item<0-> 一旦 VT 切换完成，console 驱动程序调用 vt\_event() 函数向用户空间发送 VT 切换事件。
+  \item<0-> Xorg 服务器接收到 VT 切换事件，并调用 xf86VTEnter() 或 xf86VTLeave() 函数来响应事件。
+  \item<0-> xf86VTEnter() 或 xf86VTLeave() 函数中，Xorg 服务器会暂停或恢复相关的图形设备、输入设备和输出设备，
+    并执行相应的回调函数。
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{ 交互的过程}
+  % 用 tikz 来画一张流程图，这个不难
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{0.7\linewidth}{!}{
+          \includegraphics[width=2in]{figures/tty-x-switch.png}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+
+% 要增加两个图来把这部分梳理一下，一个图是信号的；另一个图是内核处理部分。
+\subsection{ 信号的处理流程}
+\begin{frame}
+  \frametitle{ 关于 sigusr1 信号}
+  \begin{block}{\textbf{ 即是切出信号也是切入信号}}
+    \begin{itemize}
+    \item<0-> 点击切换按钮会调用vt\_ioctl 的VT\_ACTIVATE 和VT\_RELDISP 。
+    \item<0-> 首先调用 VT\_ACTIVATE 的ioctl 用于激活目标虚拟终端，过程是主要在vt 驱动中：
+      set\_console - schedule\_console\_callback - console\_work -  console\_callback - change\_console
+      vt 切换的过程1.内核会向切出的 xorg 发 sigusr1 信号通知它要做处理。
+    \item<0-> 然后调用VT\_RELDISP 的ioctl 用于释放当前终端。
+      complete\_change\_console - kill\_pid(vc->vt\_pid, vc->vt\_mode.acqsig, 1)
+      vt 切换的过程2.切出的xorg 向切入的xorg 发sigusr1 信号。
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{ 交互的过程}
+  % 用 tikz 来画一张流程图，这个不难
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{0.7\linewidth}{!}{
+          \includegraphics[width=2in]{figures/sigusr1.png}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+
+
+\section{ 问题该如何解决}
+\subsection{ CCB 评审}
+
+
+
+\begin{frame}{ 最近的一次修正提交}
+  不支持原子rmfb 的显卡都会走这个逻辑，虚拟机的umd的显示驱动vmwgfx要求fb
+  要彻底删除。rmfb 的逻辑涉及的范围很广。而且这个逻辑的小修改自 2016 年以来一直
+  没有新的改动，所以是没有大问题的。在公共部分加一些延时的trick 来修正 Oland 的显卡不是好办法。
+  \begin{figure}[thpb]
+        \centering
+        \resizebox{0.7\linewidth}{!}{
+          \includegraphics[width=2in]{figures/git.png}
+        }
+        % \includegraphics[scale=1.0]{figurefile}
+        % \caption{ 此处是图片的名称}
+        \label{fig:campus}
+  % flip
+  \end{figure}
+\end{frame}
+
+
+
+
+\begin{frame}{}
+  切换用户过程中，宏观性能下降，闪屏的问题都是不支持 atomic\_remove\_fb 这个
+  函数的遗留问题。这个问题是显卡的特性，经过一段时间的查询和思考是不能修改的。
+  所以建议 CCB 评审关闭。
+
+  \\~
+
+  占老板还说过一个问题调用dpms的时候关crtc，渲染还没有结束，会导致花屏。这种问题
+  其实也应该归为原子性的问题，如果是支持 drm\_atomic\_connector\_commit\_dpms 特性的显卡
+  就不会出现问题。显卡在发展中，历史上出现的一些小的不合理的架构设计也在不断完善，因为
+  硬件架构设计不支持的特性不能在内核当中解决。
+
+\end{frame}
+
+
+\section{Future Work}
+\begin{frame}{Future Work}  %将来可做的方向
+  \begin{itemize}
+  \item<0-> 总结调式经验，加快分析速度，提升分析能力，多看显卡驱动的代码。
+  \item<0-> 加深 drm 代码和 xorg 主要功能过程的的理解。
+  \item<0-> 因为用户态和内核态都有涉及，增加用户态 mesa 的代码熟悉。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Thank you}
+  \begin{center}
+    \begin{minipage}{1\textwidth}
+      \setbeamercolor{mybox}{fg=white, bg=black!50!blue}
+      \begin{beamercolorbox}[wd=0.70\textwidth, rounded=true, shadow=true]{mybox}
+        \LARGE \centering Thank you for listening!  %结束语
+      \end{beamercolorbox}
+    \end{minipage}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Q\&A}
+  \begin{center}
+    \begin{minipage}{1\textwidth}
+      \setbeamercolor{mybox}{fg=white, bg=black!50!blue}
+      \begin{beamercolorbox}[wd=0.70\textwidth, rounded=true, shadow=true]{mybox}
+        \LARGE \centering  Questions?  %请求提问
+      \end{beamercolorbox}
+    \end{minipage}
+  \end{center}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\end{document}
+% 文档结束
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

@@ -1,7 +1,7 @@
 +++
 title = "在我的博客和emacs中使用tikz 画图"
 date = 2023-12-11T15:43:00+08:00
-lastmod = 2023-12-13T11:27:11+08:00
+lastmod = 2023-12-14T17:47:04+08:00
 tags = ["emacs"]
 categories = ["technology"]
 draft = false
@@ -211,105 +211,105 @@ tikz 的在线使用教程：
 {{< figure src="/ox-hugo/demo1.png" >}}
 
 ```latex
-  \begin{tikzpicture}[background rectangle/.style={fill=white}, show background rectangle, scale=0.7]
-    % \begin{tikzpicture}[scale=0.6]
-    \usetikzlibrary{shapes.geometric,shapes.symbols,fit,positioning,shadows}
-    \usetikzlibrary{backgrounds}
-    % https://tex.stackexchange.com/a/12039/121799
-    \makeatletter
-    \pgfkeys{/pgf/.cd,
-      parallelepiped offset x/.initial=2mm,
-      parallelepiped offset y/.initial=2mm
+%\begin{tikzpicture}[background rectangle/.style={fill=white}, show background rectangle, scale=0.4]
+  \begin{tikzpicture}[scale=0.4]
+  \usetikzlibrary{shapes.geometric,shapes.symbols,fit,positioning,shadows}
+  \usetikzlibrary{backgrounds}
+  % https://tex.stackexchange.com/a/12039/121799
+  \makeatletter
+  \pgfkeys{/pgf/.cd,
+    parallelepiped offset x/.initial=2mm,
+    parallelepiped offset y/.initial=2mm
+  }
+  \pgfdeclareshape{parallelepiped}
+  {
+    \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
+    \inheritanchorborder[from=rectangle]
+    \inheritanchor[from=rectangle]{north}
+    \inheritanchor[from=rectangle]{north west}
+    \inheritanchor[from=rectangle]{north east}
+    \inheritanchor[from=rectangle]{center}
+    \inheritanchor[from=rectangle]{west}
+    \inheritanchor[from=rectangle]{east}
+    \inheritanchor[from=rectangle]{mid}
+    \inheritanchor[from=rectangle]{mid west}
+    \inheritanchor[from=rectangle]{mid east}
+    \inheritanchor[from=rectangle]{base}
+    \inheritanchor[from=rectangle]{base west}
+    \inheritanchor[from=rectangle]{base east}
+    \inheritanchor[from=rectangle]{south}
+    \inheritanchor[from=rectangle]{south west}
+    \inheritanchor[from=rectangle]{south east}
+    \backgroundpath{
+      % store lower right in xa/ya and upper right in xb/yb
+      \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+      \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+      \pgfmathsetlength\pgfutil@tempdima{\pgfkeysvalueof{/pgf/parallelepiped offset x}}
+      \pgfmathsetlength\pgfutil@tempdimb{\pgfkeysvalueof{/pgf/parallelepiped offset y}}
+      \def\ppd@offset{\pgfpoint{\pgfutil@tempdima}{\pgfutil@tempdimb}}
+      \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
+      \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+      \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+      \pgfpathlineto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+      \pgfpathclose
+      \pgfpathmoveto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
+      \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@ya}}{\ppd@offset}}
+      \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@yb}}{\ppd@offset}}
+      \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xa}{\pgf@yb}}{\ppd@offset}}
+      \pgfpathlineto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
+      \pgfpathmoveto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
+      \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@yb}}{\ppd@offset}}
     }
-    \pgfdeclareshape{parallelepiped}
-    {
-      \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
-      \inheritanchorborder[from=rectangle]
-      \inheritanchor[from=rectangle]{north}
-      \inheritanchor[from=rectangle]{north west}
-      \inheritanchor[from=rectangle]{north east}
-      \inheritanchor[from=rectangle]{center}
-      \inheritanchor[from=rectangle]{west}
-      \inheritanchor[from=rectangle]{east}
-      \inheritanchor[from=rectangle]{mid}
-      \inheritanchor[from=rectangle]{mid west}
-      \inheritanchor[from=rectangle]{mid east}
-      \inheritanchor[from=rectangle]{base}
-      \inheritanchor[from=rectangle]{base west}
-      \inheritanchor[from=rectangle]{base east}
-      \inheritanchor[from=rectangle]{south}
-      \inheritanchor[from=rectangle]{south west}
-      \inheritanchor[from=rectangle]{south east}
-      \backgroundpath{
-        % store lower right in xa/ya and upper right in xb/yb
-        \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
-        \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
-        \pgfmathsetlength\pgfutil@tempdima{\pgfkeysvalueof{/pgf/parallelepiped offset x}}
-        \pgfmathsetlength\pgfutil@tempdimb{\pgfkeysvalueof{/pgf/parallelepiped offset y}}
-        \def\ppd@offset{\pgfpoint{\pgfutil@tempdima}{\pgfutil@tempdimb}}
-        \pgfpathmoveto{\pgfqpoint{\pgf@xa}{\pgf@ya}}
-        \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
-        \pgfpathlineto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
-        \pgfpathlineto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
-        \pgfpathclose
-        \pgfpathmoveto{\pgfqpoint{\pgf@xb}{\pgf@ya}}
-        \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@ya}}{\ppd@offset}}
-        \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@yb}}{\ppd@offset}}
-        \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xa}{\pgf@yb}}{\ppd@offset}}
-        \pgfpathlineto{\pgfqpoint{\pgf@xa}{\pgf@yb}}
-        \pgfpathmoveto{\pgfqpoint{\pgf@xb}{\pgf@yb}}
-        \pgfpathlineto{\pgfpointadd{\pgfpoint{\pgf@xb}{\pgf@yb}}{\ppd@offset}}
-      }
+  }
+  % https://tex.stackexchange.com/a/103691/121799
+  \pgfdeclareshape{document}{
+    \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
+    \inheritanchorborder[from=rectangle]
+    \inheritanchor[from=rectangle]{center}
+    \inheritanchor[from=rectangle]{north}
+    \inheritanchor[from=rectangle]{north east}
+    \inheritanchor[from=rectangle]{north west}
+    \inheritanchor[from=rectangle]{south}
+    \inheritanchor[from=rectangle]{south east}
+    \inheritanchor[from=rectangle]{south west}
+    \inheritanchor[from=rectangle]{west}
+    \inheritanchor[from=rectangle]{east}
+    \backgroundpath{%
+      \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+      \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+      \pgf@xc=\pgf@xb \advance\pgf@xc by-5pt % this should be a parameter
+      \pgf@yc=\pgf@ya \advance\pgf@yc by5pt
+      \pgfpathmoveto{\pgfpoint{\pgf@xa}{\pgf@ya}}
+      \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yb}}
+      \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yb}}
+      \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+      \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@ya}}
+      \pgfpathclose
+      % add little corner
+      \pgfpathmoveto{\pgfpoint{\pgf@xc}{\pgf@ya}}
+      \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+      \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+      \pgfpathclose
     }
-    % https://tex.stackexchange.com/a/103691/121799
-    \pgfdeclareshape{document}{
-      \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
-      \inheritanchorborder[from=rectangle]
-      \inheritanchor[from=rectangle]{center}
-      \inheritanchor[from=rectangle]{north}
-      \inheritanchor[from=rectangle]{north east}
-      \inheritanchor[from=rectangle]{north west}
-      \inheritanchor[from=rectangle]{south}
-      \inheritanchor[from=rectangle]{south east}
-      \inheritanchor[from=rectangle]{south west}
-      \inheritanchor[from=rectangle]{west}
-      \inheritanchor[from=rectangle]{east}
-      \backgroundpath{%
-        \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
-        \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
-        \pgf@xc=\pgf@xb \advance\pgf@xc by-5pt % this should be a parameter
-        \pgf@yc=\pgf@ya \advance\pgf@yc by5pt
-        \pgfpathmoveto{\pgfpoint{\pgf@xa}{\pgf@ya}}
-        \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yb}}
-        \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yb}}
-        \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
-        \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@ya}}
-        \pgfpathclose
-        % add little corner
-        \pgfpathmoveto{\pgfpoint{\pgf@xc}{\pgf@ya}}
-        \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
-        \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
-        \pgfpathclose
-      }
-    }
-    \makeatother
+  }
+  \makeatother
 
-    \tikzset{doc/.style={document,fill=blue!10,draw,thin,minimum
-        height=1.2cm,align=center},
-      pics/.cd,
-      pack/.style={code={%
-          \draw[fill=blue!50,opacity=0.2] (0,0) -- (0.5,-0.25) -- (0.5,0.25) -- (0,0.5) -- cycle;
-          \draw[fill=blue!50,opacity=0.2] (0,0) -- (-0.5,-0.25) -- (-0.5,0.25) -- (0,0.5) -- cycle;
-          \draw[fill=blue!60,opacity=0.2] (0,0) -- (-0.5,-0.25) -- (0,-0.5) -- (0.5,-0.25) -- cycle;
-          \draw[fill=blue!60] (0,0) -- (0.25,0.125) -- (0,0.25) -- (-0.25,0.125) -- cycle;
-          \draw[fill=blue!50] (0,0) -- (0.25,0.125) -- (0.25,-0.125) -- (0,-0.25) -- cycle;
-          \draw[fill=blue!50] (0,0) -- (-0.25,0.125) -- (-0.25,-0.125) -- (0,-0.25) -- cycle;
-          \draw[fill=blue!50,opacity=0.2] (0,-0.5) -- (0.5,-0.25) -- (0.5,0.25) -- (0,0) -- cycle;
-          \draw[fill=blue!50,opacity=0.2] (0,-0.5) -- (-0.5,-0.25) -- (-0.5,0.25) -- (0,0) -- cycle;
-          \draw[fill=blue!60,opacity=0.2] (0,0.5) -- (-0.5,0.25) -- (0,0) -- (0.5,0.25) -- cycle;
-        }}}
+  \tikzset{doc/.style={document,fill=blue!10,draw,thin,minimum
+      height=1.2cm,align=center},
+    pics/.cd,
+    pack/.style={code={%
+        \draw[fill=blue!50,opacity=0.2] (0,0) -- (0.5,-0.25) -- (0.5,0.25) -- (0,0.5) -- cycle;
+        \draw[fill=blue!50,opacity=0.2] (0,0) -- (-0.5,-0.25) -- (-0.5,0.25) -- (0,0.5) -- cycle;
+        \draw[fill=blue!60,opacity=0.2] (0,0) -- (-0.5,-0.25) -- (0,-0.5) -- (0.5,-0.25) -- cycle;
+        \draw[fill=blue!60] (0,0) -- (0.25,0.125) -- (0,0.25) -- (-0.25,0.125) -- cycle;
+        \draw[fill=blue!50] (0,0) -- (0.25,0.125) -- (0.25,-0.125) -- (0,-0.25) -- cycle;
+        \draw[fill=blue!50] (0,0) -- (-0.25,0.125) -- (-0.25,-0.125) -- (0,-0.25) -- cycle;
+        \draw[fill=blue!50,opacity=0.2] (0,-0.5) -- (0.5,-0.25) -- (0.5,0.25) -- (0,0) -- cycle;
+        \draw[fill=blue!50,opacity=0.2] (0,-0.5) -- (-0.5,-0.25) -- (-0.5,0.25) -- (0,0) -- cycle;
+        \draw[fill=blue!60,opacity=0.2] (0,0.5) -- (-0.5,0.25) -- (0,0) -- (0.5,0.25) -- cycle;
+      }}}
 
-\resizebox {\textwidth} {!}{
+  \resizebox {\textwidth} {!}{
     [font=\sffamily,every label/.append
     style={font=\small\sffamily,align=center}]
     \node[cylinder, cylinder uses custom fill, cylinder end fill=blue!25,
@@ -332,10 +332,10 @@ tikz 的在线使用教程：
     \draw[-] (Client) -- ++ (1,0) |- (Server) coordinate[pos=0.25] (aux1);
     \node[draw,dashed,rounded corners,fit=(fit2) (aux1),inner
     xsep=10pt,inner ysep=30pt,label={above:{Source}}](fit3){};
-    %
+
     \pic[right=2cm of aux1,local bounding box=Webpack,scale=2] (Webpack) {pack};
     \node[below=1mm of Webpack,font=\small\sffamily,align=center]{Webpack\\ build};
-    %
+
     \node[above right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ServerBundle)
     {Server\\ bundle};
     \node[below right=1cm and 2cm of Webpack.east,doc,fill=red!10] (ClientBundle) {Client\\
@@ -350,16 +350,49 @@ tikz 的在线使用教程：
     \draw[-latex] (ClientBundle) -- (HTML) node[midway,below,font=\small\sffamily]{Hydrate};
     \draw (ServerBundle) -- (BundleRenderer);
     \draw[-latex] (BundleRenderer) -- (HTML) node[midway,right,font=\small\sffamily]{Render};
-    %
+
     \node[draw,dashed,rounded corners,fit=(ServerBundle) (BundleRenderer),inner
     sep=10pt,label={above:{Node server}}](fit4){};
     \node[draw,dashed,rounded corners,fit=(ClientBundle) (HTML),inner
     sep=10pt,label={below:{Browser}}](fit5){};
-}
-  \end{tikzpicture}
+  }
+\end{tikzpicture}
 ```
 
 {{< figure src="/ox-hugo/demo2.png" >}}
+
+```latex
+\begin{tikzpicture}
+  \draw (0,0) to (3,2);
+  \draw (0,0) to[out=90,in=180] (3,2);
+  \draw (0,0) to[bend right] (3,2);
+\end{tikzpicture}
+```
+
+{{< figure src="/ox-hugo/example1.png" >}}
+
+下面是一个中文的示例，这个例子之所以可以导出中文是因为 HEADER 的设置增加了 \usepackage{fontspec} ，并在代码中设置了 font ，并且 HEADER 中指定使用 imagemagick 进行导出，代码中也设置了中文字体：
+
+```latex
+\begin{tikzpicture}[
+  rec/.style={rectangle, thick,minimum width=1.5cm,minimum height=0.5cm,text centered,draw=#1,fill=#1!15,UTF8},
+  arrow/.style={ ->,>=stealth,very thick,red!80!black},
+  ]
+  \setmainfont{FandolSong-Regular.otf}
+  \node(rec1)     [rec=blue]                          {现实问题};
+  \node(rec2)     [rec=purple,right = of rec1]        {数学模型};
+  \node(rec3)     [rec=green,right = of rec2]         {数学结论};
+  \node(rec4)     [rec=orange,right = of rec3]        {解释 \& 预测};
+  \draw[arrow]   (rec1)  --node[above]{建模}    (rec2);
+  \draw[arrow]   (rec2)  --node[above]{求解}    (rec3);
+  \draw[arrow]   (rec3)  --node[above]{解释}    (rec4);
+  \draw[arrow]   (rec4.south)--($(rec4.south)+(0,-1)$)
+  --node[above]{检验}  ($(rec1.south)+(0,-1cm)$)
+  -- (rec1.south);
+\end{tikzpicture}
+```
+
+{{< figure src="/ox-hugo/process1.png" >}}
 
 
 ## 总结 {#总结}

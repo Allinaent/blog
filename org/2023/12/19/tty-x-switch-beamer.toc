@@ -1,0 +1,15 @@
+\beamer@sectionintoc {2}{引言}{3}{0}{1}
+\beamer@subsectionintoc {2}{1}{问题背景}{4}{0}{1}
+\beamer@subsectionintoc {2}{2}{分析思路}{6}{0}{1}
+\beamer@subsectionintoc {2}{3}{调试手段}{7}{0}{1}
+\beamer@sectionintoc {3}{误入迷途}{8}{0}{2}
+\beamer@subsectionintoc {3}{1}{ 举例}{9}{0}{2}
+\beamer@subsectionintoc {3}{2}{总结}{11}{0}{2}
+\beamer@sectionintoc {4}{切中要害}{12}{0}{3}
+\beamer@subsectionintoc {4}{1}{bpftrace 分析关键函数}{13}{0}{3}
+\beamer@subsectionintoc {4}{2}{ 逻辑分析}{14}{0}{3}
+\beamer@sectionintoc {5}{ ioctl的过程}{23}{0}{4}
+\beamer@subsectionintoc {5}{1}{ 信号的处理流程}{28}{0}{4}
+\beamer@sectionintoc {6}{ 问题该如何解决}{30}{0}{5}
+\beamer@subsectionintoc {6}{1}{ CCB 评审}{31}{0}{5}
+\beamer@sectionintoc {7}{Future Work}{33}{0}{6}

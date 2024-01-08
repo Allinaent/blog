@@ -2,7 +2,7 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2023-12-11T17:30:03+08:00
+lastmod = 2024-01-08T10:21:13+08:00
 tags = ["gpu"]
 categories = ["technology"]
 draft = false
@@ -2794,8 +2794,6 @@ setcrtc 是不是有一人默认的延时时间。
 2023-12-06 15:24:38 uos-PC kernel: [78178.170911] [drm:dce_v6_0_crtc_load_lut [amdgpu]] 0
 ```
 
-{{< figure src="/ox-hugo/example1.png" >}}
-
 ```nil
 deepin-elf-veri -> 11073-deepin-elf-veri:23
 dde-system-daem -> 965-dde-system-daem:23
@@ -2877,3 +2875,756 @@ kworker/3:0 -&gt; 889-Xorg:10
 Xorg -&gt; 3723-Xorg:10
 
 看看这两个，信号就是从内核的进程发出来的。那这个信号到底是什么含义呢？如何通过代码找到发送信号的地方呢？
+
+
+## 韬哥指导 {#韬哥指导}
+
+可以在 trace 里打印一下 kstack，看看 kworker 的路径。
+
+一般而言，内核是不会主动向用户进程发送 SIGUSR 的，这是留给用户进程自定义的信号，有 SIGUSR1 和 SIGUSR2。
+
+所以，很有可能是这是 xorg 主动注册的：在某个事件发生时，给我发送这个信号，我会知道怎么处理。典型的就是内核提供的定时器接口 itimer，默认是发送 SIGALARM，但是是可以指定 signal 的。
+
+所以往下至少有这样一些思路可以找找：
+
+-   打印 kstack，看 kworker 路径。——有可能都不是因为 kworker 发的，而是在 irq/softirq 里，比如在 hrtimer 中断里发的。
+
+-   看一下 xorg 的这个信号的 handler，可以用 crash 找到 handler 地址，然后用 gdb 找到函数名，或者在 xorg 代
+
+码里搜一搜 SIGUSR，或者在它运行时 trace 一下 signal handler 的注册过程，估计都可以找到。
+
+-   根据它的注册接口（什么事件会触发）、handler，流程框架可能就大概出来了。
+
+按照韬哥的思路我来尝试一下。
+
+```bt
+bpftrace -e 'tracepoint:signal:signal_generate { printf("Process %d %s sent SIGNAL %d to process %d %s\n", pid, comm, args->sig, args->pid, args->comm);printf("Kstack %s\n",kstack);}'
+```
+
+还是用韬哥的脚本做一下修改可以使用：
+
+```bpftrace
+#!/usr/bin/env bpftrace
+
+#ifndef BPFTRACE_HAVE_BTF
+#include <linux/sched.h>
+
+// Until BTF is available, we'll need to declare some of this struct manually,
+// since it isn't available to be #included. This will need maintenance to match
+// your kernel version. It is from kernel/sched/sched.h:
+struct cfs_rq {
+        struct load_weight load;
+        unsigned long runnable_weight;
+        unsigned int nr_running;
+        unsigned int h_nr_running;
+};
+#endif
+
+
+k:send_signal
+{
+        // for 4.19:
+        //              $task = (task_struct *)arg2;                    -> OK
+        //              $task = (struct task_struct *)arg2;             -> NG
+        $task = (task_struct *)arg2;
+        printf("%s -> %d-%s:%d\nkstack: %s,", comm, $task->pid,
+                $task->comm, arg0, kstack);
+}
+```
+
+```nil
+,kworker/1:1 -> 3723-Xorg:10
+kstack:
+        send_signal+1
+        do_send_sig_info+74
+        kill_pid_info+68
+        change_console+113
+        console_callback+357
+        process_one_work+423
+        worker_thread+48
+        kthread+274
+        ret_from_fork+31
+,dde-switchtogre -> 1-systemd:17
+kstack:
+        send_signal+1
+        do_notify_parent+538
+        do_exit+2950
+        do_group_exit+58
+        __x64_sys_exit_group+20
+        do_syscall_64+90
+        entry_SYSCALL_64_after_hwframe+68
+,Xorg -> 889-Xorg:10
+kstack:
+        send_signal+1
+        do_send_sig_info+74
+        kill_pid_info+68
+        complete_change_console+154
+        vt_ioctl+4101
+        tty_ioctl+540
+        do_vfs_ioctl+164
+        ksys_ioctl+96
+        __x64_sys_ioctl+22
+        do_syscall_64+90
+        entry_SYSCALL_64_after_hwframe+68
+
+```
+
+gdb 下查看 handler 函数：
+
+是这个函数，
+xf86VTRequest
+
+搜到的函数如下：
+
+```nil
+uos@uos-PC:~/x_all$ grep xf86VTRequest -rIin
+xorg-server-1.20.4.71/hw/xfree86/os-support/bsd/bsd_init.c:272:                OsSignal(SIGUSR1, xf86VTRequest);
+xorg-server-1.20.4.71/hw/xfree86/os-support/bsd/bsd_VTsw.c:45:xf86VTRequest(int sig)
+xorg-server-1.20.4.71/hw/xfree86/os-support/linux/lnx_init.c:241:            OsSignal(SIGUSR1, xf86VTRequest);
+xorg-server-1.20.4.71/hw/xfree86/os-support/shared/VTsw_usl.c:44:xf86VTRequest(int sig)
+xorg-server-1.20.4.71/hw/xfree86/os-support/shared/VTsw_usl.c:46:    OsSignal(sig, (void (*)(int)) xf86VTRequest);
+xorg-server-1.20.4.71/hw/xfree86/os-support/xf86_OSproc.h:181:extern _X_EXPORT void xf86VTRequest(int sig);
+```
+
+在内术当中有这几个函数：
+
+```c
+void change_console(struct vc_data *new_vc)
+{
+        struct vc_data *vc;
+
+        if (!new_vc || new_vc->vc_num == fg_console || vt_dont_switch)
+                return;
+
+        /*
+         * If this vt is in process mode, then we need to handshake with
+         * that process before switching. Essentially, we store where that
+         * vt wants to switch to and wait for it to tell us when it's done
+         * (via VT_RELDISP ioctl).
+         *
+         * We also check to see if the controlling process still exists.
+         * If it doesn't, we reset this vt to auto mode and continue.
+         * This is a cheap way to track process control. The worst thing
+         * that can happen is: we send a signal to a process, it dies, and
+         * the switch gets "lost" waiting for a response; hopefully, the
+         * user will try again, we'll detect the process is gone (unless
+         * the user waits just the right amount of time :-) and revert the
+         * vt to auto control.
+         */
+        vc = vc_cons[fg_console].d;
+        if (vc->vt_mode.mode == VT_PROCESS) {
+                /*
+                 * Send the signal as privileged - kill_pid() will
+                 * tell us if the process has gone or something else
+                 * is awry.
+                 *
+                 * We need to set vt_newvt *before* sending the signal or we
+                 * have a race.
+                 */
+                vc->vt_newvt = new_vc->vc_num;
+                if (kill_pid(vc->vt_pid, vc->vt_mode.relsig, 1) == 0) {
+                        /*
+                         * It worked. Mark the vt to switch to and
+                         * return. The process needs to send us a
+                         * VT_RELDISP ioctl to complete the switch.
+                         */
+                        return;
+                }
+
+                /*
+                 * The controlling process has died, so we revert back to
+                 * normal operation. In this case, we'll also change back
+                 * to KD_TEXT mode. I'm not sure if this is strictly correct
+                 * but it saves the agony when the X server dies and the screen
+                 * remains blanked due to KD_GRAPHICS! It would be nice to do
+                 * this outside of VT_PROCESS but there is no single process
+                 * to account for and tracking tty count may be undesirable.
+                 */
+                reset_vc(vc);
+
+                /*
+                 * Fall through to normal (VT_AUTO) handling of the switch...
+                 */
+        }
+
+        /*
+         * Ignore all switches in KD_GRAPHICS+VT_AUTO mode
+         */
+        if (vc->vc_mode == KD_GRAPHICS)
+                return;
+
+        complete_change_console(new_vc);
+}
+```
+
+```c
+/*
+ * This is the console switching callback.
+ *
+ * Doing console switching in a process context allows
+ * us to do the switches asynchronously (needed when we want
+ * to switch due to a keyboard interrupt).  Synchronization
+ * with other console code and prevention of re-entrancy is
+ * ensured with console_lock.
+ */
+static void console_callback(struct work_struct *ignored)
+{
+        console_lock();
+
+        if (want_console >= 0) {
+                if (want_console != fg_console &&
+                    vc_cons_allocated(want_console)) {
+                        hide_cursor(vc_cons[fg_console].d);
+                        change_console(vc_cons[want_console].d);
+                        /* we only changed when the console had already
+                           been allocated - a new console is not created
+                           in an interrupt routine */
+                }
+                want_console = -1;
+        }
+        if (do_poke_blanked_console) { /* do not unblank for a LED change */
+                do_poke_blanked_console = 0;
+                poke_blanked_console();
+        }
+        if (scrollback_delta) {
+                struct vc_data *vc = vc_cons[fg_console].d;
+                clear_selection();
+                if (vc->vc_mode == KD_TEXT && vc->vc_sw->con_scrolldelta)
+                        vc->vc_sw->con_scrolldelta(vc, scrollback_delta);
+                scrollback_delta = 0;
+        }
+        if (blank_timer_expired) {
+                do_blank_screen(0);
+                blank_timer_expired = 0;
+        }
+        notify_update(vc_cons[fg_console].d);
+
+        console_unlock();
+}
+```
+
+最终找到 xorg ，是 xorg 中的 lnx_init.c 中的 xf86OpenConsole 函数会初始化的时候调用这个函数。再往上是这个：
+
+```c
+/*
+ * InitOutput --
+ *	Initialize screenInfo for all actually accessible framebuffers.
+ *      That includes vt-manager setup, querying all possible devices and
+ *      collecting the pixmap formats.
+ */
+void
+InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
+```
+
+再往上是这个：
+
+```c
+int
+dix_main(int argc, char *argv[], char *envp[])
+```
+
+这个是架构和硬件无关的公共部分。
+
+发现有一堆的函数，还是用 gdb 再看一下吧。
+
+找到收到信号后 xorg 处理的 handler 是哪个，这个如果能找到的话，那么问题大概能理清楚？
+
+处理是在这里的 xf86VTRequest ，这个函数会在收到内核的 SYSUSR1 信号后做一些处理，这个函数如下：
+
+```c
+/*
+ * Handle the VT-switching interface for OSs that use USL-style ioctl()s
+ * (the sysv, sco, and linux subdirs).
+ */
+
+/*
+ * This function is the signal handler for the VT-switching signal.  It
+ * is only referenced inside the OS-support layer.
+ */
+void
+xf86VTRequest(int sig)
+{
+    OsSignal(sig, (void (*)(int)) xf86VTRequest);
+    xf86Info.vtRequestsPending = TRUE;
+    return;
+}
+```
+
+在 lnx_init.c 当中：
+
+```c
+void
+xf86OpenConsole(void)
+{
+    int i, ret;
+    struct vt_stat vts;
+    struct vt_mode VT;
+    const char *vcs[] = { "/dev/vc/%d", "/dev/tty%d", NULL };
+
+    if (serverGeneration == 1) {
+        linux_parse_vt_settings(FALSE);
+
+        if (!KeepTty) {
+            pid_t ppid = getppid();
+            pid_t ppgid;
+
+            ppgid = getpgid(ppid);
+
+            /*
+             * change to parent process group that pgid != pid so
+             * that setsid() doesn't fail and we become process
+             * group leader
+             */
+            if (setpgid(0, ppgid) < 0)
+                xf86Msg(X_WARNING, "xf86OpenConsole: setpgid failed: %s\n",
+                        strerror(errno));
+
+            /* become process group leader */
+            if ((setsid() < 0))
+                xf86Msg(X_WARNING, "xf86OpenConsole: setsid failed: %s\n",
+                        strerror(errno));
+        }
+
+        i = 0;
+        while (vcs[i] != NULL) {
+            snprintf(vtname, sizeof(vtname), vcs[i], xf86Info.vtno);    /* /dev/tty1-64 */
+            if ((xf86Info.consoleFd = open(vtname, O_RDWR | O_NDELAY, 0)) >= 0)
+                break;
+            i++;
+        }
+
+        if (xf86Info.consoleFd < 0)
+            FatalError("xf86OpenConsole: Cannot open virtual console"
+                       " %d (%s)\n", xf86Info.vtno, strerror(errno));
+
+        /*
+         * Linux doesn't switch to an active vt after the last close of a vt,
+         * so we do this ourselves by remembering which is active now.
+         */
+        SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETSTATE, &vts));
+        if (ret < 0)
+            xf86Msg(X_WARNING, "xf86OpenConsole: VT_GETSTATE failed: %s\n",
+                    strerror(errno));
+        else
+            activeVT = vts.v_active;
+
+        if (!xf86Info.ShareVTs) {
+            struct termios nTty;
+
+            /*
+             * now get the VT.  This _must_ succeed, or else fail completely.
+             */
+            if (!switch_to(xf86Info.vtno, "xf86OpenConsole"))
+                FatalError("xf86OpenConsole: Switching VT failed\n");
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETMODE, &VT));
+            if (ret < 0)
+                FatalError("xf86OpenConsole: VT_GETMODE failed %s\n",
+                           strerror(errno));
+
+            OsSignal(SIGUSR1, xf86VTRequest);
+
+            VT.mode = VT_PROCESS;
+            VT.relsig = SIGUSR1;
+            VT.acqsig = SIGUSR1;
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_SETMODE, &VT));
+            if (ret < 0)
+                FatalError
+                    ("xf86OpenConsole: VT_SETMODE VT_PROCESS failed: %s\n",
+                     strerror(errno));
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS));
+            if (ret < 0)
+                FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed %s\n",
+                           strerror(errno));
+
+            tcgetattr(xf86Info.consoleFd, &tty_attr);
+            SYSCALL(ioctl(xf86Info.consoleFd, KDGKBMODE, &tty_mode));
+
+            /* disable kernel special keys and buffering */
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_OFF));
+            if (ret < 0)
+            {
+                /* fine, just disable special keys */
+                SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_RAW));
+                if (ret < 0)
+                    FatalError("xf86OpenConsole: KDSKBMODE K_RAW failed %s\n",
+                               strerror(errno));
+
+                /* ... and drain events, else the kernel gets angry */
+                xf86SetConsoleHandler(drain_console, NULL);
+            }
+
+            nTty = tty_attr;
+            nTty.c_iflag = (IGNPAR | IGNBRK) & (~PARMRK) & (~ISTRIP);
+            nTty.c_oflag = 0;
+            nTty.c_cflag = CREAD | CS8;
+            nTty.c_lflag = 0;
+            nTty.c_cc[VTIME] = 0;
+            nTty.c_cc[VMIN] = 1;
+            cfsetispeed(&nTty, 9600);
+            cfsetospeed(&nTty, 9600);
+            tcsetattr(xf86Info.consoleFd, TCSANOW, &nTty);
+        }
+    }
+    else {                      /* serverGeneration != 1 */
+        if (!xf86Info.ShareVTs && xf86Info.autoVTSwitch) {
+            /* now get the VT */
+            if (!switch_to(xf86Info.vtno, "xf86OpenConsole"))
+                FatalError("xf86OpenConsole: Switching VT failed\n");
+        }
+    }
+}
+```
+
+xf86InfoRec 是 Xorg 服务器中的全局变量，包含了很多的信息，用于初始化等。
+
+```c
+/*
+ * xf86InfoRec contains global parameters which the video drivers never
+ * need to access.  Global parameters which the video drivers do need
+ * should be individual globals.
+ */
+
+typedef struct {
+    int consoleFd;
+    int vtno;
+
+    /* event handler part */
+    int lastEventTime;
+    Bool vtRequestsPending;
+#ifdef __sun
+    int vtPendingNum;
+#endif
+    Bool dontVTSwitch;
+    Bool autoVTSwitch;
+    Bool ShareVTs;
+    Bool dontZap;
+    Bool dontZoom;
+    Bool notrapSignals;         /* don't exit cleanly - die at fault */
+
+    /* graphics part */
+    ScreenPtr currentScreen;
+#if defined(CSRG_BASED) || defined(__FreeBSD_kernel__)
+    int consType;               /* Which console driver? */
+#endif
+
+    /* Other things */
+    Bool allowMouseOpenFail;
+    Bool vidModeEnabled;        /* VidMode extension enabled */
+    Bool vidModeAllowNonLocal;  /* allow non-local VidMode
+                                 * connections */
+    Bool miscModInDevEnabled;   /* Allow input devices to be
+                                 * changed */
+    Bool miscModInDevAllowNonLocal;
+    Bool useSIGIO;              /* Use SIGIO for handling DRI1 swaps */
+    Bool pmFlag;
+    MessageType iglxFrom;
+    XF86_GlxVisuals glxVisuals;
+    MessageType glxVisualsFrom;
+
+    Bool useDefaultFontPath;
+    Bool ignoreABI;
+
+    Bool forceInputDevices;     /* force xorg.conf or built-in input devices */
+    Bool autoAddDevices;        /* Whether to succeed NIDR, or ignore. */
+    Bool autoEnableDevices;     /* Whether to enable, or let the client
+                                 * control. */
+
+    Bool dri2;
+    MessageType dri2From;
+
+    Bool autoAddGPU;
+    const char *debug;
+
+#ifdef XSERVER_PLATFORM_BUS
+    const char *primaryBusDrv;
+    MessageType primaryBusDrvFrom;
+#endif
+
+    Bool autoBindGPU;
+} xf86InfoRec, *xf86InfoPtr;
+```
+
+切换调用的是这个函数：
+
+```c
+/*
+ * xf86VTSwitch --
+ *      Handle requests for switching the vt.
+ */
+static void
+xf86VTSwitch(void)
+{
+    DebugF("xf86VTSwitch()\n");
+
+#ifdef XFreeXDGA
+    if (!DGAVTSwitch())
+        return;
+#endif
+
+    /*
+     * Since all screens are currently all in the same state it is sufficient
+     * check the first.  This might change in future.
+     *
+     * VTLeave is always handled here (VT_PROCESS guarantees this is safe),
+     * if we use systemd_logind xf86VTEnter() gets called by systemd-logind.c
+     * once it has resumed all drm nodes.
+     */
+    if (xf86VTOwner()) {
+#ifdef CONFIG_UDEV_KMS
+        usb_drm_device_handle("remove");
+#endif
+        xf86VTLeave();
+    }
+    else if (!systemd_logind_controls_session()) {
+#ifdef CONFIG_UDEV_KMS
+        usb_drm_device_handle("add");
+#endif
+        xf86VTEnter();
+    }
+}
+```
+
+往上一级是这个：
+
+```c
+/*
+ * xf86Wakeup --
+ *      Os wakeup handler.
+ */
+
+/* ARGSUSED */
+void
+xf86Wakeup(void *blockData, int err)
+{
+    if (xf86VTSwitchPending())
+        xf86VTSwitch();
+}
+
+```
+
+在 xf86Init.c 中的 InitOutput 函数当中会初始化收到切换信号的的注册过程：
+RegisterBlockAndWakeupHandlers((ServerBlockHandlerProcPtr) NoopDDA, xf86Wakeup,
+                                   NULL);
+
+还有一个是接内核事件的：
+
+```c
+/*
+ * Handle keyboard events that cause some kind of "action"
+ * (i.e., server termination, video mode changes, VT switches, etc.)
+ */
+void
+xf86ProcessActionEvent(ActionEvent action, void *arg)
+{
+    DebugF("ProcessActionEvent(%d,%p)\n", (int) action, arg);
+    switch (action) {
+    case ACTION_TERMINATE:
+        if (!xf86Info.dontZap) {
+            xf86Msg(X_INFO, "Server zapped. Shutting down.\n");
+#ifdef XFreeXDGA
+            DGAShutdown();
+#endif
+            GiveUp(0);
+        }
+        break;
+    case ACTION_NEXT_MODE:
+        if (!xf86Info.dontZoom)
+            xf86ZoomViewport(xf86Info.currentScreen, 1);
+        break;
+    case ACTION_PREV_MODE:
+        if (!xf86Info.dontZoom)
+            xf86ZoomViewport(xf86Info.currentScreen, -1);
+        break;
+    case ACTION_SWITCHSCREEN:
+        if (!xf86Info.dontVTSwitch && arg) {
+            int vtno = *((int *) arg);
+
+            if (vtno != xf86Info.vtno) {
+                if (!xf86VTActivate(vtno)) {
+                    ErrorF("Failed to switch from vt%02d to vt%02d: %s\n",
+                           xf86Info.vtno, vtno, strerror(errno));
+                }
+            }
+        }
+        break;
+    case ACTION_SWITCHSCREEN_NEXT:
+        if (!xf86Info.dontVTSwitch) {
+            if (!xf86VTActivate(xf86Info.vtno + 1)) {
+                /* If first try failed, assume this is the last VT and
+                 * try wrapping around to the first vt.
+                 */
+                if (!xf86VTActivate(1)) {
+                    ErrorF("Failed to switch from vt%02d to next vt: %s\n",
+                           xf86Info.vtno, strerror(errno));
+                }
+            }
+        }
+        break;
+    case ACTION_SWITCHSCREEN_PREV:
+        if (!xf86Info.dontVTSwitch && xf86Info.vtno > 0) {
+            if (!xf86VTActivate(xf86Info.vtno - 1)) {
+                /* Don't know what the maximum VT is, so can't wrap around */
+                ErrorF("Failed to switch from vt%02d to previous vt: %s\n",
+                       xf86Info.vtno, strerror(errno));
+            }
+        }
+        break;
+    default:
+        break;
+    }
+}
+```
+
+
+## 画一下流程图 {#画一下流程图}
+
+{{< figure src="/ox-hugo/process1.png" >}}
+
+那么 setcrtc 这个系统调用是谁调用的呢？我分析的有，但是为啥有的时候就不闪呢？
+
+setcrtc 这个系统调用一定是调用多次的。打到多次调用的地方。
+
+libdrm 下的 drmModeSetCrtc
+
+（1) void AMDGPULeaveVT_KMS(ScrnInfoPtr pScrn) ，退出的就会有这个调用的。
+
+还有吗？
+
+（2) drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode) ，用 gdb 试一下，很容易。
+
+信号的分析：
+./winn-signal.bt
+
+好吧，用两个 gdb 走一下完整的流程：
+
+（1）切出的 xorg 收到信号 SIGUSR1
+
+（2) 触发断点
+
+```nil
+(gdb) bt
+#0  0x00007f649eb0e5d0 in drmModeSetCrtc () from /lib/x86_64-linux-gnu/libdrm.so.2
+#1  0x00007f649df90508 in drmmode_set_mode (crtc=crtc@entry=0x2601cf0, fb=fb@entry=0x319b6a0, mode=mode@entry=0x2601d08, x=x@entry=0, y=y@entry=0) at ../../src/drmmode_display.c:1353
+#2  0x00007f649df8b445 in AMDGPULeaveVT_KMS (pScrn=0x1edc200) at ../../src/amdgpu_kms.c:2202
+#3  0x000000000049012c in xf86XVLeaveVT (pScrn=0x1edc200) at ../../../../../../hw/xfree86/common/xf86xv.c:1226
+#4  0x00007f649e2df449 in glxDRILeaveVT (scrn=0x1edc200) at ../../../../glx/glxdri2.c:815
+#5  0x000000000047bc95 in xf86VTLeave () at ../../../../../../hw/xfree86/common/xf86Events.c:396
+#6  0x0000000000443435 in WakeupHandler (result=result@entry=-1) at ../../../../dix/dixutils.c:429
+#7  0x0000000000598bb1 in WaitForSomething (are_ready=0) at ../../../../os/WaitFor.c:210
+#8  0x000000000043e6cc in Dispatch () at ../../../../include/list.h:220
+#9  0x0000000000442906 in dix_main (argc=12, argv=0x7ffc704559c8, envp=<optimized out>) at ../../../../dix/main.c:276
+#10 0x00007f649e5f11fb in __libc_start_main (main=0x42b6a0 <main>, argc=12, argv=0x7ffc704559c8, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>, stack_end=0x7ffc704559b8)
+    at ../csu/libc-start.c:308
+#11 0x000000000042b6da in _start () at ../../../../../../hw/xfree86/common/xf86Events.c:638
+```
+
+（3）切入的 xorg 收到信号 SIGUSR1
+
+（4）触发断点
+
+```nil
+(gdb) bt
+#0  0x00007f377dea25d0 in drmModeSetCrtc () from /lib/x86_64-linux-gnu/libdrm.so.2
+#1  0x00007f377d3237e3 in drmmode_crtc_dpms (crtc=0x250b0e0, mode=3) at ../../src/drmmode_display.c:405
+#2  0x00007f377d327119 in drmmode_set_desired_modes (pScrn=pScrn@entry=0x1de8070, drmmode=drmmode@entry=0x1de94e8, set_hw=set_hw@entry=1) at ../../src/drmmode_display.c:3641
+#3  0x00007f377d31f12d in AMDGPUEnterVT_KMS (pScrn=0x1de8070) at ../../src/amdgpu_kms.c:2141
+#4  0x000000000048e4e0 in ?? ()
+#5  0x00000000004b8f78 in ?? ()
+#6  0x00000000004834d9 in ?? ()
+#7  0x00007f377d6734af in ?? () from /usr/lib/xorg/modules/extensions/libglx.so
+#8  0x000000000047bf29 in xf86VTEnter ()
+#9  0x0000000000443435 in WakeupHandler ()
+#10 0x0000000000598bb1 in WaitForSomething ()
+#11 0x000000000043e6cc in ?? ()
+#12 0x0000000000442906 in ?? ()
+#13 0x00007f377d9851fb in __libc_start_main (main=0x42b6a0, argc=12, argv=0x7ffd2944c698, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>, stack_end=0x7ffd2944c688)
+    at ../csu/libc-start.c:308
+#14 0x000000000042b6da in _start ()
+```
+
+（5) 第二次触发断点
+
+```nil
+(gdb) bt
+#0  0x00007f377dea25d0 in drmModeSetCrtc () from /lib/x86_64-linux-gnu/libdrm.so.2
+#1  0x00007f377d324508 in drmmode_set_mode (crtc=crtc@entry=0x250a4e0, fb=fb@entry=0x2a33370, mode=mode@entry=0x250a5c8, x=x@entry=0, y=y@entry=0) at ../../src/drmmode_display.c:1353
+#2  0x00007f377d324a6d in drmmode_set_mode_major (crtc=0x250a4e0, mode=0x250a5c8, rotation=<optimized out>, x=<optimized out>, y=<optimized out>) at ../../src/drmmode_display.c:1452
+#3  0x00007f377d3271b7 in drmmode_set_desired_modes (pScrn=pScrn@entry=0x1de8070, drmmode=drmmode@entry=0x1de94e8, set_hw=set_hw@entry=1) at ../../src/drmmode_display.c:3688
+#4  0x00007f377d31f12d in AMDGPUEnterVT_KMS (pScrn=0x1de8070) at ../../src/amdgpu_kms.c:2141
+#5  0x000000000048e4e0 in ?? ()
+#6  0x00000000004b8f78 in ?? ()
+#7  0x00000000004834d9 in ?? ()
+#8  0x00007f377d6734af in ?? () from /usr/lib/xorg/modules/extensions/libglx.so
+#9  0x000000000047bf29 in xf86VTEnter ()
+#10 0x0000000000443435 in WakeupHandler ()
+#11 0x0000000000598bb1 in WaitForSomething ()
+#12 0x000000000043e6cc in ?? ()
+#13 0x0000000000442906 in ?? ()
+#14 0x00007f377d9851fb in __libc_start_main (main=0x42b6a0, argc=12, argv=0x7ffd2944c698, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>, stack_end=0x7ffd2944c688)
+    at ../csu/libc-start.c:308
+#15 0x000000000042b6da in _start ()
+```
+
+
+## 什么是 drm 中的 plane ？ {#什么是-drm-中的-plane}
+
+<https://blog.csdn.net/hexiaolong2009/article/details/84934294>
+
+plane 就是硬件图层的意思，简单的的合成任务不是交绐 GPU 当中的渲染单元，而是交绐 GPU 当中的 plane 。
+
+<https://crab2313.github.io/post/drm-legacy-kms/>
+
+可以不使用 fb ，把 plane 绑定到 crtc 上做显示，也可以用 fb ，这种形式的兼容性可能好一点。
+
+
+## 什么是 udev ？ {#什么是-udev}
+
+udev 是一个设备管理工具，udev 以守护进程的形式运行，通过侦听内核发出来的 uevent 来管理/dev 目录下的设备文件。udev 在用户空间运行，而不在内核空间 运行。它能够根据系统中的硬件设备的状态动态更新设备文件，包括设备文件的创建，删除等。设备文件通常放在/dev 目录下。使用 udev 后，在/dev 目录下就只包含系统中真正存在的设备。
+
+
+## 现代显示器一大堆的 buffer {#现代显示器一大堆的-buffer}
+
+何小龙此人写了很多的文章，GPU 相关的东西都在他的 CSDN 和微信公众号里面能够找到。
+
+<https://blog.csdn.net/hexiaolong2009/article/details/105961192>
+
+现代显卡：
+
+显存缓冲区（VRAM）：显存缓冲区是显卡上专门用于存储图形数据的内存。它通常由显卡硬件直接管理，用于存储帧缓冲、纹理、深度缓冲等图形数据。
+
+帧缓冲区（Framebuffer）：帧缓冲区是用于存储整个屏幕图像的内存区域，包括颜色、深度和模板等信息。它是图形渲染的最终输出目标，用于生成用户可见的图像。
+
+纹理缓冲区（Texture Buffer）：纹理缓冲区用于存储 2D 或 3D 纹理数据，供图形渲染过程中使用。纹理缓冲区通常用于在物体表面上贴图或进行其他纹理映射操作。
+
+深度缓冲区（Depth Buffer）：深度缓冲区用于记录每个像素的深度信息，以便进行遮挡和深度测试，确保正确的渲染顺序和透视效果。
+
+模板缓冲区（Stencil Buffer）：模板缓冲区用于存储模板测试相关的信息，通常用于实现镜像、投影等特殊效果。
+
+
+## 怎么看 dri mode {#怎么看-dri-mode}
+
+从 xorg 的日志当中搜一下 dri 没有，glxinfo 没有，xorg 的配置文件，有！
+
+最终查到我的机器用的模式是 pagefilp 。用的驱动是 modesetting 。
+
+另外 amdgpu 使用的是 pageflip ：<https://blog.csdn.net/xiaozhi_botton/article/details/111884866>
+
+
+## drm_framebuffer {#drm-framebuffer}
+
+drm_framebuffer 的 filp_head 是指向正在显示的帧的。
+
+
+## filp_head {#filp-head}
+
+filp_head 指向的是当前正在显示的帧缓冲区。
+
+
+## 结尾 {#结尾}
+
+新的分析放到 pdf 当中了。想看的下载一下吧：
+
+[file:/tty-x-switch-beamer.pdf](/ox-hugo/tty-x-switch-beamer.pdf)
