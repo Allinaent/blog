@@ -4,6 +4,7 @@
 {{- $Width := 0 -}}
 {{- $Height := 0 -}}
 {{- $Srcset := "" -}}
+{{- $data := "zoom" -}}
 
 {{/* SVG and external images won't work with gallery layout, because their width and height attributes are unknown */}}
 {{- $galleryImage := false -}}
@@ -25,17 +26,23 @@
 	{{- end -}}
 {{- end -}}
 
-<img src="{{ $Permalink }}"
-	{{ with $Width }}width="{{ . }}"{{ end }}
-	{{ with $Height }}height="{{ . }}"{{ end }}
-	{{ with $Srcset }}srcset="{{ . }}"{{ end }}
-	loading="lazy"
-	{{ with $alt }}
-		alt="{{ . }}"
-	{{ end }}
+<div 
 	{{ if $galleryImage }}
 		class="gallery-image" 
-		data-flex-grow="{{ div (mul $image.Width 100) $image.Height }}"
-		data-flex-basis="{{ div (mul $image.Width 240) $image.Height }}px"
+		style="
+			flex-grow: {{ div (mul $image.Width 100) $image.Height }}; 
+			flex-basis: {{ div (mul $image.Width 240) $image.Height }}px"
+	{{ end }}>
+	<a href="{{ $Permalink }}" {{ if $galleryImage }}data-size="{{ $image.Width }}x{{ $image.Height }}"{{ end }}>
+		<img src="{{ $Permalink }}"
+			{{ with $Width }}width="{{ . }}"{{ end }}
+			{{ with $Height }}height="{{ . }}"{{ end }}
+			{{ with $Srcset }}srcset="{{ . }}"{{ end }}
+			loading="lazy"
+			{{ with $alt }}alt="{{ . }}"{{ end }}
+			{{ with $data }}data-action="{{ . }}"{{ end }}>
+	</a>
+	{{ with $alt }}
+	<figcaption>{{ . | markdownify }}</figcaption>
 	{{ end }}
->
+</div>

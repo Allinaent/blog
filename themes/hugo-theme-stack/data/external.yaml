@@ -1,54 +1,108 @@
+#Vibrant:
+#    #- src: https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js
+#    #  integrity: sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=
+#    #  use cloudfare cdn: related to blog https://iui.su/3635/
+#    - src: https://testingcf.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js
+#    #- src: https://cdn.staticfile.org/vibrant.js/1.0.0/Vibrant.js
+#      type: script
+#
+#      #PhotoSwipe:
+#      #    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js
+#      #    #  integrity: sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=
+#      #    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js
+#      #    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.js
+#      #      type: script
+#      #      defer: true
+#      #
+#      #    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js
+#      #    #  integrity: sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=
+#      #    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js
+#      #      #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js
+#      #      type: script
+#      #      defer: true
+#      #
+#      #    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css
+#      #    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css
+#      #    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css
+#      #      type: style
+#      #
+#      #    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css
+#      #    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css
+#      #    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css
+#      #      type: style
+#
+#PhotoSwipe:
+#    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe.min.js
+#      type: script
+#      defer: true
+#
+#    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe-ui-default.min.js
+#      type: script
+#      defer: true
+#
+#    - src: https://lib.baomitu.com/photoswipe/4.1.3/default-skin/default-skin.min.css
+#      type: style
+#
+#    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe.min.css
+#      type: style
+#
+#KaTeX:
+#    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.css
+#    #  integrity: sha256-J+iAE0sgH8QSz9hpcDxXIftnj65JEZgNhGcgReTTK9s=
+#    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.css
+#    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/katex.min.css
+#      type: style
+#
+#    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.js
+#    #  integrity: sha256-InsNdER1b2xUewP+pKCUJpkhiqwHgqiPXDlIk7GzBu4=
+#    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.js
+#    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/katex.min.js
+#      type: script
+#      defer: true
+#
+#    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/contrib/auto-render.min.js
+#    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/contrib/auto-render.min.js
+#    #  integrity: sha256-y39Mpg7V3D4lhBX4x6O0bUqTV4pSrfgwEfGKfxkOdgI=
+#    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/contrib/auto-render.min.js
+#      type: script
+#      defer: true
+#
+#Cactus:
+#    - src: https://latest.cactus.chat/cactus.js
+#      integrity:
+#      type: script
+#    - src: https://latest.cactus.chat/style.css
+#      integrity:
+#      type: style
+
 Vibrant:
-    #- src: https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js
-    #  integrity: sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=
-    #  use cloudfare cdn: related to blog https://iui.su/3635/
-    - src: https://testingcf.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js
-    #- src: https://cdn.staticfile.org/vibrant.js/1.0.0/Vibrant.js
+    - src:
       type: script
 
 PhotoSwipe:
-    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js
-    #  integrity: sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=
-    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js
-    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.js
+    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe.min.js
       type: script
       defer: true
 
-    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js
-    #  integrity: sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=
-    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js
-      #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js
+    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe-ui-default.min.js
       type: script
       defer: true
 
-    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css
-    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css
-    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css
+    - src: https://lib.baomitu.com/photoswipe/4.1.3/default-skin/default-skin.min.css
       type: style
 
-    #- src: https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css
-    - src: https://testingcf.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css
-    #- src: https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css
+    - src: https://lib.baomitu.com/photoswipe/4.1.3/photoswipe.min.css
       type: style
 
 KaTeX:
-    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.css
-    #  integrity: sha256-J+iAE0sgH8QSz9hpcDxXIftnj65JEZgNhGcgReTTK9s=
-    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.css
-    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/katex.min.css
+    - src: https://lib.baomitu.com/KaTeX/0.15.6/katex.min.css
       type: style
 
-    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.js
-    #  integrity: sha256-InsNdER1b2xUewP+pKCUJpkhiqwHgqiPXDlIk7GzBu4=
-    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/katex.min.js
-    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/katex.min.js
+    - src: https://lib.baomitu.com/KaTeX/0.15.6/katex.min.js
       type: script
       defer: true
 
-    #- src: https://cdn.jsdelivr.net/npm/katex@0.15.6/dist/contrib/auto-render.min.js
-    - src: https://testingcf.jsdelivr.net/npm/katex@0.15.6/dist/contrib/auto-render.min.js
-    #  integrity: sha256-y39Mpg7V3D4lhBX4x6O0bUqTV4pSrfgwEfGKfxkOdgI=
-    #- src: https://cdn.staticfile.org/KaTeX/0.15.6/contrib/auto-render.min.js
+    - src: https://lib.baomitu.com/KaTeX/0.15.6/contrib/auto-render.min.js
       type: script
       defer: true
 
