@@ -1,7 +1,7 @@
 +++
 title = "显卡测试的一些命令记录"
 date = 2024-01-03T15:28:00+08:00
-lastmod = 2024-01-03T15:41:44+08:00
+lastmod = 2024-01-08T11:20:32+08:00
 categories = ["technology"]
 draft = false
 toc = true
@@ -43,3 +43,16 @@ glmark2 --run-forever
 glxgears
 
 三个同时跑，glxgears 可以显示帧率。
+
+
+## deb 下载 mesa 的依赖 {#deb-下载-mesa-的依赖}
+
+sudo apt build-dep mesa #下载 mesa 编译依赖包
+
+
+## 下载所有依赖包 {#下载所有依赖包}
+
+```bash
+wget -c -r -np -k -L -p http://path/to/debs #递归下载网页内容，但是每个目录下会多一个index.thml文件
+rm`find ./ -name index.html` #删除目录及子目录下所有index.html文件
+```

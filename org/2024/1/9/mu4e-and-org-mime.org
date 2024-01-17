@@ -1,0 +1,87 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/01
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-01-09 二 15:36]
+#+TITLE: 如何用emacs mu4e 和 org-mime收发邮件
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: emacs
+
+* 前言
+
+用 mu4e 有一段时间了，之前一直认为用 emacs 发 html 的工作邮件不好用。后
+来突然突破了一些小问题，现在用起来简直是真香了。
+
+* 一些参考的博客
+
+http://www.cesarolea.com/posts/html-signatures-with-mu4e/
+
+
+https://www.reddit.com/r/emacs/comments/he885y/is_it_possible_to_add_an_image_to_orgmsg_signature/
+
+
+https://dataswamp.org/~solene/2016-06-07-13.html
+
+
+https://emacs.stackexchange.com/questions/25045/how-can-i-easily-download-save-an-attachment-in-mu4e
+
+https://www.djcbsoftware.nl/code/mu/mu4e/Sending-mail.html
+
+https://github.com/org-mime/org-mime
+
+* 实现
+
++ 痛点一
+
+不能加签名，实际上从 exmail 的已往的邮件中找到签名的部分，html 直接复制下来。
+
+另外，设置一下：
+#+begin_src lisp
+(setq mu4e-compose-signature
+  "<#part type=text/html><html><body><div ksdocclipboard=\"ksDocClipboardId:'{6ca6dd41-c38a-1a9b-73d3-e616e9e420bf-qya_1697662800_7463885520560027880_14897365800822071641}';from:'wps';priorityFormat:'Kingsoft WPS 9.0 Format,Kingsoft Image Data,text/html,text/plain,Kingsoft Data Descriptor';mimetypes:'Kingsoft WPS 9.0 Format;Kingsoft Image Data;text/html;text/plain;Kingsoft Data Descriptor'\" style=\"font-size: medium;\"><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><b style=\"font-size: 10.5pt;\"><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\">郭隆基 Longji<font face=\"CESI黑体-GB18030\">.Guo</font></span></b></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><b><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\"><font face=\"CESI黑体-GB18030\">内核研发部</font><font face=\"CESI黑体-GB18030\">&nbsp; 内核研发</font></span></b><b><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\">工程师</span></b><b><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\"><o:p></o:p></span></b></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><b><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\">统信软件</span></b><b><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\"><o:p></o:p></span></b></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\">企业</span><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\">官网：</span><a href=\"https://www.uniontech.com\"><u><span style=\"font-family: CESI黑体-GB18030; color: rgb(0, 0, 255); font-size: 14pt;\"><font face=\"CESI黑体-GB18030\">www.uniontech.com</font></span></u></a><span style=\"font-family: CESI黑体-GB18030; font-size: 14pt;\"><o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\"><font face=\"CESI黑体-GB18030\">服务热线：</font><font face=\"CESI黑体-GB18030\">400-8588-488</font></span><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\"><o:p></o:p></span></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\">办公地址：</span><span style=\"font-family: CESI黑体-GB18030; color: rgb(120, 120, 120); font-size: 14pt;\"><font face=\"CESI黑体-GB18030\">北京经济技术开发区科谷一街</font><font face=\"CESI黑体-GB18030\">10号院12号楼</font></span></p><p class=\"MsoNormal\" style=\"margin: 0pt 0pt 0.0001pt; font-family: Calibri; font-size: 10.5pt;\"><img src=\"http://exmail.qq.com/cgi-bin/viewfile?type=signature&amp;picid=ZX0619-gvCHZ7VhAmlZQG0IRjQhddm&amp;uin=762040946\" style=\"font-size: medium; font-family: &quot;lucida Grande&quot;, Verdana, &quot;Microsoft YaHei&quot;;\" onerror=\"\"></p></div></body></html><#/part>")
+
+#+end_src
+
+现在每次发邮件可以加上签名了。加签名的是 html 邮件，这种邮件只接加文本的内容是不会在邮件当中显示出
+来的，所以只能用 org-mime 来用 orgmode 写邮件。
+
++ org-mime 的配置
+
+#+begin_src lisp
+(require 'org-mime)
+
+(setq org-mime-library 'mml)
+
+(setq org-mime-export-options '(:with-latex dvipng
+                                :section-numbers nil
+                                :with-author nil
+                                :with-toc nil))
+#+end_src
+
+核心就是上面的三个配置。
+
+
+使用的步聚是这样的。C-c u 打开 mu4e 的主页面，按 C 写一个新邮件。
+
+使用 org-mime-edit-mail-in-org-mode ，用 orgmode 编辑一个 orgmode 的邮件。按 C-c C-c 来
+org-mime-edit-src-exit ，再用 org-mime-htmlize 将 orgmode 的内容转换成 html 。代码，图片，还有
+其它的 orgmode 的标题之类的都显示的比较好看。
+
+这样就可以非常方便的使用 emacs 来发送和接收邮件了。
+
+emacs 强无敌。
+
+[[file:mu4e-and-org-mime.org.assets/img_20240109_155503.jpg]]
+
+
+* 可以在 orgmode 文件当中直接发邮件
+
+在 orgmode 下开起 org-mime-src-mode ，打开这个 mode 之后，就能将 orgmode 文件直接发成邮件出来。
+不过这个对我来说不是很重要。将发邮件同 emacs 的工作流程联系起来，以后再也不用打开一个网页的客
+户端了，效率可以得到一丝的提升。幸福感直接提升非常多，最重要的是能绐小白装 X 了。
+
+* todo ，之前的 exmail 和 QQ 邮箱的配置
+
+这部分是自己之前琢磨出来的，以后补充一下配置的方法。

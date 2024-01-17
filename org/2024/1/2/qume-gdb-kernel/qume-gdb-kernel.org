@@ -10,5 +10,616 @@
 #+HUGO_CATEGORIES: technology
 
 
-* 
+* 先把韬哥的分享帖出来
+
+useradd -m glj -s /bin/bash -d /home/glj
+
+** 前言
+
+这一篇作为开场，主要是介绍最基本的使用方式：基于一个已经完成编译的内核目录，用新生成的内核 image 启动内核，
+看看是否一切正常。
+
+建议大家可以一边看一边动手跟着把流程走一走，工具嘛，熟悉了就亲切方便了。
+
+关于体验环境，大家可以直接使用自己的机器，安装 qemu 就可以；也可以考虑使用我们的 x86 公共虚拟机环境，我在里
+面已经布置好了编译目录，以及下文会提到的一些简单的小脚本，让想体验的同事可以直接一键启动。
+
+公共虚拟机环境：
+
+#+begin_src bash
+ssh uos@10.20.53.172
+cd /virt-space
+#+end_src
+
+注意：不同架构的某些命令会有差别，比如 console 在 x86 是 ttyS0,在 arm 可能是 ttyAMA0 之类的。
+
+** qemu 加 kernel 启动
+
+为了方便调整参数，避免每次都要手敲，我把命令放到了 virt-space 的脚本 1-qemu.sh 里，其实就是启动 exec qemu
+的单行命令。（大家在 virt-space 里可以直接./1-qemu.sh 启动；如果是在自己的环境里，调整一下 KERNEL 路径即可；）
+
+#+begin_src bash
+#!/bin/bash
+
+QEMU=qemu-system-x86_64
+KERNEL=4.19-x86/4.19-x86-build/
+
+exec $QEMU \
+    -enable-kvm \
+    -m 2048M \
+    -smp 2 \
+    -nographic \
+    -kernel $KERNEL/arch/x86/boot/bzImage \
+    -append "console=ttyS0 nokaslr" \
+    $@ \
+
+exit 0
+
+#+end_src
+
+ok，这样我们就完成了基于 image 的虚拟机启动！
+
+在上面的参数里：
+
++ 前面几个是基本的 cpu/memory 配置，我一般习惯 2 个 cpu+2G 内存，日常使用足够。
+
++ kernel 指定 image 路径，append 指定 cmdline，还可以有 initrd。
+
++ 如果在本机操作的话我一般不加-nogprahic，但如果是 ssh 到 virt-space，因为在 ssh 里没法起图形，
+那必须使用 nographic，否则会报错 gtk 初始化失败。
+
+在 qemu 的窗口（图形化，或者 console）里，我们可以看到内核的启动日志输出，最后会因为找不到 initrd 而
+走到 panic，但整个内核已经正常启动完成了。——如果我们的问题是修改内核后完全起不来（比如修改了 sched/mm 等
+内核核心模块），那也许这种最基本的方式就足够我们调试排查问题了。
+
+** gdb 调试
+
+我们调整一下启动参数，并且启动 qemu，它会卡住等待：
+
+#+begin_src bash
+#!/bin/bash
+
+QEMU=qemu-system-x86_64
+KERNEL=4.19-x86/4.19-x86-build/
+
+exec $QEMU \
+    -enable-kvm \
+    -m 2048M \
+    -smp 2 \
+    -nographic \
+    -kernel $KERNEL/arch/x86/boot/bzImage \
+    -append "console=ttyS0 nokaslr" \
+    -s \
+    -S \
+    $@ \
+
+exit 0
+
+#+end_src
+
+在另一个窗口，我们执行 gdb：
+
+#+begin_src bash
+cd /virt-space/4.19-x86/4.19-x86-build/
+gdb vmlinux
+    (gdb) target remote:1234
+    (gdb) hb start_kernel
+    (gdb) c
+    ...         -> hit the breakpoint "start_kernel"
+    (gdb) bt
+    (gdb) b rest_init
+    (gdb) b acpi_init
+    ...
+    (gdb) c
+    ...         -> will hit the next breakpoint
+
+#+end_src
+
+这样，我们就成功地开始用 gdb 调试我们新编译的内核了。
+
+说明：
+
++ -s：
+更正式的方式是：-gdb tcp::1234。——“-s”就是一个语法糖。（注意，tcp 后面是两个冒号！）
+qemu 会在该端口起一个服务作为 gdb server；gdb 可以用 target remote 命令连接这个端口。
+多个虚拟机都用“-s”时会有冲突，所以如果在 virt-space 里，大家还是手动指定自己的 port 吧。
+
++ -S:
+这个参数会告诉 qemu，让虚拟机停留在上电的第一条指令等待。
+所以可以和 gdb 配合：虚拟机在第一条指令等待，gdb 连接上后用“c”继续执行。
+
++ hb：
+大家注意，在很多架构里，第一个 start_kernel 断点，必须用硬断点，hardware-breakpoint。
+等到执行到 start_kernel，被断住时，之后就可以随便用普通的 breakpoint 了。
+其原因是：
+b 可以认为是基于指令替换+int3+ptrace 的，所以只有在代码已经被加载到内存里了才能有效替换；
+当在 S 处停住时，正准备跑 bios，kernel 还没 load，所以 b 可能会无效；
+而硬件断点呢？它的底下不是指令替换，而是由硬件提供的对某个地址的强制 watch，所以无论在什
+么时候 hb 都可以有效，也不管这个地址是 bios 还是 grub 还是 kernel 跑到了，都会被断住
+。——当然它的代价就是需要硬件支持，而且不像普通断点一样可以无限多，一般有硬件数量限制。
+我们可以搭配使用：S时使用 hb，监控 start_kernel 地址；等撞到了这个，那 kernel 肯定已经
+被 load 到内存了，就可以放心使用普通断点了。
+如果大家在实践中发现没有断到，可以如何排查呢？万变不离其宗的还是 gdb 的基本原理：
+gdb 所认为的目标符号的地址
+虚拟机中目标符号的实际地址
+只要这两者能对应上，就没有理由断不到。那如何确认这两者呢？
+
++ gdb： info address do_page_fault
+
++ guest: cat /proc/kallsyms | grep do_page_fault
+比对这两个地址，如果不一样，找出原因来，比如：
+
+没有正确地开启 nokaslr。——很容易手输成 nokalsr 之类的。
+vmlinux 与 guest 内核不匹配。
+……
+
+** 加入 initrd
+
+有时候我们必须要有用户态环境来测试新编译的内核：比如跑一个 poc 或者测试程序，比如挂载磁盘、做文件系统的操作等等。
+
+这一节，我们引入一个最简单的 initrd，来帮助启动一个基本的用户态操作环境。
+
+*init 创建脚本：*
+大家可以直接使用下面的脚本来创建 initrd：（脚本看起来长，其实内容很少，只是我写的比较罗嗦。）
+
+#+begin_src bash
+#!/bin/bash
+
+set -e
+
+INITRD_ROOT=./initrd-rootfs
+
+if [ -e $INITRD_ROOT ];then
+    rm -rf $INITRD_ROOT
+fi
+
+mkdir -p $INITRD_ROOT
+cd $INITRD_ROOT
+
+
+install_simple()
+{
+    mkdir -p etc proc sys lib bin usr
+    cp /bin/busybox bin/
+
+    ln -s busybox bin/cat
+    ln -s busybox bin/cp
+    ln -s busybox bin/insmod
+    ln -s busybox bin/mkdir
+    ln -s busybox bin/mknod
+    ln -s busybox bin/mount
+    ln -s busybox bin/sh
+    ln -s busybox bin/sleep
+    ln -s busybox bin/switch_root
+    ln -s busybox bin/umount
+
+    ln -s bin sbin
+}
+
+install_auto()
+{
+    mkdir -p etc proc sys lib usr/bin
+
+    cp /usr/bin/busybox usr/bin/
+    busybox --install -s usr/bin/
+
+    ln -s bin usr/sbin
+    ln -s usr/bin bin
+    ln -s usr/bin sbin
+}
+
+install_xxx()
+{
+    # Add any file you want to the INITRD_ROOT
+}
+
+# change the comment to select the mod
+
+#install_simple
+install_auto
+install_xxx
+
+
+cat << EOF > init
+#!/bin/sh
+
+mount -t proc none /proc
+mount -t sysfs none /sys
+
+echo
+echo "Hello, world!"
+
+exec /bin/sh
+
+EOF
+
+chmod +x init
+
+
+# Note: must exec cpio in INTIRD_ROOT!
+find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../myinitrd.cpio.gz
+
+#+end_src
+
+init 脚本有四个基本步骤：
+
+1. 创建一个文件夹 initrd-rootfs，我们就是步骤这个目录里的内容，然后打包为 initrd 的。
+
+2. 在里面布置我们需要的文件，主要是一些基本的命令。——我们基于 busybox 来实现。
+需要安装 busybox-static deb 包；另外一个可选项是 klibc，功能没有 busybox 多。
+我在脚本里展示了两种方式：A 手动添加链接；B 使用 busybox 的 install 选项。
+建议用 auto，这样会有完整的 busybox 命令。
+如果大家要自己手写脚本的话，要特别注意软链接之间的关系，很容易犯错。
+
+3. 布置/init:
+内核发现/init 存在时，会自动执行它，作为用户态的入口程序，pid 为 1。
+脚本的例子里非常简单，就是 mount proc 和 sysfs，然后执行 bash。
+可以在 init 里做各种事情，比如加载模块，起 udev 挂磁盘，或者挂载 9p/nfs 之类的作为 root，等等。
+
+4. cpio 打包：
+建议大家照抄命令。
+尤其是要注意：进入 INITRD_ROOT 文件夹后跑命令，不会可能文件路径对不上，最后内核找不到/init。
+
+*启动：*
+
+最后，大家可以用 initrd 来启动：
+
+#+begin_src bash
+#!/bin/bash
+
+QEMU=qemu-system-x86_64
+KERNEL=4.19-x86/4.19-x86-build/
+
+exec $QEMU \
+    -enable-kvm \
+    -m 2048M \
+    -smp 2 \
+    -nographic \
+    -kernel $KERNEL/arch/x86/boot/bzImage \
+    -initrd myintird.cpio.gz \
+    -append "console=ttyS0 nokaslr" \
+    $@ \
+
+exit 0
+
+#+end_src
+
+会看到如下显示：
+
+#+begin_src
+[    0.469630] Run /init as init process
+Hello, world!
+
+
+BusyBox v1.36.1 (Debian 1:1.36.1-6) built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+/bin/sh: can't access tty; job control turned off
+~ #
+
+#+end_src
+
+大家可以在自己的环境里测试，也可以直接到 virt-space 里体验，有一个 2-initrd.sh，就是上
+面的脚本。——实际上已经生成好了 myinitrd.cpio.gz，大家调整一下 1-qemu.sh 里的启动命令，
+就可以直接跑了，或者直接用：
+
+#+begin_src bash
+./1-qemu.sh -initrd myinitrd.cpio.gz
+#+end_src
+
+ok，到这里，我们就可以使用基本的用户环境了。
+
+** 扩展 initrd
+
+*busybox：*
+
+busybox 提供的命令很多，基本命令都涵盖了：
+
+#+begin_src
+Currently defined functions:
+        [, [[, acpid, adjtimex, ar, arch, arp, arping, ascii, ash, awk, base64, basename, bc,
+        blkdiscard, blockdev, brctl, bunzip2, busybox, bzcat, bzip2, cal, cat, chgrp, chmod,
+        chown, chroot, chvt, clear, cmp, cp, cpio, crc32, crond, crontab, cttyhack, cut, date,
+        dc, dd, deallocvt, depmod, devmem, df, diff, dirname, dmesg, dnsdomainname, dos2unix,
+        dpkg, dpkg-deb, du, dumpkmap, dumpleases, echo, ed, egrep, env, expand, expr, factor,
+        fallocate, false, fatattr, fdisk, fgrep, find, findfs, fold, free, freeramdisk,
+        fsfreeze, fstrim, ftpget, ftpput, getopt, getty, grep, groups, gunzip, gzip, halt,
+        head, hexdump, hostid, hostname, httpd, hwclock, i2cdetect, i2cdump, i2cget, i2cset,
+        i2ctransfer, id, ifconfig, ifdown, ifup, init, insmod, ionice, ip, ipcalc, kill,
+        killall, klogd, last, less, link, linux32, linux64, linuxrc, ln, loadfont, loadkmap,
+        logger, login, logname, logread, losetup, ls, lsmod, lsscsi, lzcat, lzma, lzop,
+        md5sum, mdev, microcom, mim, mkdir, mkdosfs, mke2fs, mkfifo, mknod, mkpasswd, mkswap,
+        mktemp, modinfo, modprobe, more, mount, mt, mv, nameif, nbd-client, nc, netstat, nl,
+        nologin, nproc, nsenter, nslookup, nuke, od, openvt, partprobe, passwd, paste, patch,
+        pidof, ping, ping6, pivot_root, poweroff, printf, ps, pwd, rdate, readlink, realpath,
+        reboot, renice, reset, resume, rev, rm, rmdir, rmmod, route, rpm, rpm2cpio, run-init,
+        run-parts, sed, seq, setkeycodes, setpriv, setsid, sh, sha1sum, sha256sum, sha3sum,
+        sha512sum, shred, shuf, sleep, sort, ssl_client, start-stop-daemon, stat, strings,
+        stty, su, sulogin, svc, svok, swapoff, swapon, switch_root, sync, sysctl, syslogd,
+        tac, tail, tar, taskset, tc, tee, telnet, telnetd, test, tftp, time, timeout, top,
+        touch, tr, traceroute, traceroute6, true, truncate, ts, tty, tunctl, ubirename,
+        udhcpc, udhcpc6, udhcpd, uevent, umount, uname, uncompress, unexpand, uniq, unix2dos,
+        unlink, unlzma, unshare, unxz, unzip, uptime, usleep, uudecode, uuencode, vconfig, vi,
+        w, watch, watchdog, wc, wget, which, who, whoami, xargs, xxd, xz, xzcat, yes, zcat
+#+end_src
+
+但是，有可能对于我们测试内核而言还是不够，比如：
++ 测试需要内核模块
++ 测试需要挂载磁盘里的文件系统
+
+……
+
+这篇文章里我暂时不准备做详细的说明，但是可以提供一些参考给大家：
++ 大家感兴趣的话，可以看一下本机的/init：/usr/share/initramfs-tools/init，看它怎么完成各种 kernfs 的挂载，解析 cmdline，实现 break，挂载 root，最后 switch_root。
++ 另外一个值得参考的则是 liveboot 的 init，它会找到 readonly 的 squashfs image，将它挂起来后再用 tmpfs 来做一层 overlay，实现 rw 的根文件系统。
++ 之后还会介绍到另外一种裸启动内核 image 的 virtme-ng 项目，也是在 init 里做了很多工作，比如将 host 导出的 9p 目录，挂载为 guest 里的 read-only 根。
+
+对于内核模块：
++ 可以简单的复制到 INITRD_ROOT，然后在 initramfs 的 shell 里，手动 insmod。——自己注意一下依赖关系就好。
++ 之后会介绍的 virtme-ng 项目能帮我们处理好模块依赖关系，以及复杂的用户态测试环境。——这也是它最核心的部分。
+
+对于磁盘：
++ 规范流程是起 systemd-udevd，然后用 udevadm trigger + settle，再手动 mount；
++ 也可以简单一点，把相关的 ko（比如对应 fs）打包到 initrd 里，然后手动走 mount 流程。
+
+** qemu+disk 启动
+
+如果我们编译的内核需要长时间的调试，或者调试它所需要的用户态环境比较复杂，手动构建的 initrd 不
+能满足要求，那我们可以考虑用一个稳定的磁盘来启动，安装内核 deb 包并测试，就和物理机器一样。
+
+*安装*
+
+虚拟机的安装：
++ 推荐用 virt-manager 的图形化界面来安装。
++ 也可以用 qemu 命令：
+
+#+begin_src bash
+qemu-img create -f qcow2 uos.img 256G
+qemu-system-x86_64 -enable-kvm -m 2048M -smp 2 -hda uos.img -cdrom uos.iso
+#+end_src
+
+注意，如果用 qemu 安装的话，是要图形界面支持的，所以在 ssh 里会启动不了（之前已经提到了，在 ssh 里要用 nographic）；如果在本地的话那都没问题。
+
+*启动*
+
+安装完成后（不管是用 qemu 还是 virt-manager 安装的），就可以直接基于 disk 启动了，比如：
+
+#+begin_src bash
+qemu-system-x86_64 -enable-kvm -m 2048M -smp 2 -hda uos.img
+#+end_src
+
+需要更新内核时，就编译好内核之后，想办法将 deb 包传到 guest 里并安装。——这样，guest 里自
+始至终都是一个完整、自洽的系统环境，可以跑 bpftrace、trace-cmd、crash 等各种工具。
+
+*hda/vda*
+
+hda 会虚拟一个 hard-disk 设备，在虚拟机里会被导出为 sda，其实和“-s”一样，也只是一个语法糖，等同于：
+#+begin_src
+-drive file=uos.img,index=0,media=disk
+#+end_src
+
+如果想使用 virtio-blk 的话（导出为 vda），可以：
+
+#+begin_src
+-drive file=uos.img,if=none,id=myvda \
+ -device virtio-blk-pci,drive=myvda \
+#+end_src
+
+在我们的示例里，简单起见，就直接用-hda 了。
+
+** 文件系统直通
+
+*disk-boot + 9p*
+这里只介绍 disk 启动时的 9p 直通，因为用 kernel/initrd 启动时，需要手动布置 initrd 里的 9p 相关模
+块，并且更改 init 脚本，我们暂时不想搞这么复杂（以后应该会补充）。
+
+启动脚本如下：
+
+#+begin_src bash
+#!/bin/bash
+
+QEMU=qemu-system-x86_64
+KERNEL=4.19-x86/4.19-x86-build/
+
+exec $QEMU \
+    -enable-kvm \
+    -m 2048M \
+    -smp 2 \
+    -nographic \
+    -hda disk-imgs/uos-base-hda.img \
+ -fsdev local,security_model=passthrough,id=fsdev0,path=./hostshare \
+ -device virtio-9p-pci,id=fs0,fsdev=fsdev0,mount_tag=hostshare \
+    $@ \
+
+exit 0
+
+#+end_src
+
+
+qemu 参数说明：
++ -fsdev：
++ -path：指定了要在 host 里要传递给 guest 的目录，这里是/virt-space/hostshare
++ -id：qemu 内部使用，这里在-fsdev 里导出，在-device 被使用
++ -security_model：9p 的 credits 管理，本地就用 passthrough 吧。
++ -device：
++ virtio-9p-pci，完全的写法应该是-driver=virito-9p-pci
++ mount_tag：guest 里需要用这个 tag 来完成 mount
+
+*guest 里挂载：*
+
+挂载命令：
+
+#+begin_src bash
+mount -t 9p -o trans=virtio,version=9p2000.L hostshare /hostshare
+#+end_src
+
+version 可以不指定，但是用 9p2000.L 效率更更高。
+
+也可以写入 fstab：
+
+#+begin_src bash
+hostshrae /hostshare 9p nofail,auto,trans=virtio,version=9p2000.L 0 0
+#+end_src
+
+之后就可以直接执行：
+
+#+begin_src bash
+sudo mount /hostshare
+#+end_src
+
+注意，如果在 host 里是用 uos 账户（id1000）启动内核的，那在 passthrough 模式下，guest 里同样只能用 id1000 来访问，
+可能 root 会没有访问权限……
+
+** kernel+disk 启动
+
+可以基于 disk，同时指定 kernel 启动，比如：
+
+#+begin_src bash
+#!/bin/bash
+
+QEMU=qemu-system-x86_64
+KERNEL=4.19-x86/4.19-x86-build/
+
+exec $QEMU \
+    -enable-kvm \
+    -m 2048M \
+    -smp 2 \
+    -nographic \
+    -kernel $KERNEL/arch/x86/boot/bzImage \
+    -initrd myinitrd.cpio.gz \
+    -append "console=ttyS0 nokaslr" \
+    -hda uos.img \
+    $@ \
+
+exit 0
+
+#+end_src
+
+但是我们的 initrd 环境里，缺乏必要的 ko，而且 init 脚本也没做必要的初始化工作，所以 disk 不可用。
+那如何用这种方式启动呢？某些时候我们想临时测试一个 kernel，但是又需要随便挂个盘，可以持久化一些数据。
+
+我们暂时不准备用手动方式的实现，而是引入一个上游的专门用于内核启动测试的项目：virtme-ng。
+
+* 一些我的疑问
+
+做为刚开始了解 qemu 和文件系统的人，补充一些基本问题的解答是有必要的。
+
++ 什么是 9p
+
++ 怎么制做 qemu 的镜像呢？
+
+这个韬哥可能以后会讲，如果不讲的话，自己做一些实践吧。
+
++ 内核当中的 bzimage 是什么？
+
+https://blog.csdn.net/hanxuefan/article/details/7454352 ，就是内核镜像。一般使用压缩后的 bzimage
+知道这一点就足够了。
+
++ initrd 和 initramfs 这两个是什么？
+
+为了增强内核启动的灵活性而产生的机制，就是这个。尤其是文件系统之类的模块，先有蛋还是先有鸡呢？
+为了减少循环引用吧。反正这套流程才是目前的正统流程，是符和这个现实世界发展而形成的一套机制。
+
++ 退出 qemu 的命令行界面
+
+C-a x ，用这个快捷键就能把这个关闭了。
+
++ 什么是 busybox ？
+
+https://zhuanlan.zhihu.com/p/448313296
+
+busybox 为什么这么小？显然它也是经过了压缩和删减的，所以只能说是精心设计的丐版软件，恰巧嵌入式
+的机器喜欢丐版的软件。
+
++ 上面的 ln -s bin usr/sbin 这个命令一度不理解
+
+其实，如果 ln -s 的第一个参数文件名或目录名不存在的话，那就会找第二个参数相同目录下的这个文件
+名或者目录名，看着挺绕的，可以写的更清楚一点。
+
++ mount -t
+
+mount -t proc none /proc 是一条命令，用于将 proc 文件系统挂载到指定的目录（/proc）。
+
+在 Linux 系统中，/proc 是一个特殊的虚拟文件系统，提供了对内核运行时状态的访问。它不是从硬盘上
+的文件系统中读取数据，而是通过内核动态生成的，可以获取有关系统当前状态和进程信息的各种数据。
+通过挂载/proc 文件系统，可以将这些状态信息暴露给用户空间的应用程序或工具。
+
+mount -t proc none /proc 命令的含义是将 proc 文件系统以"none"的方式挂载到/proc 目录下。"none"表
+示该挂载点没有来源设备，而是虚拟的。这样，当你通过/proc 目录访问系统信息时，实际上是通过
+读取/proc 文件系统中的虚拟文件来获取相应的信息。
+
+需要注意的是，这是一个常见的操作，通常在系统启动时自动执行，以便让用户和系统工具能够方便
+地访问/proc 中的信息。
+
++ 适合做什么？
+
+qemu 的部分肯定是适合看一些公共部分的代码的。方便调式和学习。尤其是文件系统和网络的学习
+用 qemu 是比较好的。虚拟机和 docker 不一样。各有所长。可能最好的调试方法是 kgdb 的方式。kgdb
+的方式通过网络是最好的。但是目前来看在 UOS 上还是不好做，需要一个不知道什么原理打上的一个
+patch 。多了这么一个步骤，不感觉有一些难度还愿意更深入的了解一下了。
+
++ cpio 压缩命令
+
+https://liubigbin.github.io/2016/02/28/cpio%E5%91%BD%E4%BB%A4%E8%AF%A6%E8%A7%A3/
+
+-H 或者是 --format ，newc ，是一种 SVR4 兼容的模式。
+
+gzip -9 对应的是最大压缩率，可以用 emacs helm-man 查看中文的文档，可以很清楚的理解每一个参
+数的作用。然后 C-x 4 0 关闭窗口，emacs 真的是很好用的。
+
++ virtme-ng
+
+这是一个针对内核的测试项目。这些内容都是通过网络社区中的内容学习到的开源知识。要想真的熟
+练掌握调试的话一定要多看多练。
+
++ 什么是 qemu 的 live boot ？
+
+QEMU（Quick EMUlator）是一款用于模拟 CPU 的开源虚拟化软件。使用 QEMU，用户可以在一个物理机器上
+运行多个虚拟机，每个虚拟机都可以运行不同的操作系统。
+
+Live boot 是指直接从可移动媒介（如 USB 驱动器或 CD/DVD 光盘）启动计算机，并在不安装到硬盘的
+情况下运行操作系统的过程。
+
+因此，QEMU live boot 就是使用 QEMU 工具，从可移动媒介中引导操作系统并在虚拟机中运行该操作
+系统的过程。
+
+使用 QEMU live boot，用户可以在单一计算机上同时运行多个操作系统，而无需将它们安装到本地硬盘
+。这对于测试、教学或者研究等场景非常有用。
+
++ 什么是云镜像？
+
+https://cloudinit.readthedocs.io/en/latest/tutorial/qemu.html
+
+这个云镜像适合快速构建虚拟机，但是没有找到 UOS 版本的，那就暂时不找了。
+
+https://zhuanlan.zhihu.com/p/453495129
+
+可以用云镜像来做 qemu 虚拟机，但是这个对于调式而言并不方便。没有学习的必要。这种东西，是搞
+kvm 云服务器的人才需要关注的。
+
++ 调试模块和显卡驱动等要后续继续看
+
+用 qemu 看启动部分的代码是完完全全够用的了，
+
+* gdb 高阶用法
+
+C-x 2 打开调试窗口，看起来还挺炫酷的。关闭这个 tui 窗口用的是 C-x a ；和 qemu 的退出快捷
+键不一样。qemu 的退出用的是 C-a x 很相似。
+
+如果是一个公共的问题，mm 或者是 fs 的问题，学习用的话，那么 qemu 真的是不二之选。
+
+info variables
+
+info locals
+
+info args
+
+这样做的话就能看到足够多的变量了，发现内核当中的变量都被优化掉了，那么也就不能进行调式了。
+
+内核 gdb 被优化掉了的解决方法。
+
+解决方法下面的链接有，以后有时间研究一下，或者问问其他人看是不是有人清楚是怎么回事呢？
+
+https://stdio.io/1086
+
 

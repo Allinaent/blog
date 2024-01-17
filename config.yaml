@@ -132,3 +132,7 @@ security:
   exec:
     allow: ['^dart-sass-embedded$', '^go$', '^npx$', '^postcss$', '^p']
     osEnv: ['(?i)^(PATH|PATHEXT|APPDATA|TMP|TEMP|TERM)$']
+
+service:
+    rss:
+        limit: 10

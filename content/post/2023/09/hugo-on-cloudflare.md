@@ -1,7 +1,7 @@
 +++
 title = "在cloudfare中搭建hugo博客"
 date = 2023-09-18T16:35:00+08:00
-lastmod = 2023-09-20T16:36:09+08:00
+lastmod = 2024-01-11T17:56:05+08:00
 tags = ["emacs", "hugo"]
 categories = ["classic"]
 draft = false
@@ -240,3 +240,39 @@ gitlab 和 github 的 ci 本质都是一种编程了。首先要认识这个过�
 <https://sdl.moe/post/hexo-transfer-to-hugo/#%E8%87%AA%E5%8A%A8%E5%8C%96%E5%8F%91%E5%B8%83%E4%B8%8E%E9%83%A8%E7%BD%B2>
 
 这个来做博客吧。cloudfare 是最好的选择，是否需要隐私。经过我慎重的考虑，不是一个关键的问题。今天差不多可以弄完，Ok，你又要完成一个重要的工作了，加油。人工智能时代，在博客中记录学习过程，终于可以走上正轨了。
+
+写完之后发现没有滚动条，怎么回事？在配置文件里面把代码有行号的配置绐注释掉就好了。墨语的博客优化的很好看：
+
+<https://moyu.ee/>
+
+<https://moyu.ee/p/hugo-stack/#%E6%BB%9A%E5%8A%A8%E6%9D%A1%E7%BE%8E%E5%8C%96>
+
+这个人页面优化的也不错：
+
+<https://xrg.fj.cn/>
+
+原来 hugo 和 hugo 的各种主题早就广为流传了。之前还想自己写一个博客框架或都完全把博客搞成一个自己的项目。现在感觉不是特别地有必要了。人生也有涯，没用人是无涯子。give up and turn to learn AI！
+
+
+## 修改了 katex.min.css 和 js 的 cdn {#修改了-katex-dot-min-dot-css-和-js-的-cdn}
+
+e themes/hugo-theme-stack/data/external.yaml，选用了七牛云的 CDN。
+
+现在网页显示公式基本上是秒出了，这就很棒。以后多理解多学习吧。
+
+
+## hugo stack theme 不支持灯箱 {#hugo-stack-theme-不支持灯箱}
+
+广大的开源用户是有实力的，别人已经有了很好的方案，我可以直接抄过来。参考下面这个，效果是真的好用啊。
+
+<https://blog.l3zc.com/2023/10/theme-stack-tweaks/>
+
+另外这个大佬用到的评论系统是：Twikoo ，这个有时间也试试吧。
+
+创建./layouts/partials/comments/provider/twikoo.html，修改文件第一行：
+
+&lt;script src="//lib.baomitu.com/twikoo/1.6.21/twikoo.all.min.js"&gt;&lt;/script&gt;
+
+原主题的 Twikoo 版本是 1.16.115，这里也顺便升级成匹配我部署的后端版本 1.16.21。
+
+其他的评论系统也以此类推，折腾的同学有很多，我应该也会帮助到一些人吧。时间长了就逐渐理解这些开源的项目了。

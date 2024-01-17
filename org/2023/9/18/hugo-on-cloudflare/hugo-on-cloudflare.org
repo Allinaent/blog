@@ -305,3 +305,24 @@ https://xrg.fj.cn/
 e themes/hugo-theme-stack/data/external.yaml，选用了七牛云的 CDN。
 
 现在网页显示公式基本上是秒出了，这就很棒。以后多理解多学习吧。
+
+* hugo stack theme 不支持灯箱
+
+广大的开源用户是有实力的，别人已经有了很好的方案，我可以直接抄过来。参考下面这个，效果是真的好用啊。
+
+https://blog.l3zc.com/2023/10/theme-stack-tweaks/
+
+另外这个大佬用到的评论系统是：Twikoo ，这个有时间也试试吧。
+
+创建./layouts/partials/comments/provider/twikoo.html，修改文件第一行：
+
+<script src="//lib.baomitu.com/twikoo/1.6.21/twikoo.all.min.js"></script>
+
+原主题的 Twikoo 版本是 1.16.115，这里也顺便升级成匹配我部署的后端版本 1.16.21。
+
+其他的评论系统也以此类推，折腾的同学有很多，我应该也会帮助到一些人吧。时间长了就逐渐理解这些开源的项
+目了。
+
+
+
+

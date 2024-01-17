@@ -1,7 +1,7 @@
 +++
 title = "软考考前突击"
 date = 2023-11-01T19:04:00+08:00
-lastmod = 2023-11-02T15:09:03+08:00
+lastmod = 2024-01-11T11:33:35+08:00
 tags = ["examination"]
 categories = ["exam"]
 draft = false
@@ -34,11 +34,12 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为
 
 论文:系统架构设计论文，考试时间为 120 分钟，笔试，论文题。从给出的 4 道试题(试题一至试题四)中任选 1 道题解答。满分 75 分。论文要写 2000 到 3000 字，3篇 800 字作文的字数。
 
-45 x 3 = 135 分。也就是说。9/25 的成绩，也就是 100 分满分，只需要考 36 分吗？
+45 x 3 = 135 分。也就是说。9/25 的成绩，也就是 100 分满分，只需要考 36 分吗？做对一半的题基本上就能过了。
 
 总共 32 小时，第一个小时没有什么考点。
 
-一、计算机系统
+
+## 一、计算机系统 {#一-计算机系统}
 
 {{< figure src="/ox-hugo/1.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 1: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
@@ -54,7 +55,8 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为
 
 6.DSP 处理器采用哈佛结构。
 
-二、嵌入式
+
+## 二、嵌入式 {#二-嵌入式}
 
 {{< figure src="/ox-hugo/2.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 2: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
@@ -80,7 +82,8 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为
 
 11.易错点：嵌入式系统不需要支持多任务，错，选择题考认知细节。
 
-三、网络
+
+## 三、网络 {#三-网络}
 
 {{< figure src="/ox-hugo/3.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 3: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
@@ -122,7 +125,8 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为
 
 19.覆盖范围：bluetooth &lt; ZigBee &lt; 802.11n &lt; 802.16m
 
-四、信息系统
+
+## 四、信息系统 {#四-信息系统}
 
 {{< figure src="/ox-hugo/4.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 4: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
@@ -138,7 +142,8 @@ trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为
 
 6.ES：专家系统
 
-五、信息安全技术基础知识
+
+## 五、信息安全技术基础知识 {#五-信息安全技术基础知识}
 
 {{< figure src="/ox-hugo/5.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 5: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
@@ -185,4 +190,285 @@ Relation）
 
 19.风险评估：基于脆弱性，资产，威胁，风险，安全措施
 
-六、系统工程
+
+## 六、系统工程 {#六-系统工程}
+
+{{< figure src="/ox-hugo/6.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 6: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.系统工程分类：霍尔的三维结构，切克兰德方法，并行工程，综合集成法，WSR 方法（物理-事理-人理方法）
+
+2.生命周期的阶段：探索研究，概念阶段，开发阶段，生产阶段，使用阶段
+
+3.生命周期的方法：计划驱动，渐进式迭代开发，精益开发，敏捷开发
+
+4.基于模型的系统工程：（MBSE）
+
+5.MIPS：第秒百万次指令数
+
+6.性能评估：Web 服务器的性能评测方法有基准性能测试，压力测试，可靠性测试。
+
+
+## 七、软件工程 {#七-软件工程}
+
+{{< figure src="/ox-hugo/7.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 7: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.软件过程模型包括：瀑布模型，原型模型，螺旋模型，敏捷模型，软件统一过程模型（Rational Unified Process，RUP）也可以称之为合理统一过程。
+
+2.系统分析与设计包括：结构化方法，面向对象方法，其他方法，逆向工程
+
+3.净室软件工程：（Cleanroom Software Engineering），CSE，主要是用函数理论和抽样理论，太理论化。
+
+4.CBSE：基于构建的软件工程
+
+
+## 八、数据库设计 {#八-数据库设计}
+
+{{< figure src="/ox-hugo/8.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 8: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.关系数据库基本概念：属性，域（取值范围），目或度（属性的个数），候选码，主码，主属性，外码，全码。
+
+2.关系代数运算
+
+3.范式：1NF 是属性不可再分；2NF，消除对主码的完全依赖；3NF，消除对主码的传递依赖；4NF，消除对候选码的传递依赖
+
+4.传递依赖：定义复杂
+
+5.数据库：实体用矩形，属性用椭园，关系用菱形
+
+6.OLAP：联机分析处理
+
+7.OLTP：联机事务处理
+
+8.通用数据接口标准：（Open DataBase Connectivity，ODBC），解决异构数据库的数据共享。能用统一的方式处理所有的关系数据库。不依赖 DBMS（数据库管理系统）。
+
+9.数据库接口：DAO，RDO（Remote Data Object），ADO（Active Data Ojbect），
+JDBC（java DataBase Connection）
+
+10.ORM 访问接口分为：Hibernate，Mybatis，JPA
+
+11.NoSQL：列式存储数据库，键值数据库，文档数据库，图数据库
+
+12.分布式数据库的特点：共享性，自治性，可用性，分布性。
+
+13.数据库优化技术：增加冗余列（减少连接操作），增加派生列（减小计算量），重新组表，水平分割表，垂直分割表。反规范化设计的优点是提高性能，缺点是会造成数据的重复存储。
+
+14.分布式数据库的优化技术：主从复制，读写分离，分表，分库
+
+15.redis string 类型：用于缓存层或计数器
+
+16.redis hash：节省空间，用于用户信息
+
+17.redis set：无序集合，用于去重，抽奖，初始化用户池。
+
+18.redis list：用于回复评论、点赞
+
+19.redis 出现的问题：缓存穿透（访问没有缓存的 key），缓存雪崩（大量同时过期），缓存击穿（少量热点过期）
+
+20.redis 集群分为：主从复制，哨兵集群，Cluster 集群
+
+21.redis 集群的分片方式主要分为：客户端分片，代理分片，服务端分片
+
+
+## 九、系统架构设计 {#九-系统架构设计}
+
+<div class="fancy" link>
+
+<img src="/ox-hugo/9.png" alt="Caption not used as alt text" width="900" class="fancy" link="t" />
+1.软件架构定义：指构建的结构，属性，交互作用，并通过多种视图全面描述
+
+</div>
+
+2.软件架构设计的生命周期：需求分析阶段，设计阶段，构件组装阶段，部署阶段，后开发阶段。
+
+3.软件架构的重要性：满足系统的品质，与受益人达成一致的目标，支持计划编制，对系统开发有指导性，有效地管理复杂性，为复用奠定基础，降低维护费用，支持冲突分析
+
+4.C2 风格：通过连接件连接构件或某个构件组。
+
+5.特定领域软件架构 DSSA 的建立过程：定义领域范围，定义领域特定元素，定义领域特定的设计和实现。DSSA 的建立过程是并发的，递归的，反复的螺旋模型。
+
+6.三层 CS 模式：瘦客户端模式。分为表示层（用户接口与应用逻辑层交互），功能层（业务逻辑）和数据层。
+
+
+## 十、系统质量属性与架构评估 {#十-系统质量属性与架构评估}
+
+{{< figure src="/ox-hugo/10.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 10: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.SAAM（Software Architecture Analysis method）：软件架构分析方法
+
+2.ATAM（Architecture Tradeoff Analysis method）：架构权衡分析法
+
+3.ATAM 分为：演示和调查阶段，调查和分析阶段，测试阶段，报告阶段
+
+4.SAAM 和 ATAM 的对比各有所长。
+
+5.CBAM：（Cost Benefit Analysis Method）：成本效益分析法
+
+6.其它评估方法：SEAM，SAABNet，SACMM，SASAM，ALRRA，AHP，COSMIC+UML 方法
+
+
+## 十一、软件可靠性基础知识 {#十一-软件可靠性基础知识}
+
+{{< figure src="/ox-hugo/11.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 11: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+
+## 十二、软件架构的演化和维护 {#十二-软件架构的演化和维护}
+
+{{< figure src="/ox-hugo/12.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 12: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+
+## 十三、未来信息综合技术 {#十三-未来信息综合技术}
+
+{{< figure src="/ox-hugo/13.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 13: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.边缘计算：将数据的处理，应用程序的运行以及一些功能服务的实现，由网络中心下放到网络边缘结点上。
+
+2.云计算的服务方式有：SaaS，PaaS，IaaS
+
+
+## 十四、系统规划（不重要） {#十四-系统规划-不重要}
+
+{{< figure src="/ox-hugo/14.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 14: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+
+## 十五、信息系统架构设计理论与实践 {#十五-信息系统架构设计理论与实践}
+
+{{< figure src="/ox-hugo/15.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 15: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.TOGAF：（The Open Group 组织）架构框架
+
+2.ISA：信息系统架构
+
+3.信息化工程总体归化方法主要有：CSF（关键成功因素法 Critical Success Factors），战略目标集转化法（Strategy Set
+Transformation，SST），企业系统规划法（Business System Planning，BSP，自上而下的识别系统目标）
+
+
+## 十六、层次式架构设计理论与实践 {#十六-层次式架构设计理论与实践}
+
+{{< figure src="/ox-hugo/16.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 16: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.表现层的框架设计：MVC，MVP，MVVM
+
+2.中间层的框架设计：
+
+3.数据访问层设计：在线访问，DAO，DTO（Data Transfer Object），离线数据模式，对象/关系映射方式
+
+4.数据架构均由规划与设计：与类的设计融合，与 XML 的设计融合
+
+5.物联网层次架构设计：感知层，网络层，应用层
+
+6.事务处理设计：ACID 原则，即 Atomicity，Consistency，Isolution，Durability
+
+
+## 十七、云原生架构设计理论与实践 {#十七-云原生架构设计理论与实践}
+
+{{< figure src="/ox-hugo/17.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 17: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.云原生的原则：服务化，弹性，可观测，韧性，所有过程自动化，零信任，架构持续演进
+
+2.主要架构模式：服务化架构，Mesh 化架构，Serverless 模式，存储计算分离模式，分布式事务模式，可观测架构模式，事件驱动架构模式（EDA，Event Driven Architecture）
+
+3.反例：庞大的单体应用，“硬拆”为微服务，缺乏自动能力。
+
+4.无服备的技术特点：全拖管的计算服务，通用性，自动弹性伸缩，按量计费
+
+5.Service Mesh：服务网格，将微服务之间的连接，安全，流量控制和可观测等通用功能下沉为平台基础设施。
+
+
+## 十八、面向服务架构设计理论 {#十八-面向服务架构设计理论}
+
+{{< figure src="/ox-hugo/18.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 18: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.SOA 与微服务的区别：微服务相比于 SOA 更加精细；微服务提供的接口更加通用化；微服务更加倾向于分布式去中心化的部署方式。
+
+2.SOA 的参考架构：Websphere 架构包含业务逻辑服务，控制服务，连接服务，业务创新和优化服务，开发服务，IT 服务。
+
+3.SOA 主要协议和规范：UDDI（Universal Description，Discovery and Integration） 协议，WSDL（Web Service
+Description Language），SOAP（Simple Object Access Protocol），REST 规范。
+
+4.REST：Representional State Transfer（代表性的状态转换），它强调使用标准的 HTTP 方法进行资源的操作和交互。
+
+5.SOA 设计的标准要求：文档化标准，通信协议标准，应用程序统一登记与集成，服务质量。
+
+6.SOA 的设计模式：服务注册表模式，企业服务总线模式，微服务模式，微服务架构模式方案
+
+7.微服务架构面临的问题与挑点战：服务发现与服务调用的跟踪变得困难；很难实现与传统数据库的强一致性，转而追求最终的一致性。
+
+8.SOA 的原则：无状态，单一实例，明确定义的接口，自包含和模块化，粗粒度，服务之间松耦合，重用能力，互操作性、兼容和策略声明。
+
+
+## 十九、嵌入式系统软件 {#十九-嵌入式系统软件}
+
+{{< figure src="/ox-hugo/19.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 19: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.单调速率：（Rate Monotonic Scheduling，RMS），就是按照执行速度的快慢来排序，这种方法被认为是最优的。
+
+2.DARTS：（Design Approach for Real-Time System），实时系统设计方法。
+
+3.GEMESYS：（Generic Embedded System），面向安装攸关系统的跨领域系统架构。
+
+
+## 二十、通信系统架构设计理论与实践 {#二十-通信系统架构设计理论与实践}
+
+{{< figure src="/ox-hugo/20.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 20: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.局域网网络架构类型：单核心架构，双核心架构，环型架构，层次型架构。
+
+2.广域网网络架构：单核心架构，双核心架构，半/全冗余架构，对等子域架构，层次子域架构
+
+3.存储网络架构：DAS（Direct Attached Storage），NAS（Network Attached Storage），SAN（Storage Area Storage）
+
+4.IPv4 和 IPv6 两种共存的技术：双协议栈，隧道技术（ISATAP，6to4，over6，6over4），地址翻译技术。
+
+
+## 二十一、安全架构设计理论与实践 {#二十一-安全架构设计理论与实践}
+
+{{< figure src="/ox-hugo/21.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 21: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.WPDRRC 信息安全模型：预警，保护，检测，响应，恢复，反击（Counterattack）。三个要素是：人员，策略，技术。
+
+2.典型安全模型：状态机模型，BLP（人名，机密性） 模型，Biba （完整性）模型，CWM（人名）模型，Chinese Wall 模型
+
+3.CWM：包含主体，程序，客体；权限分离原则；具有审计能力。用于银行和金融机构。
+
+4.OSI/RM 信息安全架构：多点防御技术，分层防御技术，支撑性基础设施
+
+5.信息安全的架构还有：认证框架，访问控制框架，机密性框架，完整性框架，抗抵赖框架。
+
+6.数据库完整性设计原则：依据完整性约束类型设计其实现的系统层次和方式并考虑性能，尽可能应用实体完整性约束和引用完整性约束，慎用触发器，制定并使用完整性约束命名规范，测试数据库完整性，设置数据库团队，使用 CASE 工具
+
+
+## 二十二、大数据架构设计理论与实践 {#二十二-大数据架构设计理论与实践}
+
+{{< figure src="/ox-hugo/22.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 22: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.传统数据库数据量增大的处理方法：增加异步处理队列，建立数据库水平分区，建立数据库分片或重新分片，引入读写分离技术，引入分库分表技术
+
+2.现代大数据处理技术：基于分布式文件系统的 Hadoop；使用 Map/Reduce 或 Spark 数据处理技术；使用 Kafka 数据传输消息队列及 Avro 二进制格式。
+
+3.典型的大数据架构有：Lambda 架构，Kappa 架构
+
+4.Lambda 架构：同时处理离线和实时数据的，可容错的，可扩展的分布式系统。
+
+5.Lambda 分层：批处理层，加速层，服务层。
+
+6.Kappa 架构：去掉了 Lambda 架构的 Batch Layer。包含实时层和服务层。
+
+7.Lambda 依赖 Hadoop、Spark、Storm 技术。
+
+8.Kappa 偏流式计算，依赖 Flink 计算引擎。
+
+9.Impala 和 Hive 是分布式 Sql 的前端
+
+10.Flume 是通用的数据收集和传输系统。
+
+
+## 二十三、知识产权（略） {#二十三-知识产权-略}
+
+{{< figure src="/ox-hugo/23.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 23: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+
+## 二十四、应用数学 {#二十四-应用数学}
+
+{{< figure src="/ox-hugo/24.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 24: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+
+1.最小生成树：克鲁斯卡尔算法

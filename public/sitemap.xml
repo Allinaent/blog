@@ -2,32 +2,146 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://guolongji.xyz/post/next_todo/</loc>
+    <lastmod>2023-10-17T15:06:15+08:00</lastmod>
+  </url><url>
     <loc>https://guolongji.xyz/</loc>
-    <lastmod>2023-09-21T15:52:19+08:00</lastmod>
-  </url><url>
-    <loc>https://guolongji.xyz/categories/ai/</loc>
-    <lastmod>2023-09-21T15:52:19+08:00</lastmod>
-  </url><url>
-    <loc>https://guolongji.xyz/post/ai-leaning-plan/</loc>
-    <lastmod>2023-09-21T15:52:19+08:00</lastmod>
+    <lastmod>2024-01-12T13:13:35+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/categories/</loc>
-    <lastmod>2023-09-21T15:52:19+08:00</lastmod>
+    <lastmod>2024-01-12T13:13:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/grapic/</loc>
+    <lastmod>2024-01-12T13:13:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/mesa-introduction/</loc>
+    <lastmod>2024-01-12T13:13:35+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/post/</loc>
-    <lastmod>2023-09-21T15:52:19+08:00</lastmod>
+    <lastmod>2024-01-12T13:13:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/emacs/</loc>
+    <lastmod>2024-01-09T16:03:12+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/mu4e-and-org-mime/</loc>
+    <lastmod>2024-01-09T16:03:12+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/technology/</loc>
+    <lastmod>2024-01-10T18:55:17+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/grapic-test/</loc>
+    <lastmod>2024-01-08T11:20:32+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/apparmor-introduction/</loc>
+    <lastmod>2024-01-03T15:17:17+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/qume-gdb-kernel/</loc>
+    <lastmod>2024-01-10T18:55:17+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/system/</loc>
+    <lastmod>2024-01-03T15:18:28+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/security_boot/</loc>
+    <lastmod>2024-01-03T15:18:28+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/emacs/</loc>
+    <lastmod>2024-01-11T17:56:05+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/</loc>
+    <lastmod>2024-01-11T17:56:05+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/tikz-config/</loc>
+    <lastmod>2023-12-14T17:47:04+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/ai/</loc>
+    <lastmod>2023-12-14T16:50:22+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/math/</loc>
+    <lastmod>2023-11-22T15:32:58+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/tensor/</loc>
+    <lastmod>2023-11-22T15:32:58+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/matrix-analysis-6/</loc>
+    <lastmod>2023-11-21T17:57:17+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/matrix-analysis-5/</loc>
+    <lastmod>2023-11-21T17:57:31+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/matrix-analysis-4/</loc>
+    <lastmod>2023-11-20T16:16:14+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/emacs-optimize/</loc>
+    <lastmod>2023-11-17T13:17:21+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/line-algebra-nature/</loc>
+    <lastmod>2023-11-14T16:50:03+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/exam/</loc>
+    <lastmod>2024-01-11T11:33:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/examination/</loc>
+    <lastmod>2024-01-11T11:33:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/software-architect-example/</loc>
+    <lastmod>2024-01-11T11:33:35+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/kernel/</loc>
+    <lastmod>2023-10-25T15:53:18+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/use-perf-and-flame-graph/</loc>
+    <lastmod>2023-10-25T15:53:18+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/prose/</loc>
+    <lastmod>2023-10-19T16:08:41+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/wangyong-prose/</loc>
+    <lastmod>2023-10-19T16:08:41+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/matrix-analysis-3/</loc>
+    <lastmod>2023-11-14T22:02:21+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/martrix-analysis-2/</loc>
+    <lastmod>2023-10-17T16:09:59+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/martrix-analysis-1/</loc>
+    <lastmod>2023-10-16T17:25:22+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/plan/</loc>
+    <lastmod>2023-10-17T15:06:15+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/diy/</loc>
+    <lastmod>2023-10-12T10:01:55+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/keyboard/</loc>
+    <lastmod>2023-10-12T10:01:55+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/diy-keyboard/</loc>
+    <lastmod>2023-10-12T10:01:55+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/tags/gpu/</loc>
+    <lastmod>2024-01-08T10:46:14+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/tty-x-switch/</loc>
+    <lastmod>2024-01-08T10:46:14+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/learn/</loc>
+    <lastmod>2023-12-14T16:50:22+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/core-algorithms-for-mathine-learning/</loc>
+    <lastmod>2023-12-14T16:50:22+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/categories/ai/</loc>
+    <lastmod>2023-09-21T16:32:15+08:00</lastmod>
+  </url><url>
+    <loc>https://guolongji.xyz/post/ai-leaning-plan/</loc>
+    <lastmod>2023-09-21T16:32:15+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/post/ruankao-sign-up/</loc>
     <lastmod>2023-09-20T15:59:45+08:00</lastmod>
   </url><url>
-    <loc>https://guolongji.xyz/categories/learn/</loc>
-    <lastmod>2023-09-20T15:59:45+08:00</lastmod>
-  </url><url>
     <loc>https://guolongji.xyz/tags/misc/</loc>
     <lastmod>2023-09-20T15:59:45+08:00</lastmod>
-  </url><url>
-    <loc>https://guolongji.xyz/tags/</loc>
-    <lastmod>2023-09-20T16:36:09+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/tags/docker/</loc>
     <lastmod>2023-09-20T14:29:11+08:00</lastmod>
@@ -38,12 +152,6 @@
     <loc>https://guolongji.xyz/tags/opengrok/</loc>
     <lastmod>2023-09-20T14:29:11+08:00</lastmod>
   </url><url>
-    <loc>https://guolongji.xyz/categories/technology/</loc>
-    <lastmod>2023-09-20T14:29:11+08:00</lastmod>
-  </url><url>
-    <loc>https://guolongji.xyz/tags/kernel/</loc>
-    <lastmod>2023-09-18T21:42:31+08:00</lastmod>
-  </url><url>
     <loc>https://guolongji.xyz/tags/linux/</loc>
     <lastmod>2023-09-18T21:42:31+08:00</lastmod>
   </url><url>
@@ -51,16 +159,13 @@
     <lastmod>2023-09-18T21:42:31+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/categories/classic/</loc>
-    <lastmod>2023-09-20T16:36:09+08:00</lastmod>
-  </url><url>
-    <loc>https://guolongji.xyz/tags/emacs/</loc>
-    <lastmod>2023-09-20T16:36:09+08:00</lastmod>
+    <lastmod>2024-01-11T17:56:05+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/tags/hugo/</loc>
-    <lastmod>2023-09-20T16:36:09+08:00</lastmod>
+    <lastmod>2024-01-11T17:56:05+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/post/hugo-on-cloudflare/</loc>
-    <lastmod>2023-09-20T16:36:09+08:00</lastmod>
+    <lastmod>2024-01-11T17:56:05+08:00</lastmod>
   </url><url>
     <loc>https://guolongji.xyz/post/index.zh-cn/</loc>
     <lastmod>2020-09-09T00:00:00+00:00</lastmod>

@@ -1,0 +1,63 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/01
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-01-08 一 16:23]
+#+TITLE: 实践中学习ai
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: ai
+
+* 找好小目标
+
+对于 AI 的学习，建议先从一些小项目入手，以帮助理解和掌握基本概念和技术。
+
+以下是几个适合初学者的小项目：
+
+图像分类：使用深度学习模型对图像进行分类。可以使用常见的数据集如 MNIST、CIFAR-10 等进行实践。
+
+文本分类：使用自然语言处理技术对文本进行分类。可以使用 IMDB 电影评论数据集或 20 Newsgroups 数据集等进行实践。
+
+目标检测：使用深度学习模型对图像中的目标进行检测。可以使用 PASCAL VOC 数据集或 COCO 数据集进行实践。
+
+机器翻译：使用神经网络模型将一种语言的文本翻译成另一种语言。可以使用 WMT 数据集进行实践。
+
+强化学习：使用强化学习算法训练智能体（agent）在某个环境中执行任务。可以使用 OpenAI Gym 提供的
+环境进行实践，如 CartPole、MountainCar 等。
+
+以上是一些适合初学者的小项目，可以帮助入门 AI 领域。在实践过程中，应该注意充分理解和掌握每个项目中所用到的
+技术和算法，不断拓展知识面和技能，逐步提高实践水平。
+
+* paddle 还是 pytorch
+
+当然是 paddle 还有 opencv ，这些东西的获取更加的快捷。
+
+使用的 python 之前要按装 anaconda 。通过 ci 命令，我进入了 python conda 的 base 环境。
+
+conda info --env ，通过这个命令我能看到之前创建的环境。
+
+conda activate paddle_env ，激活 paddle 的环境。
+
+conda list 能查看当前环境安装的包有哪些。
+
+创建一个工作目录，gh/paddlepaddle 。以后在这个下面创建一些小的项目。比如创建一个 CIFAR-10 的项目。
+
+https://zh.d2l.ai/chapter_computer-vision/kaggle-cifar10.html
+
+下载完这个数据集要花 40 分钟。有点长。
+
+参见这个，先做一个例子。还有下面那个狗的品种识别，还有 14 ，15 章的内容，都实践一遍，然后看框架的代
+码。
+
+后面再看代码的含义和原理。调试，注释与思考。
+
+* 最后自己找一个好的新的问题
+
+或者是网上新的项目，用这些项目来，和 paddle 框架来做一个项目。数据集和问题一定要是开源的。一定要
+是有意义的东西。
+
+这样学比较快。系统的知识可以从通过目录查询。
+
+yolo 是一定要会的。比如我自己有兴趣做一个项目吗？数据又从哪里来呢？ai 比较好应用的领域有哪些呢？
+项目有哪些？
