@@ -1,10 +1,11 @@
 +++
 title = "mesa 中的概念和代码介绍"
 date = 2024-01-11T10:00:00+08:00
-lastmod = 2024-01-12T17:25:28+08:00
+lastmod = 2024-01-19T17:18:28+08:00
 categories = ["grapic"]
 draft = false
 toc = true
+image = "ox-hugo/img_20240119_171126.jpg"
 +++
 
 ## mesa 中的一些基本概念 {#mesa-中的一些基本概念}
@@ -402,4 +403,113 @@ Mesa 的完整流程可以大致分为以下几个步骤：
 
 ### mesa 的初始化 {#mesa-的初始化}
 
-{{< figure src="/ox-hugo/mesa-init.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 1: </span>_\"mesa 3d 的初始化\"_" >}}
+{{< figure src="/ox-hugo/img_20240117_102358.jpg" alt="mesa-init" caption="<span class=\"figure-number\">Figure 1: </span>_\"mesa 3d 的初始化\"_" >}}
+
+
+### opengl 除了 mesa 外还有其它的开源实现吗？ {#opengl-除了-mesa-外还有其它的开源实现吗}
+
+<https://blog.51cto.com/u_6725876/5135511>
+
+好像是没有了， <https://www.khronos.org/> ，科纳斯集团，这个是一个几个大公司成立在美国的一个组织，pervasive ， widespread 。这个组织就是图形，机器学习相关的各种重要领域的接口标准和开源实现。这个组织就是搞这么一件事的。
+
+
+### opengl 是怎么实现的 {#opengl-是怎么实现的}
+
+是通过状态机实现的：
+
+<https://blog.csdn.net/weixin_44478077/article/details/123985055>
+
+比如，我先设置好一个上下文，然后再调用 glRectf 来进行绘制。
+
+学习 opengl 编程可以看这里：<https://learnopengl-cn.github.io/>
+
+opengl 当中各种库的命名和功能：
+
+-   GLFW: Graphics Library Framework
+
+是配合 OpenGL 使用的轻量级工具程序库，缩写自 Graphics Library Framework（图形库框架）。GLFW 的主要功能是创建并管理窗口和 OpenGL 上下文，同时还提供了处理手柄、键盘、鼠标输入的功能。
+
+-   GLU:
+
+<!--listend-->
+
+-   GLUT: OpenGL Utility Toolkit
+
+GLUT（英文全写：OpenGL Utility Toolkit）是一个处理 OpenGL 程序的工具库，负责处理和底层操作系统的调用以及 I/O，并包括了以下常见的功能：
+
+定义以及控制视窗。
+
+侦测并处理键盘及鼠标的事件。
+
+以一个函数调用绘制某些常用的立体图形，例如长方体、球、以及犹他茶壶（实心或只有骨架，如 glutWireTeapot()）。
+
+提供了简单菜单列的实现。
+
+-   SDL: Simple DirectMedia Layer
+
+SDL（英语：Simple DirectMedia Layer）是一套开放源代码的跨平台多媒体开发函式库，使用 C 语言写成。
+SDL 提供了数种控制图像、声音、输出入的函数，让开发者只要用相同或是相似的代码就可以开发出跨多个平台（Linux、Windows、Mac OS X 等）的应用软件。目前 SDL 多用于开发游戏、模拟器、媒体播放器等多媒体应用领域。
+
+{{< figure src="/ox-hugo/mesa-module.png" alt="mesa-module" caption="<span class=\"figure-number\">Figure 2: </span>_mesa-module_" width="900" >}}
+
+-   OpenGL 能做什么？渲染 Render
+    -   为什么需要渲染?
+        -   OpengGL 的描述的物体在 3D 空间，3D 坐标
+
+        -   显示设备是 2D 平面的
+
+        -   Render ：{X, Y, Z}   ------------&gt;     {a, b}
+
+    -   管线 pipeline
+        -   一堆原始图形数据途经一个输送管道，期间经过各种变化处理最终出现在屏幕的过程
+
+        -   两步：
+            -   3D 坐标          2D 坐标
+
+            -   2D 坐标          有颜色的像素
+
+    -   着色器 shader
+        -   在管线中每阶段的处理，据说一个 shader
+
+        -   shader 就是 GPU 运行的 GLSL 描述的程序
+
+{{< figure src="/ox-hugo/mesa-header.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 3: </span>_mesa 的头文件_" >}}
+
+{{< figure src="/ox-hugo/mesa-libs.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 4: </span>_mesa 的库文件_" >}}
+
+用 GLX 设置上下文，用 GL 来做渲染。
+
+{{< figure src="/ox-hugo/mesa-module-2.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的库文件_" width="900" >}}
+
+
+### Mesa3D 的作用 {#mesa3d-的作用}
+
+-   Mesa 用作 Xorg 开源硬件 DRI 驱动的核心
+-   完全实现 OpenGL，一个系统中没有其它 OpenGL 实现只使用 mesa 即可完成功能
+-   使用 Mesa 渲染来验证硬件驱动
+-   测试新的渲染技术
+-   支持深色通道渲染：16bit 整型、32bit 浮点型
+-   可调整渲染中数据的限制，如 lights、clip planes、texture size
+
+
+### vlukan 相比 opengl 有哪些优势？ {#vlukan-相比-opengl-有哪些优势}
+
+-   Vulkan 是一种新的图形 API，与 OpenGL 相比有以下几个优势：
+
+-   更高的性能：Vulkan 具有更底层的硬件访问和更好的并发处理能力，可以更充分地利用多核 CPU 和
+
+现代 GPU 的计算能力。Vulkan 还支持异步计算和多线程渲染，可以更好地处理大规模的数据和复杂的场景。
+
+-   更低的 CPU 开销：Vulkan 通过显式地管理内存和资源，避免了 OpenGL 中常见的状态切换和错误检
+
+查开销。这使得 Vulkan 在 CPU 上的开销更低，可以在更少的 CPU 资源下实现更高的性能。
+
+-   更好的可扩展性：Vulkan 可以在多个设备上运行，并且具有更好的可扩展性。它可以更好地适应不同
+
+的硬件架构和操作系统，同时支持更多的显式控制，使得开发者可以更好地控制渲染流程和资源管理。
+
+-   更好的跨平台支持：Vulkan 的设计目标之一是在多个操作系统和硬件平台上运行，因此它提供了
+
+比 OpenGL 更好的跨平台支持。例如，在 Windows、Linux 和 Android 等操作系统上都可以使用 Vulkan。
+
+-   更好的图形质量：Vulkan 支持更高级别的反走样和其他图形技术，可以提供更高质量的图形效果。

@@ -39,4 +39,7 @@
             box-shadow: 0px -10px 0px rgba(var(--link-background-color), var(--link-background-opacity-hover)) inset;
         }
     }
+    img {
+	  data-action: zoom;
+    }
 }

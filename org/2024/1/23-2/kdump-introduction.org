@@ -1,0 +1,17 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/01
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-01-23 二 17:29]
+#+TITLE: kdump 的总结和介绍
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+kdump 有一篇很好的分享：
+
+[[./kdump-introduction.org.assets/Kexec_Kdump_Impl_Appl_v2.pdf][file:/Kexec_Kdump_Impl_Appl_v2.pdf]]
+
+
+

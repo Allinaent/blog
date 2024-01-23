@@ -1,0 +1,480 @@
++++
+title = "emacs 和内核关于邮件的配置"
+date = 2024-01-23T13:31:00+08:00
+lastmod = 2024-01-23T16:08:28+08:00
+categories = ["technology"]
+draft = false
+toc = true
+image = "ox-hugo/img_20240123_133500.jpg"
++++
+
+## emacs 如何配置邮件客户端 {#emacs-如何配置邮件客户端}
+
+首先我要说的是 emacs 的邮件客户端并不是只有优点没有缺点。实际上 emacs 的邮件客户端更适合管理纯文本的邮件，而不适合管理 html 的邮件。emacs 主要有 mu/mu4e ， notmuch ，
+gnus 三个邮件客户端。
+
+我只是用了 mu/mu4e ，有一些文章说 notmuch 更好。有一些文章说 gnus 更好。后续都可以用用试试。
+
+不要想着用 mu/mu4e 发工作的邮件，它适合查（也有一些小问题，只能查两个字组成的中文），和看（基本上问题不大），可以用 org-mime 发 html 的邮件，但是 F （forward ） 或者 R （reply ）是有问题的（很难把 html
+邮件原样的回复，会转成纯文本）。以后可能会慢慢好起来。
+
+优点：清晰快速地看邮件，尤其是纯文本的邮件。不会再开一个网页了，效率提升。
+
+
+## 开始配置 {#开始配置}
+
+
+### mbsnyc {#mbsnyc}
+
+目前我主要使用两个邮箱，一个 QQ 邮箱，另一个是腾讯企业邮箱。
+
+cat ~/.mbsyncrc
+
+```nil
+########################################
+# qq.com
+########################################
+IMAPAccount qq
+Host imap.qq.com
+User allinaent@qq.com
+PassCmd "pass mail/1909943253@qq.com"
+#PassCmd "cat ~/.mail/1.pass"
+Port 993
+AuthMechs LOGIN
+SSLType IMAPS
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile /usr/local/etc/openssl/cert.pem  # MacOS
+
+##
+# Remote
+IMAPStore qq-remote
+Account qq
+
+# Local
+MaildirStore qq-local
+Path ~/.mail/1909943253@qq.com/
+Inbox ~/.mail/1909943253qq.com/Inbox
+
+## Connections
+
+Channel qq-inbox
+Far :qq-remote:"INBOX"
+Near :qq-local:"in"
+Create Near
+Expunge Both
+SyncState *
+
+Channel qq-drafts
+Far :qq-remote:"DRAFTS"
+Near :qq-local:"draft"
+Create Near
+Expunge Both
+SyncState *
+
+Channel qq-sent
+Far :qq-remote:"Sent Messages"
+Near :qq-local:"sent"
+Create Near
+Expunge Both
+SyncState *
+
+Channel qq-trash
+Far :qq-remote:"DELETED MESSAGES"
+Near :qq-local:"trash"
+Create Near
+Expunge Both
+SyncState *
+
+## Groups
+Group qq
+Channel qq-inbox
+Channel qq-drafts
+Channel qq-sent
+Channel qq-trash
+
+########################################
+# exmail.com
+########################################
+IMAPAccount exmail
+Host imap.exmail.qq.com
+User guolongji@uniontech.com
+PassCmd "pass mail/guolongji@uniontech.com"
+#PassCmd "cat ~/.mail/1.pass"
+Port 993
+AuthMechs LOGIN
+SSLType IMAPS
+CertificateFile /etc/ssl/certs/ca-certificates.crt
+# CertificateFile /usr/local/etc/openssl/cert.pem  # MacOS
+
+##
+# Remote
+IMAPStore exmail-remote
+Account exmail
+
+# Local
+MaildirStore exmail-local
+Path ~/.mail/guolongji@uniontech.com/
+Inbox ~/.mail/guolongji@uniontech.com/Inbox
+
+## Connections
+
+Channel exmail-inbox
+Far :exmail-remote:"INBOX"
+Near :exmail-local:"in"
+Create Near
+Expunge Both
+SyncState *
+
+Channel exmail-drafts
+Far :exmail-remote:"DRAFTS"
+Near :exmail-local:"draft"
+Create Near
+Expunge Both
+SyncState *
+
+Channel exmail-sent
+Far :exmail-remote:"Sent Messages"
+Near :exmail-local:"sent"
+Create Near
+Expunge Both
+SyncState *
+
+Channel exmail-trash
+Far :qq-remote:"DELETED MESSAGES"
+Near :qq-local:"trash"
+Create Near
+Expunge Both
+SyncState *
+
+## Groups
+Group exmail
+Channel exmail-inbox
+Channel exmail-drafts
+Channel exmail-sent
+Channel exmail-trash
+```
+
+下载安装 mbsync/isnyc ，这个可以用 imap 协议同步远程邮件服务器上的邮件。
+
+待下面的 pass 配置完成后，可以用 mbsnyc -a 来同步邮件可调试配置是不是通的。
+
+
+### 添加 .authinfo 文件 {#添加-dot-authinfo-文件}
+
+<https://jerling.github.io/post/%E5%B0%86emacs%E4%BD%9C%E4%B8%BA%E9%82%AE%E4%BB%B6%E5%A4%84%E7%90%86%E8%BD%AF%E4%BB%B6/>
+
+因为 emacs 使用的 mu4e 是基于 gnus 的，因此需要在主目录下新建一个文件， 命名为 .authinfo 。
+
+```nil
+machine smtp.exmail.qq.com login guolongji@uniontech.com port 465 password xxxxxxxx （企业邮箱网页密码）
+machine smtp.qq.com login 1909943253@qq.com port 465 password xxxxxxxx （imap key）
+machine fanyi-api.baidu.com login 20230112001528448 password xxxxxxxx
+```
+
+
+### pass {#pass}
+
+参考的几篇文档：
+
+<https://zhuanlan.zhihu.com/p/499631854>
+
+pass 是可以和 git 整合的：
+
+<https://cn.linux-console.net/?p=7397#gsc.tab=0>
+
+sudo apt install pass
+
+```bash
+pass add mail/1909943253@qq.com
+pass add mail/guolongji@uniontech.com
+uos@guolongji:~$ pass
+Password Store
+└── mail
+    ├── 1909943253@qq.com
+    └── guolongji@uniontech.com
+```
+
+
+### 展示一下结果 {#展示一下结果}
+
+```bash
+uos@guolongji:~$ tree -L 2 .mail
+.mail
+├── 0FE30543@AA928B02.15589E6500000000.jpg
+├── 1909943253@qq.com
+│   ├── deleted
+│   ├── dirafts
+│   ├── draft
+│   ├── in
+│   ├── sent
+│   └── trash
+├── 39D3CFB3@D555967C.15589E6500000000.jpg
+├── 关于组织架构调整与人事任命的通知.pdf
+├── 《统信一家人》第15期（2023年12月）.pdf
+├── D0A3C501@466EB942.55D4AD6500000000.jpg
+└── guolongji@uniontech.com
+    ├── draft
+    ├── drafts
+    ├── in
+    ├── sent
+    └── trash
+```
+
+
+### emacs 的主要配置 {#emacs-的主要配置}
+
+```lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mu4e 当中搜中文
+;; https://emacs-china.org/t/topic/498/11
+(setenv "XAPIAN_CJK_NGRAM" "1")
+
+(add-to-list 'load-path "~/.emacs.d/site-lisp/mu4e-1.10.7/")
+(require 'mu4e)
+
+(setq mu4e-change-filenames-when-moving t)
+(setq mu4e-update-interval (* 10 60))
+(setq mu4e-get-mail-command "mbsync -a")
+(setq mu4e-maildir "~/.mail/")
+
+;; https://github.com/daviwil/emacs-from-scratch/blob/master/show-notes/Emacs-Mail-02.org
+(setq mu4e-contexts
+      (list
+       ;; Work account
+       (make-mu4e-context
+        :name "Work"
+        :match-func
+        (lambda (msg)
+          (when msg
+            (string-prefix-p "/exmail.com" (mu4e-message-field msg :maildir))))
+        :vars '((user-mail-address . "guolongji@uniontech.com")
+                (user-full-name    . "Longji Guo")
+                (mu4e-drafts-folder  . "/guolongji@uniontech.com/drafts")
+                (mu4e-sent-folder  . "/guolongji@uniontech.com/sent")
+                (mu4e-refile-folder  . "/guolongji@uniontech.com/archive")
+                (mu4e-trash-folder  . "/guolongji@uniontech.com/trash")))
+
+       ;; Personal account
+       (make-mu4e-context
+        :name "Personal"
+        :match-func
+        (lambda (msg)
+          (when msg
+            (string-prefix-p "/qq.com" (mu4e-message-field msg :maildir))))
+        :vars '((user-mail-address . "1909943253@qq.com")
+                (user-full-name    . "allinaent")
+                (mu4e-drafts-folder  . "/1909943253@qq.com/dirafts")
+                (mu4e-sent-folder  . "/1909943253@qq.com/sent")
+                (mu4e-refile-folder  . "/1909943253@qq.com/archive")
+                (mu4e-trash-folder  . "/1909943253@qq.com/trash")))))
+
+
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program "google-chrome")
+
+(setq mu4e-maildir-shortcuts
+      '(("/guolongji@uniontech.com/in"     . ?m)
+        ("/guolongji@uniontech.com/send" . ?n)
+        ("/1909943253@qq.com/in"     . ?x)
+        ("/1909943253@qq.com/send"    . ?y)
+        ;;("/exmail.com/All Mail"  . ?a)
+        ))
+
+(setq mu4e-bookmarks
+      '(("flag:unread AND NOT flag:trashed" "Unread messages"      ?i)
+        ("date:today..now"                  "Today's messages"     ?t)
+        ("from:stallman"                    "The Boss"             ?s)
+        ("date:7d..now"                     "Last 7 days"          ?w)
+        ("mime:image/*"                     "Messages with images" ?p)))
+
+
+(defun my/mu4e-inbox ()
+  "jump to mu4e inbox"
+  (interactive)
+  (mu4e~headers-jump-to-maildir "/guolongji@uniontech.com/Inbox"))
+
+(global-set-key (kbd "C-t C-e") 'my/mu4e-inbox)
+
+(add-to-list 'mu4e-view-actions
+             '("XWidget View" . mu4e-action-view-with-xwidget) t)
+
+
+(setq mu4e-user-mail-address-list (list "guolongji@uniontech.com" "1909943253@qq.com"))
+(setq message-sendmail-envelope-from 'header)
+```
+
+
+### emacs mu4e 的美化 {#emacs-mu4e-的美化}
+
+```lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Mu4e Column faces ： mu4e 样式美化
+(use-package mu4e-column-faces
+    :after mu4e
+    :config (mu4e-column-faces-mode))
+
+(add-hook 'mu4e-headers-mode-hook (lambda () (pangu-spacing-mode -1)))
+(setq mu4e-headers-fields '((:human-date . 25)  (:from . 35) (:subject . 45)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mu4e-mark-icons
+(use-package mu4e-marker-icons)
+(setq mu4e-headers-precise-alignment t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; mu4e-views
+(define-key mu4e-headers-mode-map (kbd "v") #'mu4e-views-mu4e-select-view-msg-method)
+(use-package mu4e-views
+    :after mu4e
+    :defer nil
+    :bind (:map mu4e-headers-mode-map
+                ("v" . mu4e-views-mu4e-select-view-msg-method) ;; select viewing method
+                ("M-n" . mu4e-views-cursor-msg-view-window-down) ;; from headers window scroll the email view
+                ("M-p" . mu4e-views-cursor-msg-view-window-up) ;; from headers window scroll the email view
+                ("f" . mu4e-views-toggle-auto-view-selected-message) ;; toggle opening messages automatically when moving in the headers view
+                ("i" . mu4e-views-mu4e-view-as-nonblocked-html) ;; show currently selected email with all remote content
+                )
+    :config
+    (setq mu4e-views-completion-method 'ivy) ;; use ivy for completion
+    (setq mu4e-views-default-view-method "html") ;; make xwidgets default
+    (mu4e-views-mu4e-use-view-msg-method "html") ;; select the default
+    (setq mu4e-views-next-previous-message-behaviour 'stick-to-current-window) ;; when pressing n and p stay in the current window
+    (setq mu4e-views-auto-view-selected-message t)) ;; automatically open messages when moving in the headers view
+
+(add-hook 'mu4e-views-view-actions-mode-hook 'balance-windows) ;; 显示邮件等宽分屏
+```
+
+
+### org-mime {#org-mime}
+
+```lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; org-mime
+;; convert org content in mu4e to html and send
+(require 'org-mime)
+
+(setq org-mime-library 'mml)
+
+(setq org-mime-export-options '(:with-latex dvipng
+                                :section-numbers nil
+                                :with-author nil
+                                :with-toc nil))
+
+(defun mu4e-compose-org-mail ()
+  (interactive)
+  (mu4e-compose-new)
+  (org-mu4e-compose-org-mode))
+
+(defun htmlize-and-send ()
+  "When in an org-mu4e-compose-org-mode message, htmlize and send it."
+  (interactive)
+  (when (member 'org~mu4e-mime-switch-headers-or-body post-command-hook)
+    (org-mime-htmlize)
+    (message-send-and-exit)))
+
+(add-hook 'org-ctrl-c-ctrl-c-hook 'htmlize-and-send t)
+
+```
+
+
+### 安装 lei {#安装-lei}
+
+nix-env -iA nixpkgs.public-inbox
+
+lei 和 m4 脚本一样，是看内核 LWN 和查 <https://lore.kernel.org/> 找到有用 patch 的少数可用的工具。
+
+
+## 使用 {#使用}
+
+常用选项，列表页面：
+
+![](/ox-hugo/img_20240123_142401.jpg)
+此处按：
+
+P ，更改属性，比如是否显示 thread 关系。
+
+v ，使用 mu4e-view 选择打开邮件的方式。
+
+s ，以不同的方式排序。
+
+jm 和 jx ，跳转到不同的收件箱。
+
+{{< figure src="/ox-hugo/img_20240123_152309.jpg" >}}
+
+在邮件的页面按：
+
+E ，下载附件，我把附件下载目录设置为 ~/.mail/ 中。
+
+
+## 总结 {#总结}
+
+gnus 的配置十分的复杂，我的想法是 lei 下载下来 maildir 的邮件之后，用 mu4e 来看 thread 。
+
+可以通过 gmail 设置过滤器来过滤关心的邮件：比如：
+
+由于我维护 LLVM 构建支持，因此我只订阅我们的特定邮件列表 ( llvm@lists.linux.dev )。我通过阅读它并提供支持来获得报酬，但即便如此，我也设置了过滤器，主要是因为我不需要对每个问题进行初始分类 kbuild 测试机器人报告（如果有人回复这样的线程，我确实看到它，因为人们经常需要帮助了解如何重现任何给定的诊断）。
+
+我不订阅 LKML 或任何其他列表。这就像试图从消防水带里喝水一样。
+
+有些人确实习惯 lei 手动扫描列表以查找某些感兴趣的主题。<https://josefbacik.github.io/kernel/2021/10/18/lei-and-b4.html>
+
+
+## 相关链接： {#相关链接}
+
+-   主要配置：
+
+<https://jerling.github.io/post/%E5%B0%86emacs%E4%BD%9C%E4%B8%BA%E9%82%AE%E4%BB%B6%E5%A4%84%E7%90%86%E8%BD%AF%E4%BB%B6/>
+
+-   emacs 管理多个邮件列表（此处说 notmuch 更好用）：
+
+<https://www.reddit.com/r/emacs/comments/733rk6/how_do_emacs_developers_manage_multiple_mailing/>
+
+-   怎么看内核的邮件列表（主要是不同步邮件却能下载需要的邮件 thread ，提到了 lei ！）：
+
+<https://www.reddit.com/r/kernel/comments/157bww6/mailing_list/>
+
+-   另一个内核开发者邮件相关的配置：
+
+<https://devkernel.io/posts/kernel-dev-setup-email/#colorize-patches-in-emails>
+
+-   除了邮件列表之外还有一些好的讨论的网站，这里可能能找到有价值的提升能力的讨论：
+
+<https://www.bytelab.codes/>
+
+-   lei 的使用：
+
+<https://people.kernel.org/monsieuricon/lore-lei-part-1-getting-started>
+
+-   从 LKML 优雅的摘取补丁：
+
+<https://blog.xzr.moe/archives/293/>
+
+-   使用 notmuch 来管理邮件和邮件列表：
+
+<https://www.youtube.com/watch?v=3xWEnAVl1Tw>
+
+-   刘家财邮件相关的配置：
+
+<https://liujiacai.net/blog/2021/03/05/emacs-love-mail-feed/>
+
+xapian 这个库对中文的支持有些问题，但是对英文的查找非常地快。就连 Ryabitsev 搭建的 lore.kernel.org
+使用的也是 xapian 这个查找库。C++ 写的一个数据库用到了 B 树这种数据结构。
+
+-   LWN 是一个著名的计算机杂志
+
+-   lei 的发展史：
+
+<https://blog.csdn.net/Linux_Everything/article/details/122138214>
+
+-   如何使用 lei 的 ppt （外国人写的）：
+
+<https://lpc.events/event/11/contributions/983/attachments/759/1421/Doing%20more%20with%20lore%20and%20b4.pdf>
+
+-   使用 lei、b4、mutt 做内核开发
+
+<https://josefbacik.github.io/kernel/2021/10/18/lei-and-b4.html>
+
+这里我可以把 MUTT 换成我用的 mu4e 就行了。
+
+-   mu4e-conversation
+
+这个对看邮件列表有用： <https://gitlab.com/ambrevar/mu4e-conversation>

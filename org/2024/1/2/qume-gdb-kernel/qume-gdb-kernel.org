@@ -623,3 +623,489 @@ info args
 https://stdio.io/1086
 
 
+* 内核 gcc 编译用 Og
+
+https://www.cnblogs.com/zhchy89/p/8805691.html
+
+前几天我发现了一个上游未合入的 patch ，与韬哥讨论，韬哥用 b4 下载下来了 patch ，并在我们的内核
+上进行了合入。 https://blog.51cto.com/u_15127700/3606710
+
+
+[kernel hacking: GCC optimization for debug experience (-Og) [LWN.net]](https://lwn.net/Articles/753201/)
+
+
+patch 是 2018 年 intel 的一位国人工程师提交的，大概就是添加了两个构建编译过程中的内核配置选项，来让调试的时候更舒服一点：
+- 关闭 auto inline
+- 使用-Og，而不是默认的-O2
+
+
+同时因为某些内核代码可能会在新的配置下有编译 warning，所以作者还手动做了一些小 fix，都不涉及程序语义改动。
+
+
+这个 patch 发了几个版本，上游基本没什么反对意见；但貌似因为还有一些编译 warning 没有得到修复（根据 kbuild 维护者反馈），所以最终不了了之了。
+
+
+韬哥拉取了上游最新的 patchset，简单修复了一些合并冲突（无语义改动），推到了我们的 4.19 x86 分支：
+[kernel hacking: new config CC_OPTIMIZE_FOR_DEBUGGING to apply GCC -Og optimization (I8ce1d36b) · Gerrit Code Review](https://gerrit.uniontech.com/c/kernel/x86-kernel/+/228206/1)
+
+
+韬哥简单测试了一下，默认编译配置下，kallsyms 大概是 98000 个符号；关闭自动 inline 之后，会增加到 107000 左右。至于-Og 和-O2 的区别，我没有实际研究……
+
+
+这两个配置默认都是关闭的，如果大家发现调试 trace 时有某些 static 函数被 inline 了，那可以考虑打开这个配置再编译调试内核。
+
+
+至于-Og……从上游的描述来看应该是接近于-O1，但我也不知道实际调试会怎么需要它。
+
+
+* vng 启动虚拟机
+
+文章 udoc 地址：
+https://udoc.uniontech.com/s/kZK93TyLFMyECgZ
+
+虚拟化专题地址：
+https://udoc.uniontech.com/s/JT6W9XWFgrK9CTa
+
+** 完整的 kernel-base 启动
+
+在之前的文章里，我们展示了如何用 qemu+kernel 做最简单的启动，它会因为找不到 initrd 和 rootdev 而 panic；
+我们也可以手动用 busybox，加上我们手写的/init 脚本来构建一个最简单的 initrd，在最后调用/bin/sh 来进入一个
+可用的用户态命令行环境；当然我们也可以直接基于 qemu+disk 启动，在完整的持久化系统环境里去更新内核，做测试。
+但是我们在开发/修改内核时，时常会有这样的需求：
+
++ 修改、编译一个内核以后，可以一键快速完成启动，最好是秒级内完成。
++ 新内核可以直接启动，不需要安装、更新软件包。
++ 不需要修改内核配置，最好是可以在之前的构建目录里直接使用，无侵入性。
++ 内核启动后，可以在需要时加载正确的 ko 模块。（本次编译的 ko）
++ 虚拟机启动后，和宿主机之间有文件系统直通。
++ 虚拟机启动后，有完整的开发调试环境，比如各种调试工具，如 strace、bpf 等。
++ ......
+
+这样的需求是可能实现的吗？有相关的路径存在吗？
+
+答案肯定的：
+
++ qemu 可以基于 kernel+initrd+cmdline 启动。
++ 我们可以定制一个合适的 initrd，包含挂载 9pfs 的相关 ko（比如 9pfs，9pnet，virtio 等），同时写一个/init 脚
+本，将 host 的“/”直接挂载为 guest 的“/”（只读）。——这样，宿主机的环境就完整地传递到了虚拟机里。
+
++ 我们可以基于编译目录，手动构建一个/lib/modules/0.0.0/目录，模拟出系统的模块目录（可以被 modprobe 识别）
+，然后想办法 mount 到 guest 的“uname -r”对应目录去。——这样，guest 就能找到正确版本的 ko。
+
++ 我们可以另外指定一些目录，用 rw 的方式，通过 9pfs 直通给 guest。
++ 从上面的分析可以看出来，核心的麻烦点其实是 initrd 和内核模块：
++ 对于内核模块，我们不但要把挂载 rootfs 相关的模块部署到 initrd 里，还要构建一个模块目录来给 guest 里
+的 modprobe 使用。
++ 对于 initrd，除了 ko 之外，还需要定制一些控制逻辑，来完成 9p 文件系统的挂载，以及其他的各种环境相关
+的配置。——比如在 read-only 的 9p root 之上，可能还要用 tmpfs+overlayfs 来把一些目录（比如 etc 之类的）
+挂载为 rw 的。
+
+既然这么好，那我们之前的基于 qemu+kernel+initrd 的启动方案，为什么没有实现上面这些要求呢？因为已经存在一
+个上游项目，帮助我们完整地实现了上面的需求，也就是 virtme-ng 项目。
+
+** virtme-ng 启动
+
+*virt-space 体验*
+#+begin_src
+# 进入编译目录
+ssh uos@10.20.53.172
+cd /virt-space
+cd 4.19-x86/4.19-x86-build/
+
+# 一键启动，vng是主命令
+sudo /virt-space/virtme-vng/vng
+#+end_src
+
+启动成功的输出如下：
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ sudo /virt-space/virtme-ng/vng
+          _      _
+   __   _(_)_ __| |_ _ __ ___   ___       _ __   __ _
+   \ \ / / |  __| __|  _   _ \ / _ \_____|  _ \ / _  |
+    \ V /| | |  | |_| | | | | |  __/_____| | | | (_| |
+     \_/ |_|_|   \__|_| |_| |_|\___|     |_| |_|\__  |
+                                                |___/
+   kernel version: 4.19.0-amd64-desktop x86_64
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# uname -a
+Linux virtme-ng 4.19.0-amd64-desktop #1 SMP Fri Jan 5 11:53:01 CST 2024 x86_64 GNU/Linux
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# exit
+exit
+#+end_src
+
+
+可以看到，在虚拟机里，vng 会自动修改 hostname 为 virtme-ng，同时在内核名称加上“virtme-ng”的前缀作为区分。
+
+ok，就是这么简单，vng 启动完成！
+
+*注意，在 uos-4.19 上运行时，请直接用 root 启动，可以避免一些很繁琐的问题。*
+
+在自己的环境里部署运行 vng
+
+如果大家想在自己的机器上跑 vng 的话，也很简单，因为 vng 项目是基于 python 开发的，本身就是 python 脚
+本，可以直接运行。——上面的/virt-space/virtme-ng/实际上就是源码目录。
+
+所以大家可以直接拷贝 x86-nodepc 里 virtme-ng，也可以到
+github clone https://github.com/arighi/virtme-ng
+
+基于源码路径运行时，需要预先安装一些软件包：
+
+#+begin_src bash
+sudo apt install python3-pip python3-argcomplete flake8 pylint qemu-system-x86
+#+end_src
+
+然后就可以基于源码目录启动 vng 了。
+
+** vng 环境
+
+vng 启动的虚拟机里，有完整的程序环境，比如——我们可以随便跑一个 bpftrace 程序：（host 里已经安装了 bpftrace）
+
+#+begin_src
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# bpftrace -e 'profile:hz:1 / cpu == 0 /{ printf("cpu %d comm %s:%s\n", cpu, comm, kstack);} interval:s:3 { exit(); }'
+Attaching 2 probes...
+cpu 0 comm swapper/0:
+        native_safe_halt+14
+        __cpuidle_text_start+28
+        do_idle+467
+        cpu_startup_entry+111
+        start_kernel+1287
+        secondary_startup_64+164
+
+cpu 0 comm swapper/0:
+        native_safe_halt+14
+        __cpuidle_text_start+28
+        do_idle+467
+        cpu_startup_entry+111
+        start_kernel+1287
+        secondary_startup_64+164
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+
+#+end_src
+
+或者跑一个 strace 程序：
+
+#+begin_src
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# strace -e %%stat ls > /dev/null
+fstat(3, {st_mode=S_IFREG|0644, st_size=119161, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=163488, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0755, st_size=1779440, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=468944, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=14592, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0755, st_size=146968, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0444, st_size=0, ...}) = 0
+fstat(3, {st_mode=S_IFREG|0644, st_size=6174592, ...}) = 0
+fstat(3, {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+fstat(1, {st_mode=S_IFCHR|0666, st_rdev=makedev(0x1, 0x3), ...}) = 0
++++ exited with 0 +++
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+
+#+end_src
+
+host 里的几乎所有的命令（甚至包括嵌套 vng）都可以直接在 guest 里直接运行！（这就很神奇，为啥呢）
+
+** 文件系统与直通
+
+*vng 里的文件系统*
+
+#+begin_src
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# findmnt
+TARGET                    SOURCE             FSTYPE   OPTIONS
+/                         /dev/root          9p       ro,relatime,sync,dirsync,access=any,
+├─/proc                   proc               proc     rw,nosuid,nodev,noexec,relatime
+├─/sys                    sys                sysfs    rw,nosuid,nodev,noexec,relatime
+│ ├─/sys/kernel/debug     debugfs            debugfs  rw,relatime
+│ ├─/sys/kernel/tracing   tracefs            tracefs  rw,relatime
+│ ├─/sys/kernel/security  securityfs         security rw,relatime
+│ └─/sys/fs/cgroup        cgroup2            cgroup2  rw,relatime
+├─/tmp                    tmpfs              tmpfs    rw,relatime
+├─/run                    run                tmpfs    rw,relatime
+├─/etc                    virtme_rw_overlay0 overlay  rw,relatime,lowerdir=/etc,upperdir=/
+│ ├─/etc/fstab            tmpfs[/fstab]      tmpfs    rw,relatime
+│ ├─/etc/hosts            tmpfs[/hosts]      tmpfs    rw,relatime
+│ ├─/etc/shadow           tmpfs[/shadow]     tmpfs    rw,relatime
+│ └─/etc/sudoers          tmpfs[/tmp.tn6fSp1251]
+│                                            tmpfs    rw,relatime
+├─/usr/lib                virtme_rw_overlay1 overlay  rw,relatime,lowerdir=/lib,upperdir=/
+├─/home                   virtme_rw_overlay2 overlay  rw,relatime,lowerdir=/home,upperdir=
+├─/opt                    virtme_rw_overlay3 overlay  rw,relatime,lowerdir=/opt,upperdir=/
+├─/srv                    virtme_rw_overlay4 overlay  rw,relatime,lowerdir=/srv,upperdir=/
+├─/usr                    virtme_rw_overlay5 overlay  rw,relatime,lowerdir=/usr,upperdir=/
+│ ├─/usr/lib/modules      none               tmpfs    rw,relatime
+│ ├─/usr/lib/dpkg-db/lock tmpfs[/lock]       tmpfs    rw,relatime
+│ ├─/usr/lib/dpkg-db/lock-frontend
+│ │                       tmpfs[/lock-frontend]
+│ │                                          tmpfs    rw,relatime
+│ └─/usr/lib/dpkg-db/triggers/Lock
+│                         tmpfs[/Lock]       tmpfs    rw,relatime
+├─/var                    virtme_rw_overlay6 overlay  rw,relatime,lowerdir=/var,upperdir=/
+│ ├─/var/tmp              tmpfs              tmpfs    rw,relatime
+│ ├─/var/spool/rsyslog    tmpfs              tmpfs    rw,relatime
+│ ├─/var/log              tmpfs              tmpfs    rw,relatime
+│ ├─/var/cache            tmpfs              tmpfs    rw,relatime
+│ ├─/var/lib/apt          tmpfs              tmpfs    rw,relatime
+│ └─/var/lib/private      tmpfs              tmpfs    rw,relatime
+└─/dev                    devtmpfs           devtmpfs rw,nosuid,noexec,relatime,size=49092
+  ├─/dev/pts              devpts             devpts   rw,nosuid,noexec,relatime,gid=5,mode
+  └─/dev/shm              tmpfs              tmpfs    rw,nosuid,nodev,relatime
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# exit
+exit
+
+#+end_src
+
+可以看到，类似于 host，vng 的 guest 里也挂载了各种系统必须的 kernfs 和 tmpfs，比如 proc，sysfs，debugfs，tracefs，
+cgroupfs，devtmpfs，/tmp，/run，/dev/shm 等等。
+
+另外，默认 vng 是将 root 挂载为 read-only，同时将 usr，lib，etc，home，opt，srv 等目录都用 tmpfs 做
+了 rw 的 overlay，是可以写入的。——甚至可以在 guest 里安装新的 deb 包，只是要注意给 guest 的 memory 设置
+得大一点。（默认是 1G，装大软件是不太够的）
+
+另外我们也可以通过参数“--rwdir PATH”，直通另外的目录给 guest，并设置为可读可写：
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ sudo /virt-space/virtme-ng/vng --rwdir /virt-space/hostshare/
+          _      _
+   __   _(_)_ __| |_ _ __ ___   ___       _ __   __ _
+   \ \ / / |  __| __|  _   _ \ / _ \_____|  _ \ / _  |
+    \ V /| | |  | |_| | | | | |  __/_____| | | | (_| |
+     \_/ |_|_|   \__|_| |_| |_|\___|     |_| |_|\__  |
+                                                |___/
+   kernel version: 4.19.0-amd64-desktop x86_64
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# touch /virt-space/hostshare/hello-vvvng
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# ls -l /virt-space/hostshare/hello-vvvng
+-rw-r--r-- 1 root root 0 1月  16  2024 /virt-space/hostshare/hello-vvvng
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# exit
+exit
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$
+
+#+end_src
+
+** 快速启动与常用配置
+
+*快速启动*
+
+我们可以指定 vng 在 guest 里执行某个特定的命令，并在执行完成后自动退出，下面的例子里我们可以
+用“uname -a”来测试虚拟机启动的整体耗时：
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ time sudo /virt-space/virtme-ng/vng -- uname -a
+Linux virtme-ng 4.19.0-amd64-desktop #1 SMP Fri Jan 5 11:53:01 CST 2024 x86_64 GNU/Linux
+
+real    0m5.925s
+user    0m9.704s
+sys     0m12.036s
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$
+
+#+end_src
+
+注意，如果是在内核编译目录第一次执行，因为要解析和构建内核模块相关的临时目录，可能会要慢一些。
+
+我一般是不调整任何内核配置、构建流程，在源码目录里编译以后（不管是 make，还是 make bindeb-pkg），直接
+到该目录里启动 vng。甚至一般来说都可以不用调整配置，基本配置可以满足大部分的测试需求了。
+
+一些小的 tips：
+
++ 如果发现某个软件没有，我一般会直接在 host 里安装，guest 里会直接有，当然一般建议重启 guest，反正很快。
++ 如果有一些需要在 guest 里反复进行的小操作，那就直接在编译目录里写一个小脚本吧。——guest 启动
+后，会自动 chdir 到我们启动 vng 的目录，使用起来非常顺手。
+
+除了上面的“--rwdir PATH”之外，还有一些基本配置是我们可能比较需要的：
+
+*添加磁盘 “--disk xxx.img”*
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ dd if=/dev/zero of=test.img bs=1M count=300
+记录了300+0 的读入
+记录了300+0 的写出
+314572800 bytes (315 MB, 300 MiB) copied, 0.0868311 s, 3.6 GB/s
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ sudo /virt-space/virtme-ng/vng --disk test.img
+请输入密码:
+验证成功
+WARNING: Image format was not specified for 'test.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+          _      _
+   __   _(_)_ __| |_ _ __ ___   ___       _ __   __ _
+   \ \ / / |  __| __|  _   _ \ / _ \_____|  _ \ / _  |
+    \ V /| | |  | |_| | | | | |  __/_____| | | | (_| |
+     \_/ |_|_|   \__|_| |_| |_|\___|     |_| |_|\__  |
+                                                |___/
+   kernel version: 4.19.0-amd64-desktop x86_64
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# lsblk
+NAME MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+fd0    2:0    1    4K  0 disk
+sr0   11:0    1 1024M  0 rom
+vda  254:0    0  300M  0 disk
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# exit
+exit
+
+#+end_src
+
+*设置 cpu、memory “--cpus N --memory XX”*
+
+默认下，cpu 数量是和 host 一样，memory 是 1G，我们可以手动调整：
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ sudo /virt-space/virtme-ng/vng --cpus 4 --memory 2G
+          _      _
+   __   _(_)_ __| |_ _ __ ___   ___       _ __   __ _
+   \ \ / / |  __| __|  _   _ \ / _ \_____|  _ \ / _  |
+    \ V /| | |  | |_| | | | | |  __/_____| | | | (_| |
+     \_/ |_|_|   \__|_| |_| |_|\___|     |_| |_|\__  |
+                                                |___/
+   kernel version: 4.19.0-amd64-desktop x86_64
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# nproc
+4
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# free -h
+              total        used        free      shared  buff/cache   available
+Mem:          1.9Gi        28Mi       1.9Gi       0.0Ki        24Mi       1.8Gi
+Swap:            0B          0B          0B
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build# exit
+exit
+
+#+end_src
+
+*透传 qemu-option，内核 cmdline “-o"xxx" --append "xxx"”*
+
+比如想用 gdb 调试 vng 启动的 guest，就需要用到这两个选项，下一节里我们可以看到详细的例子。
+
+值得注意的是，使用-o 选项时，后面不要带空格，也不要用”--qemu-opts“这个格式。——参数解析时有一些
+小 bug，等我有空时修了它……
+
+总之，大家就先用-o。
+
+其他的选项大家可以用 vng --help 查看，network、graphic、sound 这些我也暂时没有用过。
+
+** 再用 gdb 调试
+
+*启动 guest*
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ sudo /virt-space/virtme-ng/vng -o"-gdb tcp::7761" --append "nokaslr"
+          _      _
+   __   _(_)_ __| |_ _ __ ___   ___       _ __   __ _
+   \ \ / / |  __| __|  _   _ \ / _ \_____|  _ \ / _  |
+    \ V /| | |  | |_| | | | | |  __/_____| | | | (_| |
+     \_/ |_|_|   \__|_| |_| |_|\___|     |_| |_|\__  |
+                                                |___/
+   kernel version: 4.19.0-amd64-desktop x86_64
+
+root@virtme-ng:/virt-space/4.19-x86/4.19-x86-build#
+#+end_src
+
+qemu opts 里，可以用“-s”快捷表示 tcp::1234，可以加-S 让虚拟机停住等 gdb。
+
+*启动 gdb*
+
+#+begin_src
+uos@uos-x86-nodepc:/virt-space/4.19-x86/4.19-x86-build$ gdb vmlinux
+GNU gdb (Uos 8.2.1.1-1+security) 8.2.1
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from vmlinux...done.
+(gdb) target remote:7761
+Remote debugging using :7761
+0xffffffff817f39ce in native_safe_halt () at ./arch/x86/include/asm/irqflags.h:60
+60              asm volatile("sti; hlt": : :"memory");
+(gdb) bt
+#0  0xffffffff817f39ce in native_safe_halt () at ./arch/x86/include/asm/irqflags.h:60
+#1  0xffffffff817f361c in arch_safe_halt () at ./arch/x86/include/asm/paravirt.h:94
+#2  default_idle () at arch/x86/kernel/process.c:557
+#3  0xffffffff810b7703 in cpuidle_idle_call () at kernel/sched/idle.c:153
+#4  do_idle () at kernel/sched/idle.c:263
+#5  0xffffffff810b795f in cpu_startup_entry (state=CPUHP_ONLINE) at kernel/sched/idle.c:369
+#6  0xffffffff817e6333 in rest_init () at init/main.c:441
+#7  0xffffffff826c4094 in start_kernel () at init/main.c:736
+#8  0xffffffff810000d4 in secondary_startup_64 () at arch/x86/kernel/head_64.S:243
+#9  0x0000000000000000 in ?? ()
+(gdb) b do_page_fault
+Breakpoint 1 at 0xffffffff8106afc0: file ./arch/x86/include/asm/paravirt.h, line 57.
+(gdb) c
+Continuing.
+[Switching to Thread 16]
+
+Thread 16 hit Breakpoint 1, do_page_fault (regs=0xffffc900007b7f58, error_code=20)
+    at ./arch/x86/include/asm/paravirt.h:57
+57              return PVOP_CALL0(unsigned long, pv_mmu_ops.read_cr2);
+(gdb) bt
+#0  do_page_fault (regs=0xffffc900007b7f58, error_code=20)
+    at ./arch/x86/include/asm/paravirt.h:57
+#1  0xffffffff8180117e in async_page_fault () at arch/x86/entry/entry_64.S:1208
+#2  0x0000000000000001 in irq_stack_union ()
+#3  0x0000000000000000 in ?? ()
+(gdb)
+
+#+end_src
+
+可以看到，gdb 调试一切如常。
+
+** 已知问题
+
+*.virtme_mods 残留问题*
+
+如果布置这个文件夹到一半的时候被中断了，可能会导致 vng 内部逻辑混乱（这也算是一个带修复的 bug），导致
+各种报错。
+
+大家可以手动执行这个脚本修复：src/virtme/scripts/virtme-prep-kdir-mods
+
+*uos4.19 普通用户权限问题*
+
+可以启动内核，但是在 init 脚本里执行 overlay 时会有一些问题。
+
+没细查，大家直接用 root 启动吧。
+
+** 总结
+
+对于 vng 的介绍就大概到这里，主要还是介绍它的实际使用为主。
+
+如果有同事对它的内部实现感兴趣的话，也可以直接阅读其源代码，核心文件有：
+
++ src/virtme/virtmods.py ： 内核 ko list
++ src/bin/virtme-prep-kdir-mods : 布置.virtme_mods 内核模块目录
++ src/virtme/mkinitramfs.py ： 构建 initrd，包括/init
++ src/virtme/guest/virtme-init ： guest 里的 1 号进程
++ src/virtme/commands/run.py : virtme 的主流程
++ src/virtme_ng/run.py ： virtme-ng 的主流程
+
+virtme 和 virtme-ng：
++ virtme 是很早就有的上游项目，实现了核心功能。
++ ubuntu 的内核团队发现了该项目，想用起来，但是发现已无人维护；所以 fork 成了 virtme-ng，同时基于 virtme 封
+装了一个 virtme-ng 以及 vng 命令，自动完成很多的配置，使得可以方便的一键快速启动。
+
+所以，当我们使用“vng”时，实际上 virtme-ng 会帮我们传递很多的参数给 virtme，最终通过 qemu 启动虚拟机。而整
+个 virtme-ng 项目，实际上就是一个超大的 qemu 启动脚本，尤其是 initrd 和内核模块相关的处理。
+
+另外，virtme-ng 项目里实际上还包含了基于 host 上的已安装内核启动虚拟机、在内核源码目录里自动配置和编译等功
+能，但我用得很少，我自己更多的还是基于我前置已经完成构建的编译目录去启动 kernel image。
+
+大家如果在使用 vng 的过程里遇到了任何问题，或者觉得有地方不顺手希望可以增加新的特性，都可以跟我联系。一方
+面我可以做一些简单的 fix，或者尝试着根据我们的使用场景做一些扩展开发；另一方面如果我自己搞不定的话，也可以
+尝试着向上游开发者去反馈。
+
+ok，vng 篇就到这里，后续我们会详细介绍一下内核的 gdb 调试。
+
+** 看了文档自己再搭建一下环境
+
+todo ，还是选把 mesa 看看。
+

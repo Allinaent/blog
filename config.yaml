@@ -123,7 +123,9 @@ markup: # **Markup Section 非常重要**
         noClasses: true
         style: dracula
         tabWidth: 4
-
+    goldmark:
+        renderer:
+            unsafe: true
 
 # 使用下面的配置才能使得 Pandoc 渲染 Blog 文章
 

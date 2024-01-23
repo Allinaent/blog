@@ -39,6 +39,7 @@ class StackGallery {
         for (const el of figures) {
             const figcaption = el.querySelector('figcaption'),
                 img = el.querySelector('img');
+		img.setProperty('data-action', 'zoom');
 
             let aux: PhotoSwipeItem = {
                 w: parseInt(img.getAttribute('width')),
@@ -69,16 +70,15 @@ class StackGallery {
 
             if (!paragraph || !container.contains(paragraph)) continue;
 
-	    if (paragraph != null) {
-            	if (paragraph.textContent.trim() == '') {
-            	    /// Once we insert figcaption, this check no longer works
-            	    /// So we add a class to paragraph to mark it
-            	    paragraph.classList.add('no-text');
-            	}
-	    	
-            	let isNewLineImage = paragraph.classList.contains('no-text');
-            	if (!isNewLineImage) continue;
-	    }
+            if (paragraph.textContent.trim() == '') {
+                /// Once we insert figcaption, this check no longer works
+                /// So we add a class to paragraph to mark it
+                paragraph.classList.add('no-text');
+            }
+
+            let isNewLineImage = paragraph.classList.contains('no-text');
+            if (!isNewLineImage) continue;
+
             const hasLink = img.parentElement.tagName == 'A';
 
             let el: HTMLElement = img;
