@@ -1,0 +1,89 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/02
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-02-05 一 16:51]
+#+TITLE: 使用串口调试
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+* 使用方法
+
+
+[[file:serial-port.org.assets/img_20240205_172946.jpg]]
+
+串口乃是 rs232 放在主板上的接口。有的原型机背面的接口有 rs232 的九针串口。
+
+一般白黄是 rx ，绿是 tx ；有时候会反过来。红是 vcc ，黑是 gnd 。一般是 9 针中的五口从
+角落开始黑白绿，或者黑绿白。
+
+** 抓串口的机器
+
++ 安装 minicom
+
+sudo apt install minicom
+
++ 执行 minicom
+
+sudo minicom -s
+
+选择： Serial Port Setup
+
+选 A ：Serial Device : /dev/ttyUSB0 ，插上串口之后，抓串口的机器会有接入 ttyUSB0 的日志。
+
+选 F ：Hardware Flow Control ： no
+
+选择 Save setup as df1
+
+exit
+
+C-a z
+
+Capture on/off L 填写串口文件的地址。
+
+C-a n 显示时间戳。
+
+enter 开始抓串口。
+
+
+** 被抓串口的机器
+
++ 安装 cutecom
+
+sudo apt install cutecom
+
+通过 cutecom 选择 ttyS0 ， ttyS1 来确定到底是哪一个串口的设备。
+
++ 更新内核参数并重启
+
+sudo vim /etc/default/grub
+
+修改 GRUB_CMDLINE_LINUX_DEFAULT 后边修改为 "console=ttyS0,115200 no_console_suspend loglevel=8 3
+initcall_debug"
+
+上面的 3 的含义是不启动图形界面直接起动 tty 。另外还有一些参数：
+
+在串口设置中，"splash" 和 "quiet" 是两个参数，其作用如下：
+
+1."splash" 参数用于控制启动过程中是否显示启动画面（splash screen）。启动画面通常是一张带有品牌标识
+或系统信息的图片，用于美化启动过程并向用户展示相关信息。
+
++ 如果使用 "splash" 参数，系统在启动时会显示启动画面。
++ 如果不使用 "splash" 参数，系统在启动时不会显示启动画面，而是直接显示启动过程中的详细信息。
+
+2."quiet" 参数用于控制启动过程中的详细信息显示级别。当使用 "quiet" 参数时，系统启动过程中的冗长信
+息将被抑制，只显示关键信息；而当不使用 "quiet" 参数时，系统将显示更多详细的启动信息。
+
++ 如果使用 "quiet" 参数，系统在启动时会抑制部分冗长信息，只显示关键信息。
++ 如果不使用 "quiet" 参数，系统在启动时会显示更多详细的启动信息，包括各个组件的初始化过程等。
+
+这两个参数在启动过程中对于显示启动信息和启动画面的控制起到了重要作用，可以根据实际需求来选择是
+否使用它们。
+
+** 华为的盘古 w 机器
+
+这个使用了 9 口的 com 口，这个机器的主板用的是 ttyAMA4 这个串口地址。中间 cutecom 不能用，原
+来用的是 waylany ，X 有权限问题。用普通的权限执行 xhost + 即可解决权限问题。
+
