@@ -1,8 +1,8 @@
 +++
 title = "mesa 中的概念和代码介绍"
 date = 2024-01-11T10:00:00+08:00
-lastmod = 2024-01-19T17:18:28+08:00
-categories = ["grapic"]
+lastmod = 2024-03-05T23:51:43+08:00
+categories = ["graphic"]
 draft = false
 toc = true
 image = "ox-hugo/img_20240119_171126.jpg"
@@ -450,7 +450,16 @@ GLUT（英文全写：OpenGL Utility Toolkit）是一个处理 OpenGL 程序的�
 SDL（英语：Simple DirectMedia Layer）是一套开放源代码的跨平台多媒体开发函式库，使用 C 语言写成。
 SDL 提供了数种控制图像、声音、输出入的函数，让开发者只要用相同或是相似的代码就可以开发出跨多个平台（Linux、Windows、Mac OS X 等）的应用软件。目前 SDL 多用于开发游戏、模拟器、媒体播放器等多媒体应用领域。
 
-{{< figure src="/ox-hugo/mesa-module.png" alt="mesa-module" caption="<span class=\"figure-number\">Figure 2: </span>_mesa-module_" width="900" >}}
+
+### mesa 的模块划分 {#mesa-的模块划分}
+
+{{< figure src="/ox-hugo/img_20240204_101056.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 2: </span>mesa categories" >}}
+
+{{< figure src="/ox-hugo/img_20240204_101412.jpg" >}}
+
+{{< figure src="/ox-hugo/img_20240204_101721.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 3: </span>_mesa-module_" width="900" >}}
+
+{{< figure src="/ox-hugo/mesa-module.png" alt="mesa-module" caption="<span class=\"figure-number\">Figure 4: </span>_mesa-module_" width="900" >}}
 
 -   OpenGL 能做什么？渲染 Render
     -   为什么需要渲染?
@@ -473,22 +482,27 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
         -   shader 就是 GPU 运行的 GLSL 描述的程序
 
-{{< figure src="/ox-hugo/mesa-header.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 3: </span>_mesa 的头文件_" >}}
+{{< figure src="/ox-hugo/mesa-header.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的头文件_" >}}
 
-{{< figure src="/ox-hugo/mesa-libs.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 4: </span>_mesa 的库文件_" >}}
+{{< figure src="/ox-hugo/mesa-libs.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 6: </span>_mesa 的库文件_" >}}
 
 用 GLX 设置上下文，用 GL 来做渲染。
 
-{{< figure src="/ox-hugo/mesa-module-2.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的库文件_" width="900" >}}
+{{< figure src="/ox-hugo/mesa-module-2.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 7: </span>_mesa 的库文件_" width="900" >}}
 
 
 ### Mesa3D 的作用 {#mesa3d-的作用}
 
 -   Mesa 用作 Xorg 开源硬件 DRI 驱动的核心
+
 -   完全实现 OpenGL，一个系统中没有其它 OpenGL 实现只使用 mesa 即可完成功能
+
 -   使用 Mesa 渲染来验证硬件驱动
+
 -   测试新的渲染技术
+
 -   支持深色通道渲染：16bit 整型、32bit 浮点型
+
 -   可调整渲染中数据的限制，如 lights、clip planes、texture size
 
 
@@ -513,3 +527,77 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 比 OpenGL 更好的跨平台支持。例如，在 Windows、Linux 和 Android 等操作系统上都可以使用 Vulkan。
 
 -   更好的图形质量：Vulkan 支持更高级别的反走样和其他图形技术，可以提供更高质量的图形效果。
+
+
+### mesa 3D 的工作方式 {#mesa-3d-的工作方式}
+
+1）stand alone 独立模式
+
+mesa 的最初的实现，在 X Window 系统上，所有的渲染都是通过 Xlib API 实现
+
+支持 GLX API，但是模拟的
+
+不支持 GLX wire protocol，也没有 X server 可加载的 OpenGL 扩展
+
+没有硬件加速
+
+libGL.so 库包括了所有内容：编程 API、GLX 函数、render 的代码
+
+2）DRI
+
+Mesa 充当 DRI 硬件驱动的核心
+
+libGL.so 库提供 GL、GLX API、GLX 协议的 encoder、设备驱动（这里是 UMD）的 loader
+
+设备驱动模块（如 r200_dri.so）中包含了 Mesa 的核心代码功能
+
+X server 加载 glx 模块，glx 模块解析传进来的 GLX protocol 数据，将命令分发到渲染模块。
+
+
+## libglvnd {#libglvnd}
+
+libglvnd 什么？
+
+vendor 调度层
+
+多 vendor 的 OpenGL API 调用的仲裁
+
+vendor 这里是指 OpenGL 方法的实现库
+
+libglvnd 作用？
+
+多个 OpenGL 实现的共存
+
+运行时选择 API 的实现
+
+将 GLX、ELG、GL、GLES 统一在一个调度表
+
+{{< figure src="/ox-hugo/img_20240204_145648.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 8: </span>_mesa 的库文件_" width="900" >}}
+
+stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：系统 S 有某个依赖 D，但我用另外的模块 X 来代替 D。模块 X 就被称为一个 stub。在测试系统的过程中，X可以是用来模拟 D 的模块，因为 D 可能调用起来比较昂贵。
+
+另一种情形是在系统开发中，可能程序 S 想要完成某个操作（比如读取某个文件），但其本身没有这个权限, 所以 S 必须调用一个模块 X。X 的作用是调用操作系统内核中用来读取文件的模块。所以编程语言中的系统调用也可以理解为一种 stub。
+
+系统启动：
+
+{{< figure src="/ox-hugo/img_20240204_153702.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 9: </span>_mesa glvnd_" width="900" >}}
+
+{{< figure src="/ox-hugo/img_20240204_153751.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 10: </span>_mesa glvnd_" width="900" >}}
+
+
+## 什么是 glxgears ？ {#什么是-glxgears}
+
+
+## mesa 相关的编译命令 {#mesa-相关的编译命令}
+
+sudo apt install devscripts
+
+debuild -- clean # 清空所有的编译中间文件
+
+sudo apt build-deb mesa # 下载 mesa 依赖的包，把 mesa 换成 . 也可以。
+
+debuild -us -uc -nc # 这个命令是可以的，相比 dpkg-buildpackage -us -uc 有时候会报错，这个一般不报错。
+
+禁用 mesa 的一个修改。
+
+<https://cgit.freedesktop.org/mesa/mesa/commit/?id=1f31a216640f294ce310898773d9b42bda5d1d47>

@@ -8,7 +8,7 @@
 #+TITLE: mesa 中的概念和代码介绍
 #+HUGO_CUSTOM_FRONT_MATTER: :image ox-hugo/img_20240119_171126.jpg
 #+HUGO_TAGS:
-#+HUGO_CATEGORIES: grapic
+#+HUGO_CATEGORIES: graphic
 
 
 * mesa 中的一些基本概念
