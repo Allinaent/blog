@@ -1,0 +1,236 @@
++++
+title = "leetcode 第一天"
+date = 2024-03-06T16:49:00+08:00
+lastmod = 2024-03-07T15:32:32+08:00
+categories = ["leetcode"]
+draft = false
+toc = true
++++
+
+```nil
+给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。
+
+字母异位词 是由重新排列源单词的所有字母得到的一个新单词。
+
+示例 1:
+
+输入: strs = ["eat", "tea", "tan", "ate", "nat", "bat"]
+
+输出: [["bat"],["nat","tan"],["ate","eat","tea"]]
+
+示例 2:
+
+输入: strs = [""]
+
+输出: [[""]]
+
+示例 3:
+
+输入: strs = ["a"]
+
+输出: [["a"]]
+
+提示：
+
+1 <= strs.length <= 104
+
+0 <= strs[i].length <= 100
+
+strs[i] 仅包含小写字母
+```
+
+这道题的思路是什么？初始化一个数组，然后开始一个循环，然后遍历，字符串的大小是 100 ，字符串数组的大小是 104 。此题是 hash 的分组当中的，那么应该有 hash 的方法来写。
+
+```c
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+char*** groupAnagrams(char** strs, int strsSize, int* returnSize, int** returnColumnSizes) {
+
+}
+```
+
+这仅仅是一道中等题，看答案直接崩溃：
+
+```c
+#define MAXSIZE 769/* 选取一个质数即可 */
+typedef struct Node
+{
+    char    string[101];
+    int     index;
+    struct Node *next;  //保存链表表头
+} List;
+
+typedef struct
+{
+    List *hashHead[MAXSIZE];//定义哈希数组的大小
+} MyHashMap;
+
+List * isInHash(List *list,char * stringKey)
+{
+    List *nodeIt = list;
+    //通过链表下遍历
+    while (nodeIt != NULL)
+    {
+        if (strcmp(stringKey, nodeIt->string)== 0 )
+        {
+            return nodeIt;
+        }
+        nodeIt = nodeIt->next;
+    }
+    return NULL;
+}
+
+MyHashMap* myHashMapCreate()
+{
+    int i;
+    MyHashMap* newHash= (MyHashMap* )malloc(sizeof(MyHashMap));
+    /* 对链表的头结点赋初值 */
+    for (i = 0; i < MAXSIZE; i++)
+    {
+        newHash->hashHead[i] = NULL;
+    }
+    return newHash;
+}
+
+int myHashID(char * str)
+{
+    long h = 0;
+    for(int i = 0; i < strlen(str); i++)
+    {
+        h = (h * 26 % MAXSIZE + str[i] - 'a') % MAXSIZE;
+        // 字符串的hashcode, 权为26是因为小写字母，不限制时为128，这样能够让结点尽可能分布均匀，减少地址冲突
+        // 取模是为了防止int型溢出
+    }
+    return h % MAXSIZE;
+}
+
+
+void myHashMapPut(MyHashMap* obj, char* stringKey,int index)
+{
+    //一定不再这里面
+    //List * it= isInHash(obj->hashHead[key%MAXSIZE],key);
+    //if(it != NULL)
+    //{
+    //    //在表里面更新键值
+    //    it->value = value;
+   // }
+   // else
+    {
+        //不在表里面
+        List *newNode       = (List*)malloc(sizeof(List));
+        strcpy(newNode->string , stringKey);
+        newNode->next       = NULL;
+        newNode->index      = index;
+        if(obj->hashHead[myHashID(stringKey)] != NULL)
+        {
+            //当前头链表不为空，则需要将后续的链表接上
+            //需要主要这里表头也代表一个数据的值
+            newNode->next = obj->hashHead[myHashID(stringKey)];
+        }
+        //修改头链表
+        obj->hashHead[myHashID(stringKey)] =  newNode;
+    }
+}
+
+int myHashMapGet(MyHashMap* obj, char* stringKey)
+{
+    List * it= isInHash(obj->hashHead[myHashID(stringKey)],stringKey);
+    if( it!= NULL)
+    {
+        return it->index;
+    }
+    return -1;
+}
+
+void myHashMapFree(MyHashMap* obj)
+{
+   int i;
+   List *freeIt;
+   List *curIt;
+   for (i = 0; i < MAXSIZE; i++)
+    {
+        if(obj->hashHead[i] != NULL)
+        {
+            freeIt = NULL;
+            curIt  = obj->hashHead[i];
+
+            while(curIt != NULL)
+            {
+                freeIt = curIt;
+                curIt= curIt->next;
+                free(freeIt);
+            }
+            obj->hashHead[i]= NULL;
+        }
+    }
+    free(obj);
+}
+
+int compareFunc(void *a,void *b)
+{
+    if(*(char*)a > *(char*)b )
+    {
+        return 1;
+    }
+    return -1;
+}
+
+char *** groupAnagrams(char ** strs, int strsSize, int* returnSize, int** returnColumnSizes)
+{
+    //首先char *** 是三维数组，意思是要将对应的字母异位词放到一起
+    //最大的长度为每个输入的字符串都是不同的
+    char *** returnStr = (char *** )malloc(sizeof(char**)*strsSize);
+    char tempStr[102];  //临时使用
+
+    //返回长度+返回列长度
+    *returnSize = 0;
+    *returnColumnSizes = (int *)malloc(sizeof(int)*strsSize);
+    MyHashMap* newHashMap = myHashMapCreate();
+    for(int i = 0; i < strsSize; i++)
+    {
+        strcpy(tempStr, strs[i]);
+        //重排字母，重小到大排列
+        qsort(tempStr,strlen(strs[i]),sizeof(char),compareFunc);
+        //检查在哈希表中是否存在
+        int row = myHashMapGet(newHashMap,tempStr);
+        if(row != -1)
+        {
+            //出现在hashMap中
+            int col = (*returnColumnSizes)[row];
+            returnStr[row][col] = (char *)malloc(sizeof(char) * (strlen(strs[i]) +1 ) );
+            strcpy(returnStr[row][col] , strs[i]);
+            col++;
+            (*returnColumnSizes)[row] = col;
+        }
+        else
+        {
+            //没有出现在hashMap中
+            row = *returnSize;
+            //插入hashMap
+            myHashMapPut(newHashMap,tempStr,row);
+
+            //申请最大的空间，防止都是输入都是一样的
+            returnStr[row] = (char **)malloc(sizeof(char*) * (strsSize));
+            int col = 0;
+            returnStr[row][col] = (char *)malloc(sizeof(char) * (strlen(strs[i]) +1 ) );
+
+
+
+            strcpy(returnStr[row][col] , strs[i]);
+            col++;
+            (*returnColumnSizes)[row] = col;
+            row++;
+            *returnSize = row;
+
+
+        }
+    }
+    myHashMapFree(newHashMap);
+    return returnStr;
+}
+```
+
+中等题都这么难，看来我是白学了。

@@ -7,7 +7,7 @@
 #+DATE: [2024-01-02 二 14:07]
 #+TITLE: UOS 安全启动
 #+HUGO_TAGS:
-#+HUGO_CATEGORIES: system
+#+HUGO_CATEGORIES: security
 
 * bios 启动
 

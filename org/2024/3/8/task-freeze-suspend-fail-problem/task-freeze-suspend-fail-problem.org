@@ -1,0 +1,903 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-08 五 17:04]
+#+TITLE: task-freeze/suspend失败问题（文韬大佬）
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+
+这是一个多次出现的 task-freeze 失败，进而导致 suspend 失败的问题，借这个问题介绍一下内核对于 task 的管理，比如 state 管理，wait/wakeup，freeze 过程等等。
+
+
+* 问题概述
+域管报告了一个 bug： BUG #243213 【兼容性测试】【1070 升级】【长城 TN140A2/T321】待机后，会小概率性自动唤醒 - 集中域管平台 - 禅道
+
+在域管升级到 2.0 后，有一定概率待机失败。——注意，虽然测试反馈的是“会小概率自动唤醒”，但实际上是待机根本就没有成功，只是我们系统里会在待机流程早期就黑屏，所以看起来“已经”待下去了，实际上待机并没有完成，还阻塞在 task freezing 阶段里，并且因为某些进程 freeze 失败，在 20s 超时之后会报错退出，看起来像是“自动唤醒”。
+
+* 根因分析
+日志如下：
+#+begin_src
+[   28.338095] PM: suspend entry (deep)
+[   28.338680] Freezing user space processes ... 
+[   48.346228] Freezing of tasks failed after 20.007 seconds (1 tasks refusing to freeze, wq_busy=0):
+[   48.355272] run-parts       D    0  4957   4953 0x00000001
+[   48.355276] Call trace:
+[   48.355285]  __switch_to+0xdc/0x148
+[   48.355290]  __schedule+0x1f4/0x720
+[   48.355292]  schedule+0x28/0x80
+[   48.355297]  fanotify_handle_event+0x2f8/0x340
+[   48.355299]  fsnotify+0x280/0x3b8
+[   48.355304]  security_file_open+0xd0/0xe0
+[   48.355307]  do_dentry_open+0xbc/0x3b8
+[   48.355310]  vfs_open+0x28/0x30
+[   48.355312]  do_last+0x224/0x870
+[   48.355313]  path_openat+0x60/0x238
+[   48.355315]  do_filp_open+0x60/0xc0
+[   48.355318]  do_open_execat+0x60/0x1d8
+[   48.355320]  __do_execve_file.isra.12+0x628/0x7b0
+[   48.355322]  do_execve+0x2c/0x38
+[   48.355324]  __arm64_sys_execve+0x28/0x38
+[   48.355328]  el0_svc_common+0x90/0x178
+[   48.355330]  el0_svc_handler+0x9c/0xa8
+[   48.355333]  el0_svc+0x8/0xc
+[   48.355335] OOM killer enabled.
+[   48.355336] Restarting tasks ... 
+#+end_src
+这里的问题进程是 run-parts，在多次复现时，这个进程基本上是随机的。——它是随机的受害者，如果从它的代码入手去查问题，那就完全走错了方向；相反，我们要从受害者的内核代码路径出发，去判断和捕捉问题的始作俑者。
+
+*fanotify/perm-event*
+
+如果我们对内核的 suspend、task-freeze 等主题比较熟悉，那结合下面的 fanotify 代码，我们不难猜测出问题的根因：
+
+#+begin_src c
+static int fanotify_get_response(struct fsnotify_group *group,
+				 struct fanotify_perm_event_info *event,
+				 struct fsnotify_iter_info *iter_info)
+{
+	int ret;
+
+	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+
+	wait_event(group->fanotify_data.access_waitq, event->response);
+
+	/* userspace responded, convert to something usable */
+	switch (event->response & ~FAN_AUDIT) {
+	case FAN_ALLOW:
+		ret = 0;
+		break;
+	case FAN_DENY:
+	default:
+		ret = -EPERM;
+	}
+
+	/* Check if the response should be audited */
+	if (event->response & FAN_AUDIT)
+		audit_fanotify(event->response & ~FAN_AUDIT);
+
+	event->response = 0;
+
+	pr_debug("%s: group=%p event=%p about to return ret=%d\n", __func__,
+		 group, event, ret);
+	
+	return ret;
+}
+#+end_src
+（虽然在 call trace 里没有 fanotify_get_response，但那只是因为它被 inline 到了 fanotify_handle_event）
+
+很显然，run-parts 进程阻塞在了 wait_event()，它的等待方式就是 D（TASK_UNINTERRUPTIBLE）。
+
+它为何会阻塞？20s 都等不到 response？
+
+这是因为域管在系统里增加了基于 fanotify 监视，并且添加了 FAN_OPEN_PERM 事件，这是 fanotify 不同于 inotify 的一种模式，从单纯的 notify 变成了权限（permission）检查。——也就是说，域管 daemon 不但会得到有人访问某个文件的通知，而且还可以做权限管控；在得到该 dameon 的 response 之前，访问进程会被阻塞。
+
+代码路径大概如下：
+#+begin_src c
+int security_file_open(struct file *file)
+{
+	int ret;
+
+	ret = call_int_hook(file_open, 0, file);
+	if (ret)
+		return ret;
+
+	return fsnotify_open_perm(file);
+}
+#+end_src
+可以看到，它的检查在 LSM 之后，但它们是从同一个入口进入的，功能也类似；实际上很多安全软件、病毒防护软件都会使用该功能来实现。——理由很直观，它可以非常灵活地设置 notify 的范围，比如新插入的 u 盘上的所有可执行的文件之类的。
+
+*freeze/suspend*
+
+那是如何引发 freeze/suspend 失败的？
+
+根本原因是在 suspend 过程里，我们并不能保证域管 daemon 最后一个被 freeze；而如果在域管 daemon 进入 frozen 状态后，有另外的进程试图打开文件，触发了 fanotify 的 perm-event request，那它永远无法得到答复。——因为负责 response 的域管 daemon 已经被 freeze 了。
+
+所以受害者进程会一直在 wait_event()里等待，而 20s 后系统的 suspend 路径会判断 tasks-freeze 失败，取消 suspend，而后域管 daemon 被唤醒，回复该 perm-event，一切往下正常进行……
+
+因此，只要使用了 fanotify 的 perm-event（访问者需要等待用户态 daemon 的回复），就有可能触发这个问题而导致 suspend 失败。
+
+——这是一个内核 bug，只是之前 uos 里没有相关的使用场景而没有被触发，新版本域管使用了该接口，所以暴露了该问题。
+
+* fix/Round 1：freezable 等待
+事实上，这个问题在多年之前就被报告了： [PATCH] fanotify: allow freeze on suspend when waiting for response from userspace - t.vivek
+
+这是来自 samsung 的一个工程师的报告，而且尝试做了 fix：
+#+begin_src diff
+@@ -63,7 +64,9 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	wait_event(group->fanotify_data.access_waitq, event->response);
++	while (!event->response)
++		wait_event_freezable(group->fanotify_data.access_waitq,
++				     event->response);
+ 
+ 	/* userspace responded, convert to something usable */
+ 	switch (event->response & ~FAN_AUDIT) {
+#+end_src
+改动的思路是：从 wait_event()变为 wait_event_freezable()，在 4.19 中可以对比一下它们核心逻辑的实现差异：
+
+#+begin_src c
+#define __wait_event(wq_head, condition)					\
+	(void)___wait_event(wq_head, condition, TASK_UNINTERRUPTIBLE, 0, 0,	\
+			    schedule())
+
+#define __wait_event_freezable(wq_head, condition)				\
+	___wait_event(wq_head, condition, TASK_INTERRUPTIBLE, 0, 0,		\
+			    schedule(); try_to_freeze())
+#+end_src
+它们的核心差异是：
+
+- wait_event()中，使用的 state 是 TASK_UNINTERRUPTIBLE；而在 freezable 接口中，使用的是 TASK_INTERRUPTIBLE。
+- wait_event()中，传入的命令（cmd）是一个单独的 schedule()，而在 freezable 接口中，除了 schedule()，还有一个 try_to_freeze()。
+
+作者的 fix 思路是：使用 wait_event_freezable()接口等待；这样有 freeze signal 进来时，它就会被唤醒，并且进入 freeze 流程；而因为此时 response 可能还没好，所以要加一个 while 循环，等到 response 才能返回。
+
+这个 fix 是否 ok？要回答这个问题，我们需要了解一下 wait/wakeup/freeze 相关机制的内部过程，不感兴趣的同事可以跳过相关章节。
+
+* 内核 wait 机制
+*wait_event()*
+
+首先我们来看一下 wait_event()宏的最终底层代码：
+#+begin_src c
+#define ___wait_event(wq_head, condition, state, exclusive, ret, cmd)		\
+({										\
+	__label__ __out;							\
+	struct wait_queue_entry __wq_entry;					\
+	long __ret = ret;	/* explicit shadow */				\
+										\
+	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
+	for (;;) {								\
+		long __int = prepare_to_wait_event(&wq_head, &__wq_entry, state);\
+										\
+		if (condition)							\
+			break;							\
+										\
+		if (___wait_is_interruptible(state) && __int) {			\
+			__ret = __int;						\
+			goto __out;						\
+		}								\
+										\
+		cmd;								\
+	}									\
+	finish_wait(&wq_head, &__wq_entry);					\
+__out:	__ret;									\
+})
+#+end_src
+这是主代码流程，核心元素是我们熟悉的元素：等待队列 wait_head，等待条件 condition（也就是等待的那个 event），进程应该处于的等待状态 state，以及等待命令 cmd。
+
+wait_event()系列接口的核心是 event：我们应当尽量等到该 event 发生，也就是某个 condition 被满足才返回。在等待时，默认状态是 uninterruptible 的，我们可以根据需要使用不同的接口。
+
+——而这个系列的接口十分丰富，有兴趣的同事可以查看 include/linux/wait.h 这个文件里的宏定义，比如有 freezable，interruptible，killable，timeout，irq_lock，io 等版本，而且它们之间还可以互相交叉，接口非常非常多……
+
+当我们从等待中被唤醒时，有多种可能性：
+
+- A condition 为 true，我们可以 break 返回。
+- B 使用 uninterruptible 方式等待，但 condition 为 false，此时我们需要继续 wait。——注意，这种情况是有可能的，比如在你被 wakeup 之后、在被 schedule/run 之前，这个 condition 再次被另外的进程设置为了 false。
+- C 使用 interruptible 方式等待，condition 为 false，且我们是被信号中断而醒来的（__int != 0），那我们也会跳出循环。
+在我们的问题里：
+
+- 当我们使用 wait_event()接口等待时，一定会等到 condition 为 true，也就是 event 已经完成才返回。
+- 而如果我们使用 wait_event_freezable()，当我们收到任意一个信号时都会被中断，跳出循环。
+
+而 cmd 呢？则是在循环里我们采取的 schedule 动作，比如：
+
+- 对于 wait_event_io()，就需要调用 io_schedule()，其本质上就是设置一下自己的状态，记录自己为等待 io，方便做 block 层的统计。
+- 对于 freezable 接口，则是在 schedule()之后直接跟一个 try_to_freeze()，响应系统可能的 task-freeze 需要。
+
+*wait_is_interruptible()*
+
+只有 TASK_INTERRUPTIBLE 状态是可中断的吗？曾经是的。——换而言之，TASK_UNINTERRUPTIBLE 就是不可中断的。
+
+但是后来内核面临这样的实际需求：当我们等待某些 event 时，可能我们不希望被任何信号中断，但是从系统角度而言，这些进程如果不能被 kill，那经常会造成很糟糕的使用体验。——一旦 deadlock，就完全杀不掉，无法退出。
+
+所以内核加入了一个一种等待模式：TASK_KILLABLE，实际上它是 TASK_UNINTERRUPTIBLE | TASK_WAKEKILL，也就是不可中断睡眠+可以被杀。
+
+与之对应的 wait 接口实现是：
+#+begin_src c
+#define __wait_event_killable(wq, condition)					\
+	___wait_event(wq, condition, TASK_KILLABLE, 0, 0, schedule())
+#+end_src
+所以 wait_is_interruptible()的判断也调整成了：
+#+begin_src c
+#define ___wait_is_interruptible(state)						\
+	(!__builtin_constant_p(state) ||					\
+		state == TASK_INTERRUPTIBLE || state == TASK_KILLABLE)		\
+#+end_src
+但其实这样写在后续的版本中会引入 bug，因为如果是 TASK_KILLABLE | TASK_*这样的组合，就会判断失效，所以在最新的代码中是这样的：
+#+begin_src c
+#define ___wait_is_interruptible(state)						\
+	(!__builtin_constant_p(state) ||					\
+	 (state & (TASK_INTERRUPTIBLE | TASK_WAKEKILL)))
+#+end_src
+从 TASK_KILLABLE 的名字来看，它就是 killable 的，那它是如何实现只响应 kill 信号的呢？它和 suspend/freeze 路径又会如何交互呢？
+
+* 内核 signal-wakeup 机制
+当我们给一个进程发送一个信号时，它的内部流程大概是：
+#+begin_src c
+__send_signal_locked()
+	prepare_signal()
+	sigaddset()
+	complete_signal()
+		signal_wake_up()
+#+end_src
+可以看到，在最后一步，就是 signal_wake_up()，尝试将进程唤醒：
+
+- 进程处于 TASK_INTERRUPTIBLE 时，会被任意信号唤醒。
+- 进程处于 TASK_KILLABLE 时，可以被 SIG_KILL 信号唤醒。
+
+内部实现呢？核心其实是 ttwu（try to wake up）模块的 state 管理，它的接口大概是：
+#+begin_src c
+int try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags);
+#+end_src
+其中的核心逻辑是：
+
+- 需要调用者传入一个 state，用它跟 task 的 state 去做匹配，只有满足条件才会真的 wakeup。
+- 用公式的话： If (@state & @p->state) @p->state = TASK_RUNNING.
+
+所以在 complete_signal 里，是这样调用的：
+#+begin_src c
+complete_signal() {
+    ...
+
+	signal_wake_up(t, sig == SIGKILL);
+	return;
+}
+
+static inline void signal_wake_up(struct task_struct *t, bool resume)
+{
+	signal_wake_up_state(t, resume ? TASK_WAKEKILL : 0);
+}
+
+void signal_wake_up_state(struct task_struct *t, unsigned int state)
+{
+	set_tsk_thread_flag(t, TIF_SIGPENDING);
+	if (!wake_up_state(t, state | TASK_INTERRUPTIBLE))
+		kick_process(t);
+}
+#+end_src
+从上面的代码过程里，可以清楚地看到 signal 模块对于 ttwu 接口的使用，如何配置传入的 state。
+
+另外，我们常用的、普通的唤醒呢？是这样的：
+#+begin_src c
+int wake_up_process(struct task_struct *p)
+{
+	return try_to_wake_up(p, TASK_NORMAL, 0);
+}
+EXPORT_SYMBOL(wake_up_process);
+#+end_src
+其中 TASK_NORMAL = TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE，而 sleep 进程必然会携带两者之一，所以它可以无条件唤醒所有的睡眠进程。
+
+* 内核 task-freeze 机制
+*task-freeze*
+
+知道了进程的等待和唤醒，还需要了解一下 suspend 过程里进程冻结，它是如何实现的？
+
+实际上它的实现依赖于信号，fake-signal：（这里不讨论 kthread 的处理）
+
+- 在 suspend 过程里，suspend 主进程会设置一个全局的标志位，标识当前系统需要做 task-freeze。
+- 同时，suspend 主进程会遍历系统中所有的用户态进程，给所有还没有被冻结的进程发送一个 fake-signal。——其实就是调用一下 signal_wake_up，不实际添加信号。
+- 进程在 exit_to_user_mode 的路径里，会调用 try_to_freeze()，其中会检查该标识，如果需要就主动将自己冻起来。
+- 只有等到所有的用户态进程都进入 frozen 状态，才算 task-freeze 阶段完成，可以进入下一阶段；如果 20s 超时还没完成，suspend 主进程就会判断 suspend 失败，开始走反向的退出流程。
+
+其中值得注意的一些核心点是：
+
+- task 最终“冻结”是自己主动做的，“自己把自己放进冰箱”，入口函数是 try_to_freeze()
+- suspend 主进程只是做检查和辅助：
+- 设置全局标志位，让进程可以检查是否需要被冻结。
+- 循环遍历进程，唤醒它们、检查它们。
+
+不同状态进程的过程呢？
+
+- 对于处于 running 状态的进程：
+  - 如果它正在内核态执行，它会在返回用户态时进入冻结路径。
+  - 如果它正在用户态执行，它会在 tick 到来时因为中断而进入内核，最终在返回时被冻结。（甚至都不用等到 tick，因为 signal_wake_up 里会调用 kick_process，底层是直接给对应 cpu 发送一个空的 IPI 中断，然后立即在返回用户态时冻结）
+  - 如果它在调度队列里，但是没有执行呢？随着正在运行的进程被冻结，运行队列里的进程会得到执行机会；而它们得到执行都是在内核里被调度到的，然后在返回用户态之前就会被冻结。
+
+- 对于处于 TASK_INTERRUPTIBLE 状态的进程：
+  - 被 fake signal 唤醒以后，会进入调度队列。
+  - 后面的过程和 running 进程一样，得到调度，开始执行，在返回用户态的路径上进入冻结流程。
+  - 最终仍然是自己主动调用 try_to_freeze()，自己主动走入冰箱的。
+
+- 对于处于 TASK_UNINTERRUPTIBLE 状态的进程：
+  - fake signal 无法唤醒它，无事发生。
+  - 它会一直睡眠，直到自己在等待的条件满足，从语义逻辑上被唤醒，然后返回用户态，主动进冰箱。
+  - 如果 20s 之内它没有被唤醒，那就会导致 suspend 失败。
+
+所以，当域管 daemon 先睡眠时，fanotify event 的请求者就会一直睡眠，无法被 suspend 主进程唤醒，得不到执行机会，也就没法主动进冰箱，最终就会 suspend 失败。
+
+*wait_event_freezable*
+
+再回过头来看这个接口，还记得它的 cmd 是什么吗？
+#+begin_src c
+    schedule(); try_to_freeze()
+#+end_src
+展开之后大概是这样：
+#+begin_src c
+#define ___wait_event(wq_head, condition, state, exclusive, ret, cmd)		\
+({										\
+	__label__ __out;							\
+	struct wait_queue_entry __wq_entry;					\
+	long __ret = ret;	/* explicit shadow */				\
+										\
+	init_wait_entry(&__wq_entry, exclusive ? WQ_FLAG_EXCLUSIVE : 0);	\
+	for (;;) {								\
+		long __int = prepare_to_wait_event(&wq_head, &__wq_entry, state);\
+										\
+		if (condition)							\
+			break;							\
+										\
+		if (___wait_is_interruptible(state) && __int) {			\
+			__ret = __int;						\
+			goto __out;						\
+		}								\
+										\
+		schedule();
+        try_to_freeze();								\
+	}									\
+	finish_wait(&wq_head, &__wq_entry);					\
+__out:	__ret;									\
+})
+#+end_src
+可以看到，核心是在 schedule()返回之后，直接尝试 try_to_freeze()！
+
+这样可以吗？当然可以，既然可以在 exit_to_user_mode()里调用，在这里调用当然也是 ok 的。——它的底层其实就是设置自己的 state，然后主动调用 schedule()，调度器会将它从 runqueue 移除……
+
+当我们使用这个接口等待时，是否能正常地进入 freeze 流程？
+
+- fanotify 请求者通过 wait_event_freezable()等待 response。
+- 域管 daemon 提前冻结了，所以没法给 response，条件在 suspend 过程里不会得到满足。
+- suspend 主进程会给请求者来一个 fake signal。
+- 因为请求者是处于 TASK_INTERRUPTIBLE 状态，所以可以被唤醒，从 schedule()函数返回。
+- 它会在 try_to_freeze()里主动走入冰箱，完成冻结。
+- suspend 主进程成功冻结所有进程，系统 suspend 成功。
+- ……
+- 系统被唤醒，所有冻结进程被唤醒。
+- 假设请求者先于域管 daemon 被唤醒，它会在循环里再次尝试 wait，因为 response 没有到来，所以它再次进入睡眠……
+- 域管被唤醒，回复 response，唤醒请求者。
+- 请求者 condition 满足，break 跳出循环，返回。
+
+看起来是否一切 ok？
+
+* Round 1 的 livelock 问题
+但实际上它会导致 livelock。
+
+回顾一下 patch：
+#+begin_src c
+@@ -63,7 +64,9 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	wait_event(group->fanotify_data.access_waitq, event->response);
++	while (!event->response)
++		wait_event_freezable(group->fanotify_data.access_waitq,
++				     event->response);
+ 
+ 	/* userspace responded, convert to something usable */
+ 	switch (event->response & ~FAN_AUDIT) {
+#+end_src
+这里的核心问题是：如果 fanotify 请求者在等待过程里接收到了一个真正的信号，它就会进入死循环。——上面所谈到的 fake signal 其实只有 wakeup，而不会真的调用 sigaddset()；而真的信号会导致有信号 pending。
+
+核心原因是 prepare_to_wait_event()里，内核统一的等待语义：
+
+- 在进入睡眠之前，应该先检查进程的整体状态，判断是否已经发生了中断条件。
+- 什么是中断条件？比如你请求的睡眠状态是 TASK_INTERRUPTIBLE，而又有信号在 pending，而根据语义信号是应该中断该睡眠状态的。
+
+代码如下：
+#+begin_src c
+long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
+{
+	unsigned long flags;
+	long ret = 0;
+
+	spin_lock_irqsave(&wq_head->lock, flags);
+	if (unlikely(signal_pending_state(state, current))) {
+		list_del_init(&wq_entry->entry);
+		ret = -ERESTARTSYS;
+	} else {
+		if (list_empty(&wq_entry->entry)) {
+			if (wq_entry->flags & WQ_FLAG_EXCLUSIVE)
+				__add_wait_queue_entry_tail(wq_head, wq_entry);
+			else
+				__add_wait_queue(wq_head, wq_entry);
+		}
+		set_current_state(state);
+	}
+	spin_unlock_irqrestore(&wq_head->lock, flags);
+
+	return ret;
+}
+EXPORT_SYMBOL(prepare_to_wait_event);
+#+end_src
+可以看到如果有 signal-pending，会直接返回-ERESTARTSYS。
+
+结合 round 1 的 patch，如果请求者收到了一个真正的信号，那它从等待里返回，而且不能再次进入等待了；而又因为 response 没有完成，所以就会无限循环，陷入 livelock。——这里的核心是，真正有信号 pending 时，是没法进入可中断 wait 的。
+
+那把循环去掉行不行？改成这样：
+#+begin_src diff
+@@ -63,7 +64,9 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	wait_event(group->fanotify_data.access_waitq, event->response);
++	wait_event_freezable(group->fanotify_data.access_waitq,
++				     event->response);
+ 
+ 	/* userspace responded, convert to something usable */
+ 	switch (event->response & ~FAN_AUDIT) {
+#+end_src
+第一眼看过去当然是不行的，因为这会导致 fanotify 的请求者提前返回：收到信号就返回了，而还没有等到 response。
+
+但真的如此吗？可能最终答案确实是不行，但不行的原因可能会大大出乎大家的意料。
+
+* fix/Round 2：syscall restart
+*-ERESTARTSYS*
+
+-ERESTARTSYS 是做什么的？这是一个特殊的返回值，加入的目的是为了实现系统调用的自动重入，所以名字是 restart syscall。——如果一个系统调用是可以被 RESTART 的，那会在 exit_to_user_mode 的相关路径里，自动再次调用该系统调用；如果不能被 restart（比如文件的 close 之类的），则会转换为-EINTR 并返回用户空间。
+
+一个例子是 sleep()接口，用户态进程可能要求睡眠 100s，它的等待方式当然应该是 interruptible 的，不然会阻塞系统的 suspend；但同时如果它被 freeze 信号中断了，它也不应该直接返回用户空间，而是应该仍然 sleep 到那个 100s 的时间点再返回。有了-ERESTARTSYS，类似的逻辑就比较好实现。
+
+可以参考这篇文章： A new system call restart mechanism [LWN.net]
+
+所以既然这是用来做系统调用的自动重启的，解决的就是这种某个系统调用被信号中断，但是又不希望提前返回的情况；那就让它提前返回，在 syscall 层里再自动重发，难道不是 ok 的吗？
+
+*Round 2*
+
+在 2018 年，有一个叫 Orion Poplawski 的开发者再次报告了这个问题，并且提供了一个 patch： Re: [PATCH] fanotify: allow freeze on suspend when waiting for response from userspace - Orion Poplawski
+
+patch：
+#+begin_src diff
+@@ -64,7 +65,15 @@
+
+         pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+
+-       wait_event(group->fanotify_data.access_waitq, event->response);
++       while (!event->response) {
++               ret = 
+wait_event_freezable(group->fanotify_data.access_waitq,
++                                          event->response);
++               if (ret < 0) {
++                       pr_debug("%s: group=%p event=%p about to return 
+ret=%d\n", __func__,
++                                group, event, ret);
++                       goto finish;
++               }
++       }
+
+         /* userspace responded, convert to something usable */
+         switch (event->response & ~FAN_AUDIT) {
+@@ -75,7 +84,7 @@
+         default:
+                 ret = -EPERM;
+         }
+-
++finish:
+         /* Check if the response should be audited */
+         if (event->response & FAN_AUDIT)
+                 audit_fanotify(event->response & ~FAN_AUDIT);
+#+end_src
+核心思路就是利用-ERESTARTSYS，当被信号中断时，就让它直接 finish 返回，在 syscall 层去重启。——代码里的循环其实没有必要。
+
+这个修改看起来很美妙，但结果就是内核直接 panic 了……
+
+*资源管理/状态管理*
+
+这是 fanotify 内部的问题，和本文章核心想要讲述的 task/state 管理关系不大，但是这种对象管理在内核里几乎无处不在，很多时候是基于类似的模型，所以可以稍微提一提。
+
+为什么会 panic？因为 use-after-free。
+
+这是因为在 fanotify 的 event 对象是在请求侧管理和释放的：
+
+- syscall 进来（比如 open），进入 fanotify 路径，分配一个 event。
+- 发送请求，同步等待回复。
+- daemon 收到请求，给出回复，根据 SeqId 之类的对应到 event。
+- 请求者收到回复后，返回，释放 event。
+
+那在上面的改动之后：
+
+- 请求者收到真实信号，被中断，返回-ERESTARTSYS，释放 event。
+- 请求者在 syscall 重入后，重新分配 event，重新等待。
+- daemon 收到请求，给出回复，访问 event 时，引发 use-after-free，内核 oops/panic。
+
+所以问题在哪里？在于 fanotify 的 event 对象管理是由请求侧来完成的，所以必须同步等待再返回。
+
+那如何 fix 这个问题呢？这就引出了 Round 3，不同的是，这次是维护者 Jan Kara 直接下场，先来了一次 event 对象管理的重构。
+
+（Jan Kara 来自 suse，他同时也是 ext2/ext3 的维护者，以及 ext4 的核心 reviewer，另外值得一提的是，huawei 的 Zhang Yi 同学好像在最近也成为了 ext4 的第二位 reviewer，撒花！）
+
+* fix/Round 3：syscall restart 2
+对象生命周期管理重构
+
+Jan Kara 的修改在 task/wait 逻辑上还是用了-ERESARTSYS 的那一套，但是做了 event 对象管理的重构：
+
+[PATCH v2 0/6] fanotify: Make wait for permission event response interruptible - Jan Kara
+
+核心修改逻辑是：
+
+- 给 event 新增加了一个 state：CANCEL。
+- 请求者在信号被中断时，返回之前会 cancel 该 event，设置其 state，但不会做 free。
+- 之后 daemon 在回复该请求时，如果发现已经被 cancel，则丢弃结果，同时负责释放掉该 event
+
+这样，event 的生命周期管理现在是双方都要参与。这种模式几乎在所有的异步请求/应答场景里都可以见到。
+
+patch 的核心部分：
+#+begin_src diff
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index e725831be161..2e40d5d8660b 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -57,6 +57,13 @@ static int fanotify_merge(struct list_head *list, struct fsnotify_event *event)
+ 	return 0;
+ }
+ 
++/*
++ * Wait for response to permission event. The function also takes care of
++ * freeing the permission event (or offloads that in case the wait is canceled
++ * by a signal). The function returns 0 in case access got allowed by userspace,
++ * -EPERM in case userspace disallowed the access, and -ERESTARTSYS in case
++ * the wait got interrupted by a signal.
++ */
+ static int fanotify_get_response(struct fsnotify_group *group,
+ 				 struct fanotify_perm_event_info *event,
+ 				 struct fsnotify_iter_info *iter_info)
+@@ -65,8 +72,29 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	wait_event(group->fanotify_data.access_waitq,
+-		   event->state == FAN_EVENT_ANSWERED);
++	ret = wait_event_interruptible(group->fanotify_data.access_waitq,
++				       event->state == FAN_EVENT_ANSWERED);
++	/* Signal pending? */
++	if (ret < 0) {
++		spin_lock(&group->notification_lock);
++		/* Event reported to userspace and no answer yet? */
++		if (event->state == FAN_EVENT_REPORTED) {
++			/* Event will get freed once userspace answers to it */
++			event->state = FAN_EVENT_CANCELED;
++			spin_unlock(&group->notification_lock);
++			return ret;
++		}
++		/* Event not yet reported? Just remove it. */
++		if (event->state == FAN_EVENT_INIT)
++			fsnotify_remove_queued_event(group, &event->fae.fse);
++		/*
++		 * Event may be also answered in case signal delivery raced
++		 * with wakeup. In that case we have nothing to do besides
++		 * freeing the event and reporting error.
++		 */
++		spin_unlock(&group->notification_lock);
++		goto out;
++	}
+ 
+ 	/* userspace responded, convert to something usable */
+ 	switch (event->response & ~FAN_AUDIT) {
+@@ -84,6 +112,8 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p about to return ret=%d\n", __func__,
+ 		 group, event, ret);
++out:
++	fsnotify_destroy_event(group, &event->fae.fse);
+ 	
+ 	return ret;
+ }
+@@ -255,7 +285,6 @@ static int fanotify_handle_event(struct fsnotify_group *group,
+ 	} else if (fanotify_is_perm_event(mask)) {
+ 		ret = fanotify_get_response(group, FANOTIFY_PE(fsn_event),
+ 					    iter_info);
+-		fsnotify_destroy_event(group, fsn_event);
+ 	}
+ finish:
+ 	if (fanotify_is_perm_event(mask))
+diff --git a/fs/notify/fanotify/fanotify.h b/fs/notify/fanotify/fanotify.h
+index 98d58939777c..bbdd2adfbf0f 100644
+--- a/fs/notify/fanotify/fanotify.h
++++ b/fs/notify/fanotify/fanotify.h
+@@ -26,7 +26,8 @@ struct fanotify_event_info {
+ enum {
+ 	FAN_EVENT_INIT,
+ 	FAN_EVENT_REPORTED,
+-	FAN_EVENT_ANSWERED
++	FAN_EVENT_ANSWERED,
++	FAN_EVENT_CANCELED,
+ };
+#+end_src
+*userspace breaking*
+
+但是这个 patch 很快被发现破坏了用户空间 API： Re: [PATCH v2 0/6] fanotify: Make wait for permission event response interruptible - Orion Poplawski
+
+Jan Kara 在确认这个问题后，将等待的方式从 interruptible 回退为了 killable。——保留了已经重构的 event 对象管理，允许在等待时被 kill（这是同样有人报告的问题，当 fanotify daemon 写出 bug 死锁的时候，等待的进程没法被 kill，导致系统卡死）。
+
+邮件中的说明：
+#+begin_src
+Yes, so the patches can definitely lead to
+EINTR returns from open(2) if there's fanotify permission event generated
+by it and the opening process has a signal pending. Now EINTR is documented
+as a possible return from open(2) but Marko is right that in practice
+open(2) on local filesystem never returns EINTR so programs just don't
+bother handling it. Since breaking userspace is no-go, we probably cannot
+apply the change as is.
+
+What we can do easily is to change the wait_event_interruptible() to
+wait_event_killable(). This is what we commonly do when we want to allow
+administrator to interrupt a syscall but userspace is not prepared for
+EINTR. That will at least allow processes that are waiting for fanotify
+response to be killed. So I'll do this for the coming merge window
+(attached patch). However this will not solve your problems with
+hibernation as TASK_KILLABLE tasks cannot be hibernated AFAICS. I will have
+to talk with people more knowledgeable about hibernation if there's a
+solution to this.
+#+end_src
+简单而言就是，这个改动会导致 open(2)会返回-EINTR，而虽然 posix 标准了允许 open(2)返回这个错误值，但实际上几乎没有任何进程针对这种情况做了编码，会误认为是 io 错误。——返回-EINTR 的原因是，如果一个 syscall 的某些路径没法 restart，就会将-ERESTARTSYS 转换为-EINTR 返回用户空间。
+
+在第二段里，Jan 也说明了会切换为 wait_event_killable()，这会导致休眠失败问题仍然悬置，他需要找机会和 pm/task 那一边的人讨论一下看有没有更好的办法。——在内核里跨越多个大子系统的问题 fix 起来都会很麻烦。
+
+*killable patch*
+
+所以最后又有一个补充 patch：
+#+begin_src diff
+ fs/notify/fanotify/fanotify.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index ff7b8a1cdfe1..6b9c27548997 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -92,8 +92,8 @@ static int fanotify_get_response(struct fsnotify_group *group,
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	ret = wait_event_interruptible(group->fanotify_data.access_waitq,
+-				       event->state == FAN_EVENT_ANSWERED);
++	ret = wait_event_killable(group->fanotify_data.access_waitq,
++				  event->state == FAN_EVENT_ANSWERED);
+ 	/* Signal pending? */
+ 	if (ret < 0) {
+ 		spin_lock(&group->notification_lock);
+-- 
+#+end_src
+到这里，这一轮的 fix 就完全结束了。虽然没有完全 fix 掉，但完成了 event 对象管理的重构，同时也支持了 killable。
+
+* fix/uos：4.19 上的 fix
+*fix 思路*
+
+虽然上游的 fix 失败了，但是我们是否能另辟蹊径，用潦草一点的方式完成 fix 呢？
+
+理论上来说应当是可以的：
+
+- 用 TASK_INTERRUPTIBLE 方式睡眠，来了信号就被唤醒。
+- 醒来就检查是否需要走 freeze，主动进冰箱。
+- 如果不需要被 freeze，而 response 也还没来，我们就强行继续睡眠等待。
+
+第一个版本的修改之所以会导致 livelock，主要是因为 prepare_to_wait_event()里，有了信号进程就睡不下去了。那我们就自己改一个版本，忽略信号，强行睡，那不就 ok 了吗！——虽然有点丑陋，但听起来可行？
+
+*patch 代码*
+
+这种 fix，我一般的做法是不修改已有代码，而是 copy 新增一条全新的路径：
+#+begin_src diff
++/*
++ * copy from prepare_to_wait_event(), ignore pending signal
++ */
++long prepare_to_wait_event_ignore_signal(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_entry, int state)
++{
++	unsigned long flags;
++	long ret = 0;
++
++	spin_lock_irqsave(&wq_head->lock, flags);
++
++	/* keep signal-pending branch for easy code-review */
++	if (false && unlikely(signal_pending_state(state, current))) {
++		list_del_init(&wq_entry->entry);
++		ret = -ERESTARTSYS;
++	} else {
++		if (list_empty(&wq_entry->entry)) {
++			if (wq_entry->flags & WQ_FLAG_EXCLUSIVE)
++				__add_wait_queue_entry_tail(wq_head, wq_entry);
++			else
++				__add_wait_queue(wq_head, wq_entry);
++		}
++		set_current_state(state);
++	}
++	spin_unlock_irqrestore(&wq_head->lock, flags);
++
++	return ret;
++}
++EXPORT_SYMBOL(prepare_to_wait_event_ignore_signal);
+#+end_src
+就是把信号检查路径给屏蔽了，不会在这个路径里通过-ERESTARTSYS 返回了。
+
+最后在入口则是：
+#+begin_src diff
+@@ -65,7 +66,9 @@
+ 
+ 	pr_debug("%s: group=%p event=%p\n", __func__, group, event);
+ 
+-	wait_event(group->fanotify_data.access_waitq, event->response);
++	do {
++		wait_event_freezable_ignore_signal(group->fanotify_data.access_waitq, event->response);
++	} while (!event->response);
+#+end_src
+
+ok，经过测试，功能 ok。——而且这个修改确保只会影响到 fanotify/perm-event 这个路径，而目前这个路径只有域管一个用户，所以风险也 ok。
+
+* elfverify 的 freezable
+其实在之前，elfverify 就已经遭遇过这个问题，当时克武找我一起排查了这个问题并且做了 fix，具体实现是：
+#+begin_src c
+int access_verify(const int msg_type, const char* target)
+{
+	DECLARE_WAITQUEUE(wait, current);
+	elf_verifier_req *evr = NULL;
+	int ret = 0;
+	sigset_t retain = { 0 };
+
+	evr = create_evr(msg_type, target);
+	if (evr == 0)
+		return VERIFY_NOMEM;
+
+	add_wait_queue(&elf_ver_dev.resp_wq, &wait);
+	wake_up_interruptible(&elf_ver_dev.reqs_wq);
+
+	ret = VERIFY_UNKNOWN;
+	mutex_lock(&elf_ver_dev.lock);
+	for (;;) {
+		// Must 'get_response_nolock' firstly, otherwise
+		// sometimes it will be not run because of no wake up event.
+		// Wake up event should be send after write which has
+		// item changed, sometimes the event was sent too early.
+		ret = get_response_nolock(evr);
+		if (ret != VERIFY_UNKNOWN)
+			break;
+
+		__set_current_state(TASK_INTERRUPTIBLE);
+		mutex_unlock(&elf_ver_dev.lock);
+		schedule();
+
+		if (signal_pending(current)) {
+
+			sigandnsets(&retain, &current->pending.signal,
+				&elf_ver_dev.ignore_sigset);
+
+			ret = sigisemptyset(&retain);
+			if (!ret) {
+				clean_requests_locked(evr->pid);
+				ret = VERIFY_INTR;
+
+				dev_warn(elf_ver_dev.misc.this_device,
+					"%s return %d by signal\n",
+					__func__, ret);
+
+				goto out;
+			}
+			try_to_freeze();
+		}
+
+		mutex_lock(&elf_ver_dev.lock);
+	}
+
+	mutex_unlock(&elf_ver_dev.lock);
+out:
+	remove_wait_queue(&elf_ver_dev.resp_wq, &wait);
+	set_current_state(TASK_RUNNING);
+	return ret;
+}
+#+end_src
+思路是类似的，但对信号处理的方式不同：
+
+- 循环等待，等待方式为 TASK_INTERRUPTIBLE。
+
+- 被中断后，直接把预设可以忽略的信号清空，再检查是否还有信号 pending。
+
+- 如果还有 pending signal，就 break 跳出循环，走错误路径返回。——elfverity 返回-EINTR 上去是 ok 的。
+
+- 如果没有了，就检查是否需要 freeze，自己进冰箱。
+
+实际上可能不只是 elfverify 和 fanotify，以后我们需要开发的需要从内核发起 reqeust，而需要用户态 dameon 给回复的模型，都有类似的问题，都要注意它在等待时是否是 freezable 的。
+
+ok，我们的本地 4.19 上可以完成 fix，但是实际上还是破坏了原本的 wait/state 一致性语义：
+
+- 在有 signal pending 时，仍然强行进入了 TASK_INTERRUPTIBLE 睡眠。
+
+这种方案在上游应该是不可接受的，那如何完成 fix 呢？
+
+* freeze 机制的重写（v6.1）
+在 v6.1 中，内核调度方式有一个重要的改动：freeze 的核心逻辑被完全重写了。作者是 Peter Zijlstra，也就是当前内核调度方向的两个大维护者之一。（另外一个是 Ingo Molnar，也就是 O(1)调度算法和 cfs 的作者；从 cfs 演化而来，在 6.6 中替代了 cfs 的 EEVDF 新调度算法就是 Peter Zijlstra 写的）
+
+这次重写试图解决的问题是进程解冻过程里的顺序问题：
+
+- 系统在 suspend 时，是有严格的阶段的，比如先 freeze 用户进程，再关 smp，再 freeze 内核线程……
+
+- 同样在唤醒时，要先 thaw 内核线程，再开 smp，再 thaw 用户进程……
+
+- 而在之前的实现里（我其实没有完全细看，所以也没有展开讨论），freeze 过程总之还是一种睡眠状态，会在某些情况下被意外的提前唤醒，比如用户进程可能在 smp 起来之前就被唤醒了，引发一些问题。（我也没完全搞懂这个场景）
+
+重写的内容很多，有兴趣的同事可以参考这 2 个链接： [PATCH v3 0/6] Freezer Rewrite
+
+[PATCH v4 0/2] Avoid spurious freezer wakeups
+
+最后在我看来核心的改动点有：
+
+- 增加了一个专用状态: TASK_FROZEN，表示进程已经被 freeze 了。——不再只是 TASK_UNINTERRUPTIBLE 了。
+
+- task 上增加了一个新的字段 task->saved_state，也就是在被冻结时，可以这样：
+
+  - task->saved_state = task->__state
+
+  - task->__state = TASK_FROZEN
+
+- 这样，TASK_FROZEN 是一种特殊的中间状态，之后在 thaw 时可以反向操作：
+
+  - task->__state = task->saved_state
+
+这样带来的一个很重要的变化是：进程的 freeze 方式，不再必须“主动走入冰箱”，而是可以由 suspend 主进程“直接把它塞进冰箱”了。
+
+换而言之：
+
+- 之前要进入 freeze，实际上是进入 sleep，需要进程自己先变为 TASK_RUNNING，得到执行机会，走进去。
+
+- 现在呢？对于正在睡眠的进程，suspend 主进程可以直接将它设置为 frozen，之后再直接恢复它的状态，中间该进程都无需执行！
+
+用更简单的一句话来概括就是：
+
+- freeze 不再是 sleep；thaw 也不再是 wakeup。
+
+两者变成了独立的两个机制、两个状态：sleep 的 task 可以直接被 freeze，之后 thaw 之后还是 sleep 的，它自己甚至都没有感知；thaw 的过程也不同于 wakeup，实际上它是恢复了之前的 task-state，压根不会做 wakeup。
+
+那所有 TASK_UNINTERRUPTIBLE 的进程都是可以被直接 freeze 的吗？并不是，所以引入了一个新的 flag，TASK_FREEZABLE。
+
+而经过重写之后的__wait_event_freezable()也变成了：
+#+begin_src c
+#define __wait_event_freezable(wq_head, condition)				\
+	___wait_event(wq_head, condition, (TASK_INTERRUPTIBLE|TASK_FREEZABLE),	\
+			0, 0, schedule())
+#+end_src
+只要设置自己为 TASK_FREEZABLE 就足够了，不再需要在等待循环里主动调用 try_to_freeze()了，因为会由 suspend 主进程把它直接从等待状态塞入冰箱。
+
+* fix/Round 4：最终 fix
+在新的机制下，我们对于 fanotify 的 fix 变得异常简单：
+#+begin_src diff
+-	ret = wait_event_killable(group->fanotify_data.access_waitq,
+-				  event->state == FAN_EVENT_ANSWERED);
++	ret = wait_event_state(group->fanotify_data.access_waitq,
++				  event->state == FAN_EVENT_ANSWERED,
++				  TASK_KILLABLE|TASK_FREEZABLE);
++
+ 	/* Signal pending? */
+ 	if (ret < 0) {
+ 		spin_lock(&group->notification_lock);
+#+end_src
+直接使用 wait_event_state()接口，结合 KILLABLE|TASK_FREEZABLE 就可以。——此时的等待方式是 TASK_UNINTERRUPTIBLE，不会被普通的信号所中断唤醒；而结合 TASK_FREEZABLE，它可以直接被 freeze/thaw。
+
+上游提交链接如下： [PATCH] fanotify: allow freeze when waiting response for permission events
+
+patch 已经被 Jan Kara 接受，预计会在即将到来的 v6.9 里进入主线，Jan Kara 的回复让我哈哈大笑了三声哈哈哈：
+#+begin_src
+Thanks and I'm glad this has finally a workable solution (keeping fingers
+crossed ;)). I've added the patch to my tree.
+
+								Honza
+#+end_src
+这个问题第一次在上游被报告是在 2018 年，在 5 年以后，在经历曲曲折折的路径以后，终于迎来了它的 fix，而其中大部分的工作都是由两个子系统的维护者完成的，我们只是恰好发现了这一道缝隙并最终完成了填补，但仍然成就感满满！
+

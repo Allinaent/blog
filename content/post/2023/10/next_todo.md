@@ -1,7 +1,7 @@
 +++
 title = "置顶：博客计划与完成"
 date = 2023-10-12T11:04:00+08:00
-lastmod = 2023-10-17T15:06:15+08:00
+lastmod = 2024-03-07T15:33:34+08:00
 categories = ["plan"]
 draft = false
 weight = 1
@@ -10,17 +10,40 @@ toc = true
 
 ## 计划的任务 {#计划的任务}
 
--   emacs 使用 mu4e
+-   将开发环境装到 U 盘上随身携带，并借此机会优化和重构我的 emacs 配置。
 
-这个我本地用来读写 QQ 和 exmail 邮件，功能已经很好了，但是没总结。
+全过程做一下记录吧。24 年 3 月 6 日。
 
--   trace-bpfcc 和 mesa 的调试方法
+时间不同步的问题：<https://blog.csdn.net/X_T_S/article/details/110142773>
+sudo apt-get install ntpdate
 
-这个问了洪奥大佬，还没有自己实践过
+sudo ntpdate time.windows.com
 
--   小工具的网站
+sudo hwclock --localtime --systohc
 
-去水印，ai 问答
+-   免费内网穿透
+
+<https://www.natfrp.com/user/>
+
+配合 nginx ，把我的 Nas 利用起来，这个 Nas 只为了同步文件。
+
+<https://blog.csdn.net/qwex888/article/details/122968063>
+
+利用 Zerotier 。这相当于，我下载了一个客户端之后，就能访问我的 NAS 且速度非常快。和 snycthing 有一些像吧。但是不一样。
+
+我的 Network ID 是：856127940c697801
+
+工作机的 ID 是：311fd05b42
+
+ubuntutogo 的 ID 是：f59277a974
+
+用法简单，速度也是很快。如果只是自己用的话，根本不需要花钱买公网 ip 或者花钱弄个服务器，搞内网穿透。加速的方法很多，而 p2p 是网络对等降低成本的好方法。
+
+而使用 syncthing 这种东西的话，我设计一种目录规则，目录名称为 syncthing + 机器名 + 分类名。比如我工作中存了大量的文档。我可以把这些文档放在：syncthing_uos_work 当中。
+
+我觉得我还是有必要把工作当中的文档存到 Nas 上的，这样以后离职了也随时都能看。
+
+-   文韬大佬邮件中提到的一些有用的东西
 
 -   git 常用命令
 
@@ -38,3 +61,15 @@ ai，math 和内核
 
 
 ## 完成的任务 {#完成的任务}
+
+-   emacs 使用 mu4e
+
+这个我本地用来读写 QQ 和 exmail 邮件，功能已经很好了，但是没总结。
+
+-   trace-bpfcc 和 mesa 的调试方法
+
+这个问了洪奥大佬，还没有自己实践过。
+
+-   小工具的网站
+
+去水印，ai 问答

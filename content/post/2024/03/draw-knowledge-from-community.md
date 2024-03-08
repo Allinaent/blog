@@ -1,0 +1,104 @@
++++
+title = "如何从内核的开源社区获取资讯"
+date = 2024-03-06T15:59:00+08:00
+lastmod = 2024-03-06T16:10:59+08:00
+categories = ["kernel"]
+draft = false
+toc = true
++++
+
+如果想要深入内核的底层，并且了解内核前延的问题和发展方向，就上 <https://lwn.net/> 看一个方向的问题。再从
+<https://lore.kernel.org/> 查找一下邮件列表，学习一下别人的代码和改动的内容。还有只有真的做了一些底层的工作之后才能真正的提升分析问题的能力和知识水平。
+
+来一个勇士来做一下这个 patch 的 backport 吧，感觉对我们挺有用的。
+
+[[PATCHv5 0/3] **\*** Detect interrupt storm in softlockup \*\*\*](<https://lore.kernel.org/lkml/92a6e940-560d-4a61-bfcd-27a2df369b0f@linux.alibaba.com/t/#u>)
+
+fs 方向：
+
+-   lsfmm-2024 开始收集议题了，fs 方向上目前核心的还是 iomap/folio 相关的。
+-   xfs 维护者提了一个 RFC，新增一个系统调用实现 atomic file content exchange，也就是两个文件之间原子地交换一段数据。
+-   vfs 维护者 Al 写了一个很长的 rcu pathwalk 的文档……rcu 的资源管理太容易误用了。
+-   huawei 的 zhangyi 在给 ext4（默认配置）做 iomap+large folio 的支持，在某些场景下能大大提升性能。
+-   David Howells 正在将 iov_iter 的那堆晦涩难懂的宏转换为 inline 函数。
+-   有人提了一个 famfs 的 RFC，这是一个面向 fs-dax 设计的文件系统。
+-   block 层正在做的 atomic write 功能，首先在 xfs 中提交了支持。
+-   block 层添加了向上通知的机制，比如 u 盘强拔后，文件系统终于可以收到通知了。
+-   有人在实现 blksnap，在 block 层做 snapshot（这两年似乎有不少 blkxxx 的实现）
+-   block 层仍然在做重构……
+-   有人提交了一个 memory allocation profile 的 RFC，统计内存分配情况。
+-   rust 在实现 fs 相关的 binder，下一步就是在内核里用 rust 写文件系统。——社区提议用 ext2 先写个实现版，我们有人有兴趣的吗？
+
+trace 方向：
+
+-   有人在尝试实现在 kretprobe 里获得函数参数。——很有用的功能。
+-   alibaba 有人提了一个在 softlockup 里自动检查 irq-storm 的 patch，感觉挺好用，可以考虑移植过来。
+-   有人在尝试实现将 ftrace 的 buffer 在 kexec 过程里保留，类似于之前的 ram-oops
+-   有人在实现 dyndbg：将 dynamic debug 的 log 输出到 trace 的 buffer……
+-   sframe，在内核态实现用户堆栈的解析（unwind）
+
+其它：
+
+-   内核和 glibc 都成为了 CVE 的命名机构，以后可以自己负责自己的 CVE 命名，可以避免以前几乎所有报告的内核 bug 都会被打上 CVE 的窘境了。
+-   tasklets 要接近被删除了，会用 workqueue 来实现。（不受待见的 bottom half）
+-   有人实现了一个 sanbox mode kernel，虽然在上游被驳回了，但点子还是很不错的，在一个另外的地址空间（通过不同的页表）执行不安全代码来实现完全的隔离。
+-   fedora 的 atomic desktop
+
+参考链接：（大家可以挑感兴趣的、能把握的看看，不要想着去看每一个 patch 的讨论，那肯定看不过来，事实上下面的 patch 大部分我都没看过内容，只是过了一下标题和介绍……）
+[The end of tasklets [LWN.net]](<https://lwn.net/Articles/960041/>)
+
+[Introducing Fedora Atomic Desktops - Fedora Magazine](<https://fedoramagazine.org/introducing-fedora-atomic-desktops/>)
+
+[The kernel becomes its own CNA [LWN.net]](<https://lwn.net/Articles/961961/#Comments>)
+
+[A turning point for CVE numbers [LWN.net]](<https://lwn.net/Articles/961978/>)
+
+[A sandbox mode for the kernel [LWN.net]](<https://lwn.net/Articles/963734/>)
+
+[[PATCHv5 0/3] **\*** Detect interrupt storm in softlockup \*\*\*](<https://lore.kernel.org/lkml/92a6e940-560d-4a61-bfcd-27a2df369b0f@linux.alibaba.com/t/#u>)
+
+[[PATCHES] RCU pathwalk race fixes](<https://lore.kernel.org/linux-ext4/CAJfpegtJtrCTeRCT3w3qCLWsoDopePwUXmL5O9JtJfSJg17LNg@mail.gmail.com/t/#m2dc6e81096351b3538f704e36ab9d0ff7eb00dc8>)
+
+[[PATCH v2 00/16] block atomic writes](<https://lore.kernel.org/linux-fsdevel/20240110091929.GA31003@lst.de/T/#t>)
+
+[[PATCH 0/6] block atomic writes for XFS](<https://lore.kernel.org/linux-fsdevel/ZcLJgVu9A3MsWBI0@dread.disaster.area/t/#u>)
+
+[[RFC PATCH 00/20] Introduce the famfs shared-memory file system](<https://lore.kernel.org/linux-fsdevel/ulweov27unhr4q6x6oad7vpmemi4ivl5ztls7gish7c7a52t3e@peoqzqt6pk4l/t/#mcae074f9d87c2bf810838609e208432aa6563fd7>)
+
+[[PATCH v4 00/36] Memory allocation profiling](<https://lore.kernel.org/linux-fsdevel/20240221194052.927623-1-surenb@google.com/T/#t>)
+
+[[PATCHSET v29.4 03/13] xfs: atomic file content exchanges](<https://lore.kernel.org/linux-fsdevel/CAOQ4uxg9k7261Gw08iCBMZ2sfk7tEwwKh4ufor_PpF-NApvEOA@mail.gmail.com/T/#t>)
+
+[[PATCH v2 0/7] tracing/probes: Support function parameter access from return probe](<https://lore.kernel.org/linux-trace-kernel/20240229175216.96bb2e16b510f81e3802ef23@kernel.org/T/#t>)
+
+[[PATCH v7 0/8] filtering and snapshots of a block devices](<https://lore.kernel.org/linux-block/20240209160204.1471421-1-sergei.shtepa@linux.dev/T/#t>)
+
+[[PATCH v3 00/17] kexec: Allow preservation of ftrace buffers](<https://lore.kernel.org/linux-trace-kernel/ZcJE1qQy29lR42-G@pengutronix.de/T/#t>)
+
+[[PATCH v4 00/39] dyndbg: add support for writing debug logs to trace](<https://lore.kernel.org/lkml/20240210235009.2405808-1-ukaszb@chromium.org/T/#t>)
+
+[[PATCH v5 0/9] File abstractions needed by Rust Binder](<https://lore.kernel.org/lkml/20240209-alice-file-v5-0-a37886783025@google.com/T/#t>)
+
+[[POC,V2 0/5] SFrame based stack tracer for user space in the kernel](<https://lore.kernel.org/linux-toolchains/20230526035637.26e333c4@rorschach.local.home/t/#u>)
+
+[[PATCH RFC 00/10] perf: user space sframe unwinding](<https://lore.kernel.org/lkml/20231120140334.GW8262@noisy.programming.kicks-ass.net/t/#u>)
+
+[[RFC PATCH v3 00/26] ext4: use iomap for regular file's buffered IO path and enable large foilo](<https://lore.kernel.org/linux-ext4/20240127015825.1608160-27-yi.zhang@huaweicloud.com/t/#u>)
+
+[LSF/MM/BPF: 2024: Call for Proposals](<https://lore.kernel.org/linux-block/ZdytYs8W9o0CIu_C@bombadil.infradead.org/t/#u>)
+
+[[LSF/MM/BPF TOPIC]: Challenges and Ideas in Transitioning EXT\* and other FS to iomap](<https://lore.kernel.org/linux-ext4/87y1ba17x0.fsf@doe.com/T/#m9b9f38d50e812c812ea739cb806087fe0b290f96>)
+
+[[LSF/MM/BPF TOPIC] Measuring limits and enhancing buffered IO](<https://lore.kernel.org/linux-fsdevel/Zd0wMYvju4Z%2FHZye@dread.disaster.area/t/#u>)
+
+[[LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] Meta/Integrity/PI improvements](<https://lore.kernel.org/linux-fsdevel/yq14jdu7t2u.fsf@ca-mkp.ca.oracle.com/t/#u>)
+
+[[LSF TOPIC] statx extensions for subvol/snapshot filesystems &amp; more](<https://lore.kernel.org/linux-fsdevel/CAOQ4uxgRX2L52XS7ZoZBLe+GbhcNMbNcOEbkHOzV-xRF2g=vew@mail.gmail.com/t/#u>)
+
+[[LSF/MM/BPF TOPIC] shmem/tmpfs: large folios adoption, regression tracking and performance testing](<https://lore.kernel.org/linux-fsdevel/4ktpayu66noklllpdpspa3vm5gbmb5boxskcj2q6qn7md3pwwt@kvlu64pqwjzl/t/#u>)
+
+[[LSF/MM/BPF TOPIC] Large folios, swap and fscache](<https://lore.kernel.org/linux-fsdevel/CAF8kJuOFKTuepSheBa1Uhdm-a+pOVKUORjOPSDhTfxFydRTN_A@mail.gmail.com/t/#u>)
+
+[[LSF/MM/BPF ATTEND][LSF/MM/BPF TOPIC] : blktests: status, expansion plan for the storage stack test framework](<https://lore.kernel.org/linux-fsdevel/6spltrohwisctoeowctyyneyrqolzyvcd3riozbczj2c2o5pcw@lmtrghutbgwx/t/#u>)
+
+[[LSF TOPIC] beyond uidmapping, &amp; towards a better security model](<https://lore.kernel.org/linux-fsdevel/lgsh46klnmhaqsgzguoces452gbuzpzpg6jqr3cndblhpq34ez@jm2kobculj2p/t/#m906a406076af67fcaf1d5bbd4f047a78b1681646>)

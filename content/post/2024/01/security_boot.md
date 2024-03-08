@@ -1,8 +1,8 @@
 +++
 title = "UOS 安全启动"
 date = 2024-01-02T14:07:00+08:00
-lastmod = 2024-01-03T15:18:28+08:00
-categories = ["system"]
+lastmod = 2024-03-06T16:34:02+08:00
+categories = ["security"]
 draft = false
 toc = true
 +++

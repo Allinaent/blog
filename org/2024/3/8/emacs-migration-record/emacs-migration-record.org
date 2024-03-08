@@ -1,0 +1,53 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-08 五 11:42]
+#+TITLE: emacs 迁移记录
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: emacs
+
+
+在 ubuntu 22.04 当中安装 emacs ：
+
+* 编译安装
+
+sudo apt install libcairo2-dev libharfbuzz-dev libgtk-3-dev librsvg-2-dev libmagickwand-dev make texinfo
+libxpm-dev libgif-dev libgnutls28-dev libncurses-dev libwebkit2gtk-4.1-dev
+
+./autogen.sh
+
+./configure --with-x-toolkit=gtk3 --with-mailutils --with-rsvg --with-imagemagick
+--with-xwidgets --with-gnutls 2>&1|tee configure.log
+
+#+begin_src
+[Desktop Entry]
+Name=Emacs
+GenericName=Text Editor
+Comment=Edit text
+MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++;
+Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F
+Icon=emacs
+Type=Application
+Terminal=false
+Categories=Development;TextEditor;
+StartupNotify=true
+StartupWMClass=Emacs
+#+end_src
+
+emacs 启动时增加两个环境变量就可以了：GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs &
+
+* 配置优化
+
+我的配置加的太多了。这次完全是在一个新的电脑上用我的配置： https://gitee.com/allinaent/onlyconfig
+
+优化到可以用就行。
+
+** all-the-icons 用的是 git 子模块
+
+没必要。变成普通的版本管理方式。
+
+
+
