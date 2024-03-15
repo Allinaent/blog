@@ -515,7 +515,8 @@ Mesa 的完整流程可以大致分为以下几个步骤：
 #+attr_html: :alt mesa-init
 #+attr_html: :data zoom
 #+attr_org: :width 900
-[[file:mesa-introduction.org.assets/img_20240117_102358.jpg]]
+
+[[https://r2.guolongji.xyz/img_20240117_102358.jpg]]
 
 # 可以完成后手动增加修改，替换导出的图片增加灯箱，这个方法不太好，但能用
 # ![](mesa-introduction.org.assets/img_20240117_102358.jpg)
@@ -576,17 +577,16 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
 #+caption: mesa categories
 #+attr_html: :alt mesa-module
-[[file:mesa-introduction.org.assets/img_20240204_101056.jpg]]
+[[https://r2.guolongji.xyz/img_20240204_101056.jpg]]
 
 
-[[file:mesa-introduction.org.assets/img_20240204_101412.jpg]]
+[[https://r2.guolongji.xyz/img_20240204_101412.jpg]]
 
 
 #+caption: /mesa-module/
 #+attr_html: :alt mesa-module
 #+attr_html: :width 900
-[[file:mesa-introduction.org.assets/img_20240204_101721.jpg]]
-
+[[https://r2.guolongji.xyz/img_20240204_101721.jpg]]
 
 
 
@@ -719,7 +719,7 @@ libglvnd 作用？
 #+caption: /mesa 的库文件/
 #+attr_html: :alt mesa 的库文件
 #+attr_html: :width 900
-[[file:mesa-introduction.org.assets/img_20240204_145648.jpg]]
+[[https://r2.guolongji.xyz/img_20240204_145648.jpg]]
 
 
 stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：系统 S 有某个依赖 D，但我用另外的模块 X 来代替 D。
@@ -734,14 +734,12 @@ stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：�
 #+caption: /mesa glvnd/
 #+attr_html: :alt mesa 的库文件
 #+attr_html: :width 900
-[[file:mesa-introduction.org.assets/img_20240204_153702.jpg]]
-
-
+[[https:r2.guolongji.xyz/img_20240204_153702.jpg]]
 
 #+caption: /mesa glvnd/
 #+attr_html: :alt mesa 的库文件
 #+attr_html: :width 900
-[[file:mesa-introduction.org.assets/img_20240204_153751.jpg]]
+[[https://r2.guolongji.xyz/img_20240204_153751.jpg]]
 
 
 * 什么是 glxgears ？

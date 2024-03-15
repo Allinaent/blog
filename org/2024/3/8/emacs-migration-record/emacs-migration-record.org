@@ -169,6 +169,31 @@ nix-env -iA nixpkgs.texliveFull
 
 安装 gtags 包就可以了。
 
+** bbdb 源文件 bbdb-autoloads.el 不存在
+
+这个问题换了一下，使用 melpa-orig 这个手动重新安装这个包解决了一个小报错。
+
+** 输入法相关
+
+系统层面的输入法，还需要加上 /etc/environment 的配置，这样系统的输入法才好用
+
+#+begin_src bash
+OSFONTDIR="/usr/share/fonts/:/usr/local/share/fonts/"
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
+# SDL_IM_MODULE DEFAULT=fcitx
+GLFW_IM_MODULE=ibus
+#+end_src
+
+emacs 包使用的 emacs-rime 也需要下载：sudo apt install librime-dev
+
+查找配置文件：
+
+#+begin_src bash
+ls -a |grep "^\..*"|grep -vE "^\.\.$|^\.$"|xargs -I{} find {} -name "*.yaml"
+#+end_src
+这个非常地好。我的五笔反查的配置到底是哪里做的？不记得了，不懂原理的配置不算会，只能说是瞎蒙的。
 
 * 写在结尾
 

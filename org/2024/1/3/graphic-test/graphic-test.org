@@ -7,7 +7,7 @@
 #+DATE: [2024-01-03 三 15:28]
 #+TITLE: 显卡测试的一些命令记录
 #+HUGO_TAGS:
-#+HUGO_CATEGORIES: technology
+#+HUGO_CATEGORIES: graphic
 
 * glmark2 的测试
 
@@ -49,6 +49,8 @@ glxgears
 
 * 编译 mesa
 
+和种显示相关的包，编译之前一定要关闭安全中心的禁止安装第三方应用。
+
 如果要编包还要加上编包的源：
 
 这个在日构建镜像的 report/iso-build-source/ 文件夹当中。
@@ -76,6 +78,7 @@ sudo apt build-dep ./
 
 假设xserver的源目录为 /home/uos/code/xorg-xserver  编译后的目录为/home/uos/xorgdist
 
+#+begin_src bash
 cd /home/uos/code/xorg-xserver
 
 export PKG_CONFIG_PATH=/home/uos/xorgdist/share/pkgconfig:/home/uos/xorgdist/lib/pkgconfig:$PKG_CONFIG_PATH
@@ -87,6 +90,7 @@ cd build
 ninja
 
 ninja install
+#+end_src
 
 如果meson编译失败，解决方案，建议使用2
 
@@ -132,7 +136,9 @@ cp /usr/lib/xorg/modules/input/* /home/uos/xorgdist/lib/x86_64-linux-gnu/xorg/mo
 
 创建/home/zzz/xorgdist/var/log日志目录
 
+#+begin_src bash
 mkdir -p /home/uos/xorgdist/var/log
+#+end_src
 
 + 2d驱动配置
 
@@ -144,9 +150,23 @@ cp /usr/share/X11/xorg.conf.d/* /home/uos/xorgdist/share/X11/xorg.conf.d/
 
 + 通过配置启动xorg启动
 
-/etc/lightdm/lightdm.conf
+在 /etc/lightdm/lightdm.conf 当中增加：
 
 xserver-command=/home/uos/xorgdist/bin/Xorg
+
+
+** 重新编译
+
+如果代码切换了分支之后。重新编译 Xorg 的话，不用再执行那么多的代码，只需要：
+
+ninja install ，所有的改动都会覆盖上去。后面 sudo systemctl restart lightdm 即可。
+
+
+** 系统升级
+
+源当中增加这个，至于源是按什么名称分类的，不太清楚。
+
+deb http://pools.uniontech.com/ppa/dde-eagle eagle/1070 main contrib non-free
 
 
 

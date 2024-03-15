@@ -1,7 +1,7 @@
 +++
 title = "mesa 中的概念和代码介绍"
 date = 2024-01-11T10:00:00+08:00
-lastmod = 2024-03-05T23:51:43+08:00
+lastmod = 2024-03-16T00:51:08+08:00
 categories = ["graphic"]
 draft = false
 toc = true
@@ -403,7 +403,7 @@ Mesa 的完整流程可以大致分为以下几个步骤：
 
 ### mesa 的初始化 {#mesa-的初始化}
 
-{{< figure src="/ox-hugo/img_20240117_102358.jpg" alt="mesa-init" caption="<span class=\"figure-number\">Figure 1: </span>_\"mesa 3d 的初始化\"_" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240117_102358.jpg" >}}
 
 
 ### opengl 除了 mesa 外还有其它的开源实现吗？ {#opengl-除了-mesa-外还有其它的开源实现吗}
@@ -453,13 +453,13 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
 ### mesa 的模块划分 {#mesa-的模块划分}
 
-{{< figure src="/ox-hugo/img_20240204_101056.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 2: </span>mesa categories" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_101056.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 1: </span>mesa categories" >}}
 
-{{< figure src="/ox-hugo/img_20240204_101412.jpg" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_101412.jpg" >}}
 
-{{< figure src="/ox-hugo/img_20240204_101721.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 3: </span>_mesa-module_" width="900" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_101721.jpg" alt="mesa-module" caption="<span class=\"figure-number\">Figure 2: </span>_mesa-module_" width="900" >}}
 
-{{< figure src="/ox-hugo/mesa-module.png" alt="mesa-module" caption="<span class=\"figure-number\">Figure 4: </span>_mesa-module_" width="900" >}}
+{{< figure src="/ox-hugo/mesa-module.png" alt="mesa-module" caption="<span class=\"figure-number\">Figure 3: </span>_mesa-module_" width="900" >}}
 
 -   OpenGL 能做什么？渲染 Render
     -   为什么需要渲染?
@@ -482,13 +482,13 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
         -   shader 就是 GPU 运行的 GLSL 描述的程序
 
-{{< figure src="/ox-hugo/mesa-header.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的头文件_" >}}
+{{< figure src="/ox-hugo/mesa-header.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 4: </span>_mesa 的头文件_" >}}
 
-{{< figure src="/ox-hugo/mesa-libs.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 6: </span>_mesa 的库文件_" >}}
+{{< figure src="/ox-hugo/mesa-libs.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的库文件_" >}}
 
 用 GLX 设置上下文，用 GL 来做渲染。
 
-{{< figure src="/ox-hugo/mesa-module-2.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 7: </span>_mesa 的库文件_" width="900" >}}
+{{< figure src="/ox-hugo/mesa-module-2.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 6: </span>_mesa 的库文件_" width="900" >}}
 
 
 ### Mesa3D 的作用 {#mesa3d-的作用}
@@ -572,7 +572,7 @@ libglvnd 作用？
 
 将 GLX、ELG、GL、GLES 统一在一个调度表
 
-{{< figure src="/ox-hugo/img_20240204_145648.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 8: </span>_mesa 的库文件_" width="900" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_145648.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 7: </span>_mesa 的库文件_" width="900" >}}
 
 stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：系统 S 有某个依赖 D，但我用另外的模块 X 来代替 D。模块 X 就被称为一个 stub。在测试系统的过程中，X可以是用来模拟 D 的模块，因为 D 可能调用起来比较昂贵。
 
@@ -580,9 +580,9 @@ stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：�
 
 系统启动：
 
-{{< figure src="/ox-hugo/img_20240204_153702.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 9: </span>_mesa glvnd_" width="900" >}}
+{{< figure src="https:r2.guolongji.xyz/img_20240204_153702.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 8: </span>_mesa glvnd_" width="900" >}}
 
-{{< figure src="/ox-hugo/img_20240204_153751.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 10: </span>_mesa glvnd_" width="900" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_153751.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 9: </span>_mesa glvnd_" width="900" >}}
 
 
 ## 什么是 glxgears ？ {#什么是-glxgears}

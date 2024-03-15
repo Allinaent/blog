@@ -1,0 +1,14 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-15 五 16:22]
+#+TITLE: 为博客增加图床
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: technology
+
+主要参考这一篇文章：
+
+https://hugo-c1e.pages.dev/dev/guide-to-setup-blog-with-zero-cost-3/

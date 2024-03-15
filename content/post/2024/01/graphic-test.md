@@ -1,8 +1,8 @@
 +++
 title = "显卡测试的一些命令记录"
 date = 2024-01-03T15:28:00+08:00
-lastmod = 2024-03-14T15:59:30+08:00
-categories = ["technology"]
+lastmod = 2024-03-14T16:13:29+08:00
+categories = ["graphic"]
 draft = false
 toc = true
 +++
@@ -49,6 +49,8 @@ glxgears
 
 ## 编译 mesa {#编译-mesa}
 
+和种显示相关的包，编译之前一定要关闭安全中心的禁止安装第三方应用。
+
 如果要编包还要加上编包的源：
 
 这个在日构建镜像的 report/iso-build-source/ 文件夹当中。
@@ -83,6 +85,7 @@ sudo apt build-dep ./
 
 假设xserver的源目录为 /home/uos/code/xorg-xserver  编译后的目录为/home/uos/xorgdist
 
+```bash
 cd /home/uos/code/xorg-xserver
 
 export PKG_CONFIG_PATH=/home/uos/xorgdist/share/pkgconfig:/home/uos/xorgdist/lib/pkgconfig:$PKG_CONFIG_PATH
@@ -94,6 +97,7 @@ cd build
 ninja
 
 ninja install
+```
 
 如果meson编译失败，解决方案，建议使用2
 
