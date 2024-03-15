@@ -19,7 +19,7 @@ params:
         - post
     featuredImageField: image
     rssFullContent: true # RSS 是否开启全内容 / false 则为只有摘要
-    favicon: img/sdl-logo-white-cir.webp # 浏览器 Tab 页的网站图标
+    favicon: img/favicon.ico # 浏览器 Tab 页的网站图标
     toc: true
 
     article:

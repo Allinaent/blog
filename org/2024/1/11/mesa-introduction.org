@@ -734,7 +734,7 @@ stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：�
 #+caption: /mesa glvnd/
 #+attr_html: :alt mesa 的库文件
 #+attr_html: :width 900
-[[https:r2.guolongji.xyz/img_20240204_153702.jpg]]
+[[https://r2.guolongji.xyz/img_20240204_153702.jpg]]
 
 #+caption: /mesa glvnd/
 #+attr_html: :alt mesa 的库文件

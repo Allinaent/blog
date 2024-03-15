@@ -1,7 +1,7 @@
 +++
 title = "mesa 中的概念和代码介绍"
 date = 2024-01-11T10:00:00+08:00
-lastmod = 2024-03-16T00:51:08+08:00
+lastmod = 2024-03-16T01:14:57+08:00
 categories = ["graphic"]
 draft = false
 toc = true
@@ -580,7 +580,7 @@ stub 在不同情景下有不同的意思。从我的理解，stub 是泛指：�
 
 系统启动：
 
-{{< figure src="https:r2.guolongji.xyz/img_20240204_153702.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 8: </span>_mesa glvnd_" width="900" >}}
+{{< figure src="https://r2.guolongji.xyz/img_20240204_153702.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 8: </span>_mesa glvnd_" width="900" >}}
 
 {{< figure src="https://r2.guolongji.xyz/img_20240204_153751.jpg" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 9: </span>_mesa glvnd_" width="900" >}}
 
