@@ -1,0 +1,280 @@
++++
+title = "emacs 迁移记录"
+date = 2024-03-08T11:42:00+08:00
+lastmod = 2024-03-20T01:25:30+08:00
+categories = ["emacs"]
+draft = false
+toc = true
++++
+
+在 ubuntu 22.04 当中安装 emacs ：
+
+
+## 编译安装 {#编译安装}
+
+sudo apt install libcairo2-dev libharfbuzz-dev libgtk-3-dev librsvg-2-dev libmagickwand-dev make texinfo
+libxpm-dev libgif-dev libgnutls28-dev libncurses-dev libwebkit2gtk-4.1-dev
+
+./autogen.sh
+
+./configure --with-x-toolkit=gtk3 --with-mailutils --with-rsvg --with-imagemagick
+--with-xwidgets --with-gnutls 2&gt;&amp;1|tee configure.log
+
+```nil
+[Desktop Entry]
+Name=Emacs
+GenericName=Text Editor
+Comment=Edit text
+MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++;
+Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F
+Icon=emacs
+Type=Application
+Terminal=false
+Categories=Development;TextEditor;
+StartupNotify=true
+StartupWMClass=Emacs
+```
+
+emacs 启动时增加两个环境变量就可以了：GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs &amp;
+
+
+## 配置优化 {#配置优化}
+
+sudo apt install cmake libtool-bin pass isync gtags fzf  meson libmime-3.0-dev  libxapian-dev
+rime-data-pinyin-simp gnome-tweaks
+
+我的配置加的太多了。这次完全是在一个新的电脑上用我的配置： <https://gitee.com/allinaent/onlyconfig>
+
+优化到可以用就行。
+
+
+### all-the-icons 用的是 git 子模块 {#all-the-icons-用的是-git-子模块}
+
+没必要。变成普通的版本管理方式。
+
+还有，doom-modeline 没必要使用 all-the-icons 显示 gui 的图标，一点也不好看。也不简洁，所以去掉它。
+
+
+### 将我的 mydata/orgmode 日程放到了 github 的私有项目中 {#将我的-mydata-orgmode-日程放到了-github-的私有项目中}
+
+github 已经可以免费使用私有仓库，且创建没有数量的限制，可以说一个面向全世界的免费网盘。当然安全性也是不可能保障的。因为微软是美国的企业。但我是一个没什么重要秘密的普通人。也不会把重要的信息上传到自己的日程表当中。
+
+写的都是可以公开的信息。并且初始化的时候增加了判断的条件。
+
+
+### 判断条件的增加 {#判断条件的增加}
+
+```lisp
+(if (file-exists-p "~/.emacs.d/site-lisp/emacs-application-framework/")
+  (progn
+    (add-to-list 'load-path "~/.emacs.d/site-lisp/emacs-application-framework/")
+    (require 'eaf)
+  )
+)
+```
+
+增加一个简单的判断条件非常地简单。
+
+eaf 和 eaf-mindmap 这两个东西是同样的道理。
+
+
+### vterm 使用 CMake {#vterm-使用-cmake}
+
+这个倒是不重要，要求提前安装 cmake 和 libtool-bin 这两个包即可。
+
+
+### aweshell 这个目录 {#aweshell-这个目录}
+
+同 all-the-icons 类似，这个也从 git module 改成一般的 git 目录。
+
+
+### lsp-python-ms {#lsp-python-ms}
+
+这个需要安装 anaconda ，这个正好是我要用的，但是要保证，如果没有安装的话，不要加载这个插件，因为 anaconda 这个也是个大包，比较难装。增加 ~/.conda 目录的判断条件。
+
+
+### comany {#comany}
+
+这个多处用了。还使用 use-package 和 require 两种写法。第一次使用 company-backends 这个变量前，必须先 require 一下。这些问题的出现都是因为自己对 lisp 并不熟悉才出现的。
+
+
+### image-roll 找不到 {#image-roll-找不到}
+
+(latex-preview-pane-enable) ;;不可用于 xelatex，别用这个了。
+
+
+### cape.el {#cape-dot-el}
+
+版本有关吧，一个函数找不到了。
+
+(keymap-global-set "C-c p e" (cape-interactive-capf #'elisp-completion-at-point)) 这一行去掉。
+
+
+### real-auto-save {#real-auto-save}
+
+这个包注释掉了，这个是需要的，不应该注释掉。
+
+
+### mu 和 mu4e {#mu-和-mu4e}
+
+nix 和 mu 这两个包需要安装。
+
+nix 的安装不要使用包管理器。有这个：
+
+curl --proto '=https' --tlsv1.2 -sSf -L <https://install.determinate.systems/nix> | sh -s -- install
+
+这个比官方的安装快一些， .bashrc 也需要更新一下。安装完成之后需要：
+
+nix-channel --update 这个时间比较长。
+
+nix-env -iA nixpkgs.mu 这个的时间也比较长。
+
+nix 这个安装时间太长了，这一点比较烦人。
+
+然后又遇到了问题。
+
+sudo mkdir /nix/var/nix/profiles/per-user/uos
+
+sudo touch /nix/var/nix/profiles/per-user/uos/profile.lock
+
+sudo chown -R uos:uos /nix/var/nix/profiles/per-user/uos
+
+mu/mu4e 1.12.1 版本，这个手动更新一下。之前用的是 1.10.6 ，没想到 mu 这个小众的软件更新还是很快的，所以说开源社区的大佬有不少的项目和人是值得期待的。
+
+sudo apt install meson libmime-3.0-dev  libxapian-dev
+
+最后发现 mu4e 最适合的是编译安装：<https://github.com/emacsmirror/mu4e> 将 build 文件夹中产生的 mu4e 的 el 文件存到。
+
+到了现在邮件还是不能用的。还需要安装 pass
+
+后面 gpg --full-generate-key
+
+pass init xxxxxxx(key)
+
+pass add ...
+
+
+### dumb-jump {#dumb-jump}
+
+这个包是不用的，直接删掉就好了。
+
+
+### 2FA 验证 {#2fa-验证}
+
+小米需要搜时间设置：自动设置时间，这个要打开。2FA 的验证是和时间有关系的。如果手机的时间不准确，永远也无法通过 github 的 2FA 验证。现在 github 需要手机登陆了。安全性有了很大的提高。另一个与时间有关的是 v2ray 。
+
+
+### latex 环境的安装 {#latex-环境的安装}
+
+nix-env -iA nixpkgs.texliveFull
+
+
+### gtags 相关 {#gtags-相关}
+
+安装 gtags 包就可以了。
+
+
+### bbdb 源文件 bbdb-autoloads.el 不存在 {#bbdb-源文件-bbdb-autoloads-dot-el-不存在}
+
+这个问题换了一下，使用 melpa-orig 这个手动重新安装这个包解决了一个小报错。第三方包的问题，原因未知。
+
+
+### 输入法相关 {#输入法相关}
+
+系统层面的输入法，还需要加上 /etc/environment 的配置，这样系统的输入法才好用
+
+```bash
+OSFONTDIR="/usr/share/fonts/:/usr/local/share/fonts/"
+GTK_IM_MODULE=fcitx
+QT_IM_MODULE=fcitx
+XMODIFIERS=@im=fcitx
+# SDL_IM_MODULE DEFAULT=fcitx
+GLFW_IM_MODULE=ibus
+```
+
+emacs 包使用的 emacs-rime 也需要下载：sudo apt install librime-dev gnome-tweaks
+
+通过 gnome-tweaks 设置 fcitx5 开机自起动。
+
+查找配置文件：
+
+```bash
+ls -a |grep "^\..*"|grep -vE "^\.\.$|^\.$"|xargs -I{} find {} -name "*.yaml"
+```
+
+这个非常地好。我的五笔反查的配置到底是哪里做的？
+
+rime 五笔的项目在 <https://github.com/rime/rime-wubi> 当中，这个里面提到了五笔反查的核心包是 pinyin-simp
+
+sudo apt install rime-data-pinyin-simp
+
+
+### 搜索相关 {#搜索相关}
+
+sudo apt install fzf
+
+
+### 去掉 emacsclient 的干扰 {#去掉-emacsclient-的干扰}
+
+```bash
+sudo mv /usr/share/applications/etc/emacsclient.desktop
+sudo update-desktop-database
+```
+
+
+### hugo {#hugo}
+
+需要安装来 golang ，这个解压即安装：
+
+.bashrc 中增加 golang 的代理：
+
+export GO111MODULE=on
+export GOPROXY=<https://goproxy.cn>
+
+```bash
+cd ~/INSTALL/ && mkdir hugo && cd hugo
+git clone git@github.com:SDLMoe/hugo.git
+go build
+sudo cp hugo /usr/local/bin/
+```
+
+这样就可以直接 win + em 打开 emacs 了。
+
+
+### shutter {#shutter}
+
+安装 shutter 并设置截图压缩率，为了加快博客的访问速度。
+
+
+### 公式图片的包 {#公式图片的包}
+
+sudo apt install dvisvgm
+
+sudo apt install dvipng
+
+还有更改 imagemagick 的权限：
+
+sudo vim /etc/ImageMagick-6/policy.xml
+
+&lt;policy domain="coder" rights="read|write" pattern="PDF" /&gt;
+
+emacs 和系统相关的修改很多，我也很难完全迁移过来。
+
+
+## 查找和全局替换 {#查找和全局替换}
+
+```bash
+grep -RiIl 'search' | xargs sed -i 's/search/replace/g'
+```
+
+这个全局搜索和替换的功能非常地好用。以后要牢记。
+
+
+## 写在结尾 {#写在结尾}
+
+总的来说我的 emacs 的配置的完全迁移到另外一台机器上是比较花时间的。像邮件这种一定要加一个判断是否安装了相关的软件，没有安装就不必加载。邮件也不是一个很重要的功能。
+
+
+### 非博客 {#非博客}
+
+并非所有的东西都要写在博客上。如果有一些东西是不想让别人知道的，那么。我新建了一个 mydata 的私有项目托管在 github 的私有仓库里，比如在这个里面写一些考研的东西。摸鱼有风险，上传需谨慎。

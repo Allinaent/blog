@@ -15,11 +15,13 @@ permalinks:
 # 下面是 Stack 主题的参数
 
 params:
+    sidebar:
+        subtitle: "No steps, no miles"
     mainSections:
         - post
     featuredImageField: image
-    rssFullContent: true # RSS 是否开启全内容 / false 则为只有摘要
-    favicon: img/favicon.ico # 浏览器 Tab 页的网站图标
+    rssFullContent: false # RSS 是否开启全内容 / false 则为只有摘要
+    favicon: /img/favicon.ico # 浏览器 Tab 页的网站图标
     toc: true
 
     article:
@@ -58,15 +60,15 @@ params:
 ### Custom menu
 ### See https://docs.stack.jimmycai.com/configuration/custom-menu.html
 ### To remove about, archive and search page menu item, remove `menu` field from their FrontMatter
-#menu:
+menu:
     main:
-        - identifier: home
-          name: Home
-          url: /
-          weight: -100
-          params:
-              newTab: false
-              icon: home
+        #- identifier: home
+        #  name: Home
+        #  url: /
+        #  weight: -100
+        #  params:
+        #      newTab: false
+        #      icon: home
 
         - identifier: categories
           name: Categories

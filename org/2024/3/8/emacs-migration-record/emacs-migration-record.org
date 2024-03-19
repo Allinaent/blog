@@ -1,5 +1,5 @@
 #+OPTIONS: author:nil ^:{}
-#+HUGO_BASE_DIR: ../../../../
+#+HUGO_BASE_DIR: ../../../../../
 #+HUGO_SECTION: post/2024/03
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
@@ -41,7 +41,8 @@ emacs 启动时增加两个环境变量就可以了：GTK_IM_MODULE=emacs XMODIF
 
 * 配置优化
 
-sudo apt install cmake libtool-bin pass isync gtags
+sudo apt install cmake libtool-bin pass isync gtags fzf  meson libmime-3.0-dev  libxapian-dev
+rime-data-pinyin-simp gnome-tweaks
 
 我的配置加的太多了。这次完全是在一个新的电脑上用我的配置： https://gitee.com/allinaent/onlyconfig
 
@@ -171,7 +172,7 @@ nix-env -iA nixpkgs.texliveFull
 
 ** bbdb 源文件 bbdb-autoloads.el 不存在
 
-这个问题换了一下，使用 melpa-orig 这个手动重新安装这个包解决了一个小报错。
+这个问题换了一下，使用 melpa-orig 这个手动重新安装这个包解决了一个小报错。第三方包的问题，原因未知。
 
 ** 输入法相关
 
@@ -186,14 +187,78 @@ XMODIFIERS=@im=fcitx
 GLFW_IM_MODULE=ibus
 #+end_src
 
-emacs 包使用的 emacs-rime 也需要下载：sudo apt install librime-dev
+emacs 包使用的 emacs-rime 也需要下载：sudo apt install librime-dev gnome-tweaks
+
+通过 gnome-tweaks 设置 fcitx5 开机自起动。
 
 查找配置文件：
 
 #+begin_src bash
 ls -a |grep "^\..*"|grep -vE "^\.\.$|^\.$"|xargs -I{} find {} -name "*.yaml"
 #+end_src
-这个非常地好。我的五笔反查的配置到底是哪里做的？不记得了，不懂原理的配置不算会，只能说是瞎蒙的。
+这个非常地好。我的五笔反查的配置到底是哪里做的？
+
+rime 五笔的项目在 https://github.com/rime/rime-wubi 当中，这个里面提到了五笔反
+查的核心包是 pinyin-simp
+
+sudo apt install rime-data-pinyin-simp
+
+** 搜索相关
+
+sudo apt install fzf
+
+** 去掉 emacsclient 的干扰
+
+#+begin_src bash
+sudo mv /usr/share/applications/etc/emacsclient.desktop
+sudo update-desktop-database
+#+end_src
+
+** hugo
+
+需要安装来 golang ，这个解压即安装：
+
+.bashrc 中增加 golang 的代理：
+
+export GO111MODULE=on
+export GOPROXY=https://goproxy.cn
+
+#+begin_src bash
+cd ~/INSTALL/ && mkdir hugo && cd hugo
+git clone git@github.com:SDLMoe/hugo.git
+go build
+sudo cp hugo /usr/local/bin/
+#+end_src
+
+这样就可以直接 win + em 打开 emacs 了。
+
+** shutter
+
+安装 shutter 并设置截图压缩率，为了加快博客的访问速度。
+
+
+** 公式图片的包
+
+sudo apt install dvisvgm
+
+sudo apt install dvipng
+
+还有更改 imagemagick 的权限：
+
+sudo vim /etc/ImageMagick-6/policy.xml
+
+<policy domain="coder" rights="read|write" pattern="PDF" />
+
+emacs 和系统相关的修改很多，我也很难完全迁移过来。
+
+* 查找和全局替换
+
+#+begin_src bash
+grep -RiIl 'search' | xargs sed -i 's/search/replace/g'
+#+end_src
+
+这个全局搜索和替换的功能非常地好用。以后要牢记。
+
 
 * 写在结尾
 

@@ -1,0 +1,126 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-19 二 12:26]
+#+TITLE: kvm 中流览器白屏问题分析
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+
+* 一些零散的信息和结论
+
+1. 问题复现时的详细现象
+    - 某个浏览器进程下的某个线程会 cpu 100%。——不管是用 top 看，还是用 perf/crash 等工具确认，确实 100%了。
+    - 此时在该 cpu 上中断、内核线程、调度等均正常。——如果将它和另外一个死循环绑定到同一个 cpu，会各占 50%。
+    - 用 profile 事件查看该 cpu 上的执行流，会发现 cpu 一直停留在同一条指令上。
+    - 该指令为用户态空间的指令，在 browser 这个 elf 文件之内，且目前来看都是函数的第一行汇编指令。
+    - 不仅仅是 pc 没变，整个调用栈都完全没变。——就像 cpu 被冻结在这一条指令上了。
+
+2. 关于指令与 cpu 如何“停止”
+    cpu 是永不停止的，内核的 halt 也是一个 for 循环。那 cpu 如何能停止在一条指令上？
+
+    一种已知的方式是汇编指令"b ."，也就是绝对跳转到自身，那在底层就是无限将 pc 设置为自己，永远都执行自己。
+
+     那是否可能是 vcpu 的问题，比如某条指令导致了虚拟化环境里 vcpu 的异常，vcpu 一直就没向下，停留在这一条指
+   令上？——在我们这个问题里应该不可能，因为中断的触发机制是一条指令执行结束时，检查 cpu 的中断事件，
+   如果有中断事件并且未屏蔽，就自动保存现场，并跳转到中断入口。
+
+    在这个过程里，既然中断能得到执行，那说明 vcpu 上有“指令的完成”，而在处理中断事件时，是将 pc，也就是将要
+  执行的下一条指令保存现场的（存到内核栈/中断栈），按道理中断完成时会在 return 指令里弹出并跳转过去，解开这个死
+  结。但是在 cpu100 时，期间有 tick，有各种中断、调度进进出出，100 线程仍然卡在同一条指令。
+
+     还有一种可能是用户指令压根没有得到执行机会，就像遭遇中断风暴时，看起来是线程卡住了，实际上线程根本没有得
+   到执行机会。——但是我们通过各种方式确认，并没有发生中断风暴。
+
+    另外在“指令”上，还有一些值得关注的信息。
+
+    其一，如果用 perf stat 查看，会发现 100%的 cpu 上，平均每个 cpu 周期只完成了 0.03 条指令，而正常的 cpu 上应该是每个周期 0.2 条指令左右。——也就是 4-5 个周期就应该能跑完一条指令，而不是 30 个周期。
+
+    其二，当将 100 线程和另外的死循环线程同时绑一个 cpu 时，虽然在 top 里看是 50：50，但是用 perf 直接抓 cpu 事件，会发现比例可能是 5：95。
+
+3. 关于信号处理
+     之前一直怀疑是否和信号处理相关，因为有一个非常有意思的现象：在 100%后，用 gdb attach 上去，再 continue，就解开了。——至少是在这个卡的点上解开了，实际上有可能会卡到下一个点去，如此循环几次，就能解除 100%。
+     因为 gdb 的 ptrace 和信号处理高度相关，而且浏览器可能用了单独的信号栈，信号处理流程本身又有很多 hack，所以理所当然地怀疑到了信号处理那边去。
+
+     但实际上应该与信号处理无关。主要理由是下面一些现象：
+
+      其一，如果不用 gdb attach，而是直接用手动 kill 给进程发送 SIGSTP 和 SIGCON，也就是 19/18，那并不能解开 100%。——还是卡在原来的问题。
+
+      其二，在发生 100%时，用 crash 等工具查看进程的信号相关状态，会发现它的并没有在处理信号。——如果卡在某个信号里转，那这个信号会被 block 到，会体现在内核数据结构里。
+
+      其三，如果卡在信号栈，即使是自定义的信号栈，gdb、sysrq 等都能抓到它的痕迹并正确输出。
+
+4. 关于卡死的指令位置
+
+     我们没法直接查看 cpu 当前正在执行什么指令，当前的各种手段，都是通过中断打断 cpu 的指令流，根据其 pc 和堆栈完成调用栈的解析。其中有两个关键点：
+
+     其一，pc 指向的是下一条指令而非当前正在执行的指令。
+
+     其二，中断只有在开中断之后才能进入。
+
+     所以如果 cpu 上发生了一个中断风暴（或者类似的执行流），它在处理过程里全程不开中断，只会在 return 时，恢
+   复 cpu 的 pstate 寄存器（x86 的 flag，arm 的 spsr 之类的）时才会打开中断。此时我们的观测中断（比如定时器中
+   断，IPI 中断等等）才能进入，但看到的将会是底下的得不到执行机会的线程栈，而非导致 cpu 卡死的中断风暴。
+     如果有 NMI 支持的话可以避免这个问题。（我还不太清楚 NMI 用法，而且 nmi 和 arch 相关，比如 arm 就没有，顶多用 fiq 模拟）
+
+5. 一种另外的可能性
+    还有一种执行路径是可能让 cpu“停留”在一条指令的：fault。——导致 fault 的指令是需要重新执行的，那如果 fault 的 handler 没有真正解决这个 fault，那这个 fault 就可能被无限触发，引发 fault 的这条指令永远都没法执行完成。
+
+    比如 pagefault，如果一条指令导致了 pagefault，硬件会将该指令本身而非下一条指令作为现场保存，然后自动跳转到对应的处理函数入口，在处理完成恢复现场时则回到这条指令来。
+
+     这种可能性和我们当前所看到的很多现象有一些契合：
+     - 卡死似乎永远发生在某个函数的入口。——因为 call 的时候，很有可能进入一个新的 page，更容易进入 pagefault 的路径。
+     - 只有开了 zygote 时才会复现，而 zygote 的核心就是内存共享，fork 之后不会有 exec，底下的 vma 共享的方式和普通的 so 方式还不太一样。
+     - 上面的指令周期问题，如果是指令本身会引发异常的话，那很有可能它所涉及的周期数量什么的都会受到影响。
+     - 通过排查定位到的嫌疑 patch，核心改动就是 gup 相关的，这会影响到 pagefault 的方方面面……
+     - gdb attach 能解开循环。
+     - ……
+
+6. gdb 和 ptrace
+     前面提到一个核心的现象是：gdb attach 之后能解开。gdb 的核心是 ptrace，ptrace 不仅仅和信号相关，更和内存
+   访问相关。——gdb 不但需要读取进程空间的数据，还有用 int3 替换其指令，等等。
+
+     综合各种，可能 gdb 解开的方式是这样的：进程原本因为 zygote 的内存共享、内核的 gup 改动、虚拟化环境等等原
+   因，可能在跳入某个函数时，卡死在当前指令所在 apge 的某种 pagefault 里，无限循环；当 gdb attach 之后，因为
+   gdb 的特殊属性，会复制指令所在 page 并让进程独占，从而解开 pagefault 循环，让进程可以继续往下。
+
+     当然，进程到底是如何卡在 pagefault 循环的，为何中断里看不到痕迹（el0 的 pagefault 处理是开中断的），是
+   否和虚拟化相关，能否手动写出 reproducer/PoC，内核的 gup 改动是如何引发这个问题的等等，都还依赖于进一步的排查分析。
+
+* 结尾
+
+这是之前一个排查了很久最后还是没有结果的问题，天翼云最后在 host/kvm 里找到了修复 patch：
+[[PATCH stable-4.19 v2] KVM: arm64: Assume write fault on S1PTW permission fault on instruction fetch - Marc Zyngier](https://lore.kernel.org/stable/20200929074323.744700-1-maz@kernel.org/)
+
+其说明如下：
+
+#+begin_src
+KVM currently assumes that an instruction abort can never be a write.
+This is in general true, except when the abort is triggered by
+a S1PTW on instruction fetch that tries to update the S1 page tables
+(to set AF, for example).
+
+This can happen if the page tables have been paged out and brought
+back in without seeing a direct write to them (they are thus marked
+read only), and the fault handling code will make the PT executable(!)
+instead of writable. The guest gets stuck forever.
+
+In these conditions, the permission fault must be considered as
+a write so that the Stage-1 update can take place. This is essentially
+the I-side equivalent of the problem fixed by 60e21a0ef54c ("arm64: KVM:
+Take S1 walks into account when determining S2 write faults").
+
+Update kvm_is_write_fault() to return true on IABT+S1PTW, and introduce
+kvm_vcpu_trap_is_exec_fault() that only return true when no faulting
+on a S1 fault. Additionally, kvm_vcpu_dabt_iss1tw() is renamed to
+kvm_vcpu_abt_iss1tw(), as the above makes it plain that it isn't
+specific to data abort.
+#+end_src
+
+可以看到，最后是因为 host 上 kvm 对于 pagefault 的处理不当，当 guest 因为 pagetable 的权限问题引发异常而陷入 host 时，
+kvm 没有正确地更改其权限，导致重新进入 VM 后又会再次触发 fault，无限循环，导致 guest 在该条指令卡住，且 cpu100%。
+
+而我们之前的排查里，虽然没法接触 host，但是分析已经非常接近真相了：

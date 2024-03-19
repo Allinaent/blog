@@ -9,6 +9,7 @@
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: plan
 #+HUGO_WEIGHT: 1
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/my_plan.jpg
 
 * 计划的任务
 
@@ -87,7 +88,7 @@ ai，math 和内核
 
 + trace-bpfcc 和 mesa 的调试方法
 
-这个问了洪奥大佬，还没有自己实践过。
+“这个问了洪奥大佬，还没有自己实践过。” 现在这个初步做过了。对于操作系统信号中断和调度的学习要深入。
 
 + 小工具的网站
 
