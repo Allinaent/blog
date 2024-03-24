@@ -15,6 +15,7 @@ permalinks:
 # 下面是 Stack 主题的参数
 
 params:
+    math: false
     sidebar:
         subtitle: "No steps, no miles"
     mainSections:
@@ -25,7 +26,7 @@ params:
     toc: true
 
     article:
-        math: true # 这里关闭是因为我们使用的是 MathJax
+        math: math # 这里关闭是因为我们使用的是 MathJax
         toc: true # TOC 默认开启
         readingTime: true
         license:
@@ -126,6 +127,18 @@ markup: # **Markup Section 非常重要**
         style: dracula
         tabWidth: 4
     goldmark:
+        extensions:
+            passthrouth:
+                delimiters:
+                    block:
+                    - - \[
+                      - \]
+                    - - $$
+                      - $$
+                    inline:
+                    - - \(
+                      - \)
+                enable: true
         renderer:
             unsafe: true
 

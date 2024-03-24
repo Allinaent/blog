@@ -1,13 +1,14 @@
-{{- partial "helper/external" (dict "Context" . "Namespace" "KaTeX") -}}
-<script>
+<!-- {{- partial "helper/external" (dict "Context" . "Namespace" "KaTeX") -}} -->
+<!-- <script>
     window.addEventListener("DOMContentLoaded", () => {
         renderMathInElement(document.querySelector(`.article-content`), {
             delimiters: [
                 { left: "$$", right: "$$", display: true },
-                { left: "$", right: "$", display: false },
-                { left: "\\(", right: "\\)", display: false },
+                { left: "$", right: "$", display: true },
+                { left: "\\(", right: "\\)", display: true },
                 { left: "\\[", right: "\\]", display: true }
             ],
             ignoredClasses: ["gist"]
         });})
-</script>
+</script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script>
