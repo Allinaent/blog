@@ -2,9 +2,9 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2024-01-08T10:46:14+08:00
+lastmod = 2024-03-26T14:21:56+08:00
 tags = ["gpu"]
-categories = ["technology"]
+categories = ["graphic"]
 draft = false
 toc = true
 +++
@@ -3627,4 +3627,4 @@ filp_head 指向的是当前正在显示的帧缓冲区。
 
 新的分析放到 pdf 当中了。想看的下载一下吧：
 
-[file:/tty-x-switch-beamer.pdf](/ox-hugo/tty-x-switch-beamer.pdf)
+[https://r2.guolongji.xyz/tty-x-switch-beamer.pdf](/ox-hugo/tty-x-switch-beamer.pdf)

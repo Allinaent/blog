@@ -6,7 +6,7 @@
 #+DATE: [2023-09-25 一 10:31]
 #+TITLE: tty和x的切换流程
 #+HUGO_TAGS: gpu
-#+HUGO_CATEGORIES: technology
+#+HUGO_CATEGORIES: graphic
 #+LATEX_HEADER: \usepackage{tikz}
 #+AUTHOR:郭隆基
 # #+LATEX_HEADER: \extrainfo{简单介绍一下概念和学习路线}
@@ -3812,6 +3812,6 @@ filp_head 指向的是当前正在显示的帧缓冲区。
 
 新的分析放到 pdf 当中了。想看的下载一下吧：
 
-[[./tty-x-switch.org.assets/tty-x-switch-beamer.pdf][file:/tty-x-switch-beamer.pdf]]
+[[./tty-x-switch.org.assets/tty-x-switch-beamer.pdf][https://r2.guolongji.xyz/tty-x-switch-beamer.pdf]]
 
 

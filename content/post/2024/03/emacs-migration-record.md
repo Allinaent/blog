@@ -1,13 +1,13 @@
 +++
 title = "emacs 迁移记录"
 date = 2024-03-08T11:42:00+08:00
-lastmod = 2024-03-20T01:25:30+08:00
+lastmod = 2024-03-27T10:09:11+08:00
 categories = ["emacs"]
 draft = false
 toc = true
 +++
 
-在 ubuntu 22.04 当中安装 emacs ：
+在 ubuntu 22.04 当中安装 emacs：
 
 
 ## 编译安装 {#编译安装}
@@ -100,7 +100,9 @@ eaf 和 eaf-mindmap 这两个东西是同样的道理。
 
 ### image-roll 找不到 {#image-roll-找不到}
 
-(latex-preview-pane-enable) ;;不可用于 xelatex，别用这个了。
+```lisp
+(latex-preview-pane-enable) ;;不可用于 xelatex，别用这个了
+```
 
 
 ### cape.el {#cape-dot-el}
@@ -217,8 +219,19 @@ sudo apt install fzf
 ### 去掉 emacsclient 的干扰 {#去掉-emacsclient-的干扰}
 
 ```bash
-sudo mv /usr/share/applications/etc/emacsclient.desktop
+sudo mv /usr/share/applications/emacsclient.desktop /usr/share/applications/emacsclient.desktop.bak
 sudo update-desktop-database
+```
+
+
+### 去除守护进程的影响 {#去除守护进程的影响}
+
+```bash
+systemctl --user list-units
+systemctl --user disable emacs
+systemctl --user stop emacs
+systemctl --user disable ljemacs
+systemctl --user stop ljemacs
 ```
 
 

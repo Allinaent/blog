@@ -1,0 +1,25 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-26 二 11:18]
+#+TITLE: 考研数学第四章——多元函数微积分学
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: exam
+
+从 2021 年李永乐的 148 页开始
+
+* 多元函数的极限、连续、偏导数与全微分
+
+
+
+- 多元函数
+ + 二元函数的概念
+ + 二元函数的几何意义
+
+- 二元函数的极限与连续
+ + 重极限的函数（用距离定义）
+ + 二元函数连续的概念
+
