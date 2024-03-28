@@ -1,0 +1,419 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-03-27 三 15:07]
+#+TITLE: cifs的ioctl notify特性backport （学习文韬大佬）
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+* 问题说明
+
+问题来源：
+
+- BUG #215779 【AMD】【N79Z】【V6】【用户反馈】【文管】文件管理器中共享文件夹新增文件后不会自动刷新，需要手动刷新后才能显现 - 文件管理器 - 禅道
+- BUG #245957 UBXC004509 X86 利旧 1060 统信文管的共享文件夹访问群辉 SMB，有时会出现问题 - 桌面专业版 V20 - 禅道
+大概就是当我们用 cifs 网络挂载时，如果文件在远端发生了更改，比如服务端上传了新的文件，客户端的文管不会自动刷新显示。
+
+路径分析：
+
+- 文管是通过 fsnotify 相关的机制（inotify/fanotify）来做目录监控的：用户打开某个文管界面，就监控该文件夹对应
+  的目录；当该目录发生内容更改（主要是增删）时，会通知文管，文管收到通知后可以重新读取文件夹内容，再刷新显示。——这是通用的流程。
+
+- 当前 linux 内核实现里，fsnotify 机制是完全在 vfs 层实现的，不会将 watch request 传递到底下的 fs。——所有的 watch/event 都是在 vfs 层做的，底下的 fs 完全不知情。
+- 这对于本地 fs 而言是 ok 的，反正访问也都是在本地，都是从 vfs 进入的，可以被 vfs 捕获。
+- 对于网络文件系统如 cifs，因为 client 并没有将 watch request 通过 smb 协议发送给 server，server 也不会回复它更改事件，所以远端有更改时 cifs 不会收到通知。
+
+* backport
+
+这是上游的已知问题，这些年已经经过了很多轮的讨论，但最后也没有个定论。所以 cifs 的维护者 Steve 决定不等 vfs/fsnotify 的更改了，自己给 cifs 开了一道小门，通过 ioctl 来等待，实现上非常简单直接。
+
+整个的实现从 5.2 开始，一路修修补补，最开始是仅仅支持“知道有改变”，到 6.1 加入了更详细的“info”，比如可以详细
+地知道是增加或者删除了某个文件。中间也夹了一些 bug fix，我尽可能地去搜寻了一下，但是因为时间跨度大、提交很分散，也没有一个特定的 tag 归档，所以可能有遗漏。
+
+整个 backport 包含 8 个 patch，某些 patch 我做了一些更改以避免合并冲突或者其它的，整体而言没做逻辑改动。同时我做了简单的 demo 测试，功能正常。
+
+gerrit 链接：（每个 patch 的 commit 信息里我都附带了上游引入的原始版本）
+
+smb3: fix unneeded error message on change notify (I003e7703) · Gerrit Code Review
+
+#+begin_src
+smb3: fix unneeded error message on change notify
+smb3: improve SMB3 change notification support
+cifs: fix out-of-bound memory access when calling smb3_notify() at mount point
+smb3: fix access denied on change notify request to some servers
+cifs: add SMB3 change notification support
+smb3: cleanup some recent endian errors spotted by updated sparse
+smb3: add missing worker function for SMB3 change notify
+smb3: Add protocol structs for change notify support
+#+end_src
+
+
+* test/demo
+
+改动的原理很简单：
+
+- smb 协议里已经提供了支持，samba server 也有支持，只需要通过 ioctl 开放一条 watch/event 路径给用户。
+核心的测试代码如下：
+
+#+begin_src c
+/* See MS-SMB2 2.2.35 for a definition of the individual filter flags */
+struct __attribute__((__packed__)) smb3_notify {
+       uint32_t completion_filter;
+       bool	watch_tree;
+       uint32_t data_len;
+       uint8_t	data[];
+} __packed;
+
+#define CIFS_IOC_NOTIFY  0x4005cf09 /* previous ioctl which simply returns when changes occur */
+#define CIFS_IOC_NOTIFY_INFO 0xc009cf0b /* new ioctl for change notification */
+int main(int argc, char **argv)
+{
+	struct smb3_notify *pnotify;
+	int f, g;
+
+	if ((f = open(argv[1], O_RDONLY)) < 0) {
+		fprintf(stderr, "Failed to open %s\n", argv[1]);
+		exit(1);
+	}
+
+	pnotify = malloc(sizeof(struct smb3_notify) + 200);
+	memset(pnotify, 0, sizeof(struct smb3_notify) + 200);
+
+	pnotify->watch_tree = false;
+	pnotify->completion_filter = 0xFFF;
+	pnotify->data_len = 200;
+
+	if (ioctl(f, CIFS_IOC_NOTIFY_INFO, pnotify) < 0)
+		printf("Error %d returned from ioctl\n", errno);
+	else {
+		printf("notify completed. returned data size is %d\n", pnotify->data_len);
+	}
+}
+#+end_src
+简单而言，就是调用 ioctl：
+
+- 它会阻塞在内核，直至收到事件。
+- 等待过程里可以被 kill。
+
+附件里有完整的测试 demo。另外我还附带了我编译的 ko，基于当前最新的 4.19-x86 内核编译的，使用的内核默认配置，应该可以在 1060+系统上直接使用。
+
+* 用户态接口说明
+COMMAND：
+
+#+begin_src
+#define CIFS_IOC_NOTIFY  0x4005cf09 /* previous ioctl which simply returns when changes occur */
+#define CIFS_IOC_NOTIFY_INFO 0xc009cf0b /* new ioctl for change notification */
+#+end_src
+
+有两个，都可以使用，看需要。分别对应下面的参数：
+
+#+begin_src c
+struct smb3_notify {
+	__u32	completion_filter;
+	bool	watch_tree;
+} __packed;
+
+struct smb3_notify_info {
+	__u32	completion_filter;
+	bool	watch_tree;
+	__u32   data_len; /* size of notify data below */
+	__u8	notify_data[];
+} __packed;
+#+end_src
+
+文管可能有两种选择：
+
+- 只关注一个 bool 的 notify，然后重新扫描目录内容
+- 关注 notify-info，不再重新扫描目录，基于发回的信息做增量更新
+
+*事件订阅*
+
+#+begin_src c
+/*
+ * SMB2_NOTIFY  See MS-SMB2 section 2.2.35
+ */
+/* notify flags */
+#define SMB2_WATCH_TREE			0x0001
+
+/* notify completion filter flags. See MS-FSCC 2.6 and MS-SMB2 2.2.35 */
+#define FILE_NOTIFY_CHANGE_FILE_NAME		0x00000001
+#define FILE_NOTIFY_CHANGE_DIR_NAME		0x00000002
+#define FILE_NOTIFY_CHANGE_ATTRIBUTES		0x00000004
+#define FILE_NOTIFY_CHANGE_SIZE			0x00000008
+#define FILE_NOTIFY_CHANGE_LAST_WRITE		0x00000010
+#define FILE_NOTIFY_CHANGE_LAST_ACCESS		0x00000020
+#define FILE_NOTIFY_CHANGE_CREATION		0x00000040
+#define FILE_NOTIFY_CHANGE_EA			0x00000080
+#define FILE_NOTIFY_CHANGE_SECURITY		0x00000100
+#define FILE_NOTIFY_CHANGE_STREAM_NAME		0x00000200
+#define FILE_NOTIFY_CHANGE_STREAM_SIZE		0x00000400
+#define FILE_NOTIFY_CHANGE_STREAM_WRITE		0x00000800
+#+end_src
+demo 里传入了 0XFFF，就是包含了上面的所有事件。
+
+来自于 smb 协议定义，具体含义可以参考：
+
+[MS-SMB2]: SMB2 CHANGE_NOTIFY Request | Microsoft Learn
+https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-smb2/598f395a-e7a2-4cc8-afb3-ccb30dd2df7c
+
+*事件回复*
+
+#+begin_src c
+/* SMB2 Notify Action Flags */
+#define FILE_ACTION_ADDED                       0x00000001
+#define FILE_ACTION_REMOVED                     0x00000002
+#define FILE_ACTION_MODIFIED                    0x00000003
+#define FILE_ACTION_RENAMED_OLD_NAME            0x00000004
+#define FILE_ACTION_RENAMED_NEW_NAME            0x00000005
+#define FILE_ACTION_ADDED_STREAM                0x00000006
+#define FILE_ACTION_REMOVED_STREAM              0x00000007
+#define FILE_ACTION_MODIFIED_STREAM             0x00000008
+#define FILE_ACTION_REMOVED_BY_DELETE           0x00000009
+#+end_src
+cifs 的 ioctl 实现里是完全做的回复 data 的透传，直接把 server 回复的 smb 协议所规定的回复
+数据传给了用户态，所以文管如果要使用这个接口的话，需要根据 smb 协议来解析。
+
+具体格式是：
+
+#+begin_src c
+typedef struct _FILE_NOTIFY_INFORMATION {
+  DWORD NextEntryOffset;
+  DWORD Action;
+  DWORD FileNameLength;
+  WCHAR FileName[1];
+} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
+#+end_src
+比如我执行动作
+
+#+begin_src
+touch mnt1/hello8
+#+end_src
+
+可以得到回复：
+#+begin_src
+$ ./a.out mnt1/
+notify completed. returned data size is 24
+00000000:  00 00 00 00 03 00 00 00  0c 00 00 00 68 00 65 00 ............h.e.
+00000010:  6c 00 6c 00 6f 00 38 00                          l.l.o.8.
+#+end_src
+
+按照解析的话：
+#+begin_src
+00 00 00 00     NextEntryOffset -> None
+03 00 00 00     Action -> FILE_ACTION_MODIFIED
+0c 00 00 00     FileNameLength -> 12
+68 00           h
+65 00           e
+6c 00           l
+6c 00           l
+6f 00           o
+38 00           8
+#+end_src
+
+如果嫌麻烦的话，就直接用简单的 notify 接口吧。
+
+详细的文档：
+
+FILE_NOTIFY_INFORMATION (winnt.h) - Win32 apps | Microsoft Learn
+
+https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-file_notify_information
+
+* 拓展/链接
+
+大概的时间线如下：
+
+2012:
+
+- Possible to make nfs aware of a inotify watch has been set.
+
+https://lore.kernel.org/linux-cifs/CANXojcy9thLBwrENTkOTSSE17L3N17A8XsTmyNqq3oNdhW_Q_w@mail.gmail.com/t/#u
+
+2016:
+
+- Design of fsnotify for FUSE, nfs and cifs: when/how to send a watch. - Stef Bon
+
+https://lore.kernel.org/linux-cifs/CANXojcz-U4YzgUhDRgvoVX=n756oVg4nvvvwpimmpBJyLkkmoQ@mail.gmail.com/
+
+- Fsnotify and FUSE · libfuse/libfuse Wiki
+
+https://github.com/libfuse/libfuse/wiki/Fsnotify-and-FUSE
+
+2019:
+
+- [RFC PATCH] network fs notification
+
+https://lore.kernel.org/linux-fsdevel/20190501205541.GC30899@veci.piliscsaba.redhat.com/t/#u
+
+- [PATCH][SMB3] Add worker function for smb3 change notify
+
+https://lore.kernel.org/linux-cifs/CAH2r5msvi8_+yaoJbEo0a-T46B+L84fV9Rai5p30Ny+RSsyNiA@mail.gmail.com/t/#u
+
+2020:
+
+- [LFS/MM TOPIC] Enabling file and directory change notification for network and cluster file systems
+
+https://lore.kernel.org/linux-fsdevel/CAOQ4uxipauh1UXHSFt=WsiaDexqecjm4eDkVfnQXN8eYofdg2A@mail.gmail.com/t/#u
+
+- [PATCH][SMB3] Add worker function for smb3 change notify - Steve French
+
+https://lore.kernel.org/linux-cifs/CAH2r5msvi8_+yaoJbEo0a-T46B+L84fV9Rai5p30Ny+RSsyNiA@mail.gmail.com/
+
+- [CIFS][PATCH] Add SMB3 Change Notify
+
+https://lore.kernel.org/linux-cifs/CAH2r5mtQRVX3_-_sVjvigRSv2LpSoUBQo7YeY5v0nXm7BGaDig@mail.gmail.com/t/#u
+
+2021:
+
+- fanotify: support limited functionality for unprivileged users - kernel/git/torvalds/linux.git - Linux kernel source tree
+
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=7cea2a3c505e
+
+- fanotify and network/cluster fs
+
+https://lore.kernel.org/linux-fsdevel/CAH2r5mt1Fy6hR+Rdig0sHsOS8fVQDsKf9HqZjvjORS3R-7=RFw@mail.gmail.com/t/#u
+
+- [PATCH 0/8] virtiofs: Notification queue and blocking posix locks
+
+https://lore.kernel.org/linux-fsdevel/20210930143850.1188628-1-vgoyal@redhat.com/t/#u
+
+- [RFC PATCH 0/7] Inotify support in FUSE and virtiofs
+
+https://lore.kernel.org/linux-fsdevel/20211025204634.2517-1-iangelak@redhat.com/t/#m4be8759370b7b3ced3ae3bc6cb2b0b0f1f1ceb3e
+
+2022:
+
+- [LSF/MM/BPF TOPIC] Enabling change notification for network and cluster fs
+
+https://lore.kernel.org/linux-fsdevel/Yhf+FemcQQToB5x+@redhat.com/t/#u
+
+- Change notifications for network filesystems [LWN.net]
+
+https://lwn.net/Articles/896055/
+
+- [PATCH][SMB3 client] improve smb3 notify info suopport
+
+https://lore.kernel.org/linux-cifs/CAH2r5mt=zoWTmbQAsukALC4FEqatJtxDw40mR3=GepPp+KM+Uw@mail.gmail.com/t/#u
+
+* Next
+
+也许会尝试做网络文件系统的原生 fsnotify 支持，感觉阻力很大，有很多实现上的难题(不然也不会这么多年没结果了)。所以不一定能做，也不一定会做……
+
+所以先用 ioctl 接口解决现实问题吧。
+
+测试 demo:
+
+#+begin_src c
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+
+
+void dumpmem(FILE *out, const void *ptr, const size_t size)
+{
+    const size_t BYTES_PER_LINE = 16;
+    size_t offset, read;
+
+    uint8_t *p = (uint8_t *)ptr;
+    const uint8_t *maxp = (p + size);
+
+    if (out == NULL || ptr == NULL || size == 0)
+    {
+        return;
+    }
+
+    for (offset = read = 0; offset != size; offset += read)
+    {
+        uint8_t buf[BYTES_PER_LINE];
+
+        for (read = 0; read != BYTES_PER_LINE && (&p[offset + read]) < maxp; read++)
+        {
+            buf[read] = p[offset + read];
+        }
+
+        if (read == 0)
+            return;
+
+        fprintf(out, "%.8x: ", (unsigned int)offset);
+
+        /* raw data */
+        for (size_t i = 0; i < read; i++)
+        {
+            fprintf(out, " %.2x", buf[i]);
+            if (BYTES_PER_LINE > 8 && BYTES_PER_LINE % 2 == 0 && i == (BYTES_PER_LINE / 2 - 1))
+                fprintf(out, " ");
+        }
+
+        /* ASCII */
+        if (read < BYTES_PER_LINE)
+        {
+            for (size_t i = read; i < BYTES_PER_LINE; i++)
+            {
+                fprintf(out, "  ");
+                fprintf(out, " ");
+                if (BYTES_PER_LINE > 8 && BYTES_PER_LINE % 2 == 0 && i == (BYTES_PER_LINE / 2 - 1))
+                    fprintf(out, " ");
+            }
+        }
+        fprintf(out, " ");
+        for (size_t i = 0; i < read; i++)
+        {
+            if (buf[i] <= 31 || buf[i] >= 127) /* ignore control and non-ASCII characters */
+                fprintf(out, ".");
+            else
+                fprintf(out, "%c", buf[i]);
+        }
+
+        fprintf(out, "\n");
+    }
+}
+
+
+/* See MS-SMB2 2.2.35 for a definition of the individual filter flags */
+struct __attribute__((__packed__)) smb3_notify {
+       uint32_t completion_filter;
+       bool	watch_tree;
+       uint32_t data_len;
+       uint8_t	data[];
+} __packed;
+
+#define CIFS_IOC_NOTIFY  0x4005cf09 /* previous ioctl which simply returns when changes occur */
+#define CIFS_IOC_NOTIFY_INFO 0xc009cf0b /* new ioctl for change notification */
+int main(int argc, char **argv)
+{
+	struct smb3_notify *pnotify;
+	int f, g;
+
+	if ((f = open(argv[1], O_RDONLY)) < 0) {
+		fprintf(stderr, "Failed to open %s\n", argv[1]);
+		exit(1);
+	}
+
+	pnotify = malloc(sizeof(struct smb3_notify) + 200);
+	memset(pnotify, 0, sizeof(struct smb3_notify) + 200);
+
+	pnotify->watch_tree = false;
+	pnotify->completion_filter = 0xFFF;
+	pnotify->data_len = 200;
+
+	if (ioctl(f, CIFS_IOC_NOTIFY_INFO, pnotify) < 0)
+		printf("Error %d returned from ioctl\n", errno);
+	else {
+		printf("notify completed. returned data size is %d\n", pnotify->data_len);
+		dumpmem(stdout, pnotify->data, pnotify->data_len);
+	}
+}
+
+#+end_src
+

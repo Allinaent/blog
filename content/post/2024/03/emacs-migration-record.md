@@ -1,13 +1,13 @@
 +++
 title = "emacs 迁移记录"
 date = 2024-03-08T11:42:00+08:00
-lastmod = 2024-03-27T10:09:11+08:00
+lastmod = 2024-03-27T14:17:38+08:00
 categories = ["emacs"]
 draft = false
 toc = true
 +++
 
-在 ubuntu 22.04 当中安装 emacs：
+在 ubuntu 22.04 当中安装 emacs ：
 
 
 ## 编译安装 {#编译安装}
@@ -211,6 +211,33 @@ rime 五笔的项目在 <https://github.com/rime/rime-wubi> 当中，这个里�
 sudo apt install rime-data-pinyin-simp
 
 
+### 关闭四字自动上屏 {#关闭四字自动上屏}
+
+```diff
+diff --git a/.local/share/fcitx5/rime/wubi86.schema.yaml b/.local/share/fcitx5/rime/wubi86.schema.yaml
+index 6410de4..527f105 100644
+--- a/.local/share/fcitx5/rime/wubi86.schema.yaml
++++ b/.local/share/fcitx5/rime/wubi86.schema.yaml
+@@ -50,9 +50,9 @@ speller:
+   delimiter: " ;'"
+   #max_code_length: 4
+
+-  max_code_length: 4 # 最长4码
+-  auto_select: true  # 顶字上屏
+-  auto_select_unique_candidate: true # 无重码自动上屏
++  #max_code_length: 4 # 最长4码
++  #auto_select: true  # 顶字上屏
++  #auto_select_unique_candidate: true # 无重码自动上屏
+```
+
+
+### emacs 不使用系统输入法 {#emacs-不使用系统输入法}
+
+```bash
+Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F
+```
+
+
 ### 搜索相关 {#搜索相关}
 
 sudo apt install fzf
@@ -228,8 +255,8 @@ sudo update-desktop-database
 
 ```bash
 systemctl --user list-units
-systemctl --user disable emacs
-systemctl --user stop emacs
+#systemctl --user disable emacs
+#systemctl --user stop emacs
 systemctl --user disable ljemacs
 systemctl --user stop ljemacs
 ```
@@ -257,6 +284,9 @@ sudo cp hugo /usr/local/bin/
 ### shutter {#shutter}
 
 安装 shutter 并设置截图压缩率，为了加快博客的访问速度。
+
+快捷键设置 shutter -s ，但是发现 ubuntu 的 22.04 版本使用的是 wayland 桌面。那么，
+sudo vim /etc/gdm3/custom.conf ，设置 WaylandEnable=false ，强制使用 wayland 来显示桌面。 sudo systemclt restart gdm3 。X11 还是要比 wayland 的兼容性要更好。
 
 
 ### 公式图片的包 {#公式图片的包}
