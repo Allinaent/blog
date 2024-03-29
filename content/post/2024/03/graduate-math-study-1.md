@@ -1,7 +1,7 @@
 +++
 title = "考研数学二复习开始"
 date = 2024-03-19T17:08:00+08:00
-lastmod = 2024-03-20T22:23:38+08:00
+lastmod = 2024-03-28T15:09:07+08:00
 categories = ["exam"]
 draft = false
 weight = 10

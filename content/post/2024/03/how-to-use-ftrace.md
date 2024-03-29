@@ -1,49 +1,49 @@
-#+OPTIONS: author:nil ^:{}
-#+HUGO_BASE_DIR: ../../../../../
-#+HUGO_SECTION: post/2024/03
-#+HUGO_CUSTOM_FRONT_MATTER: :toc true
-#+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
-#+DATE: [2024-03-27 三 15:26]
-#+TITLE: 如何使用 ftrace 来调试系统问题
-#+HUGO_TAGS:
-#+HUGO_CATEGORIES: kernel
++++
+title = "如何使用 ftrace 来调试系统问题"
+date = 2024-03-27T15:26:00+08:00
+lastmod = 2024-03-29T11:37:16+08:00
+categories = ["kernel"]
+draft = false
+toc = true
++++
 
 在无法使用 bpftrace 的时候，我们用 ftrace 来分析内核当中函数的调用流程。
 
-* ftrace
 
-** 查看是否支持
+## ftrace {#ftrace}
+
+
+### 查看是否支持 {#查看是否支持}
 
 ftrace 可以用来跟踪 S3 过程，而 bpftrace 不能
 
-#+begin_src bash
+```bash
 cd /sys/kernel/debug/tracing #进入 ftrace 工作目录
 cat available_tracers #查看系统支持的 tracer 类型,eg: blk mmiotrace function_graph function nop
 cat available_filter_functions #查看可以跟踪的函数
 cat available_events # 查看可以跟踪的事件
-#+end_src
+```
 
 
-** 查看函数是否调用
+### 查看函数是否调用 {#查看函数是否调用}
 
-#+begin_src bash
+```bash
 echo function > current_tracer #设置 tracer 类型
 echo xxx > set_ftrace_filter #设置要跟踪的函数,不设置则跟踪所有
 echo 1 > tracing_on #开启跟踪
 cat trace #查看结果
 echo 0 > tracing_on #关闭跟踪
 echo nop > current_tracer
-#+end_src
+```
 
-要清空 trace 的话，可以使用 echo /dev/null > trace 。而如果使用 ftrace-cmd 的话，就不用
-这样做清理了。
+要清空 trace 的话，可以使用 echo /dev/null &gt; trace 。而如果使用 ftrace-cmd 的话，就不用这样做清理了。
 
-** function_graph 查看函数执行栈、内部函数执行事件
+
+### function_graph 查看函数执行栈、内部函数执行事件 {#function-graph-查看函数执行栈-内部函数执行事件}
 
 可以确定函数内部的函数指针
 
-#+begin_src bash
+```bash
 echo function_graph > current_tracer
 # 设置前先执行`echo  > set_ftrace_filter #确保可以跟踪所有函数`
 
@@ -55,12 +55,12 @@ cat trace
 echo 0 > tracing_on
 echo   > set_graph_function
 echo nop > current_tracer
-#+end_src
+```
 
 
-** 查看函数调用栈(被调用流程)
+### 查看函数调用栈(被调用流程) {#查看函数调用栈--被调用流程}
 
-#+begin_src bash
+```bash
 echo function > current_tracer
 echo xxx > set_ftrace_filter
 echo 1 > options/func_stack_trace #开启调用栈跟踪
@@ -69,50 +69,51 @@ cat trace
 echo 0 > tracing_on
 echo 0 > options/func_stack_trace
 echo nop > current_tracer
-#+end_src
+```
 
 
-** trace event/tracepoint
+### trace event/tracepoint {#trace-event-tracepoint}
 
 trace event 就是利用 ftrace 框架，实现低性能损耗，对执行流无影响的一种信息输出机制。相比 printk, trace event：
 
-- 不开启没有性能损耗
-- 开启后不影响代码流程
-- 不需要重新编译内核即可获取 debug 信息
+-   不开启没有性能损耗
+-   开启后不影响代码流程
+-   不需要重新编译内核即可获取 debug 信息
 
 系统支持的所有 trace event 都位于/sys/kernel/debug/tracing/events 目录
 
-#+begin_src bash
+```bash
 echo nop > current_tracer #必须确保
 echo 1 > events/sched/sched_switch
 echo 1 > tracing_on
 cat trace
 echo 0 > tracing_on
 echo 0 > events/sched/sched_switch
-#+end_src
+```
 
 
-** kprobe
+### kprobe {#kprobe}
 
 休眠唤醒过程无法使用 kprobe？
 
 使用 kprobe 机制跟踪函数须是 available_filter_functions 列表中的子集,格式如下:
 
-#+begin_src
+```nil
 p[:[GRP/]EVENT] [MOD:]SYM[+offs]|MEMADDR [FETCHARGS] # 设置 probe 探测点
 r[:[GRP/]EVENT] [MOD:]SYM[+0] [FETCHARGS] # 函数地址的返回跟踪
 -:[GRP/]EVENT # 删除跟踪
-#+end_src
-
+```
 
 以下文件为设置 kprobe 跟踪函数后，Ftrace 自动创建：
 
-- kprobes/<GRP>/<EVENT>/enabled 用于控制是否启用该内核函数的跟踪
-- kprobes/<GRP>/<EVENT>/filter kprobe 函数跟踪过滤器，与上述的跟踪点 fliter 类似
-- kprobes/<GRP>/<EVENT>/format kprobe 事件显示格式
-- kprobe_profile kprobe 事件统计性能数据
+-   kprobes/&lt;GRP&gt;/&lt;EVENT&gt;/enabled 用于控制是否启用该内核函数的跟踪
+-   kprobes/&lt;GRP&gt;/&lt;EVENT&gt;/filter kprobe 函数跟踪过滤器，与上述的跟踪点 fliter 类似
+-   kprobes/&lt;GRP&gt;/&lt;EVENT&gt;/format kprobe 事件显示格式
+-   kprobe_profile kprobe 事件统计性能数据
 
-#+begin_src bash
+<!--listend-->
+
+```bash
 echo 'p:my_grp/arm64_sys_openat __arm64_sys_openat dfd=$arg1 flags=$arg3 mode=$arg4' >> kprobe_events #跟踪函数参数
 echo 1 > events/my_grp/arm64_sys_openat/enable
 cat trace
@@ -120,145 +121,152 @@ echo 0 > events/my_grp/arm64_sys_openat/enable
 echo '-:my_grp/arm64_sys_openat' >> kprobe_events #删除跟踪
 
 echo 'r:my_grp/arm64_sys_openat __arm64_sys_openat ret=$retval' >> kprobe_events #跟踪函数返回值
-#+end_src
+```
 
 
-** uprobe
+### uprobe {#uprobe}
 
 
+### ftrace filter {#ftrace-filter}
 
-** ftrace filter
-|--------------------+-----------------------------------------------|
-| name               | function                                      |
-|--------------------+-----------------------------------------------|
-| set_ftrace_filter  | function tracer 只跟踪某个函数                |
-| set_ftrace_notrace | function tracer 不跟踪某个函数                |
-| set_graph_function | function_graph tracer 只跟踪某个函数          |
-| set_graph_notrace  | function_graph tracer 不跟踪某个函数          |
-| set_event_pid      | trace event 只跟踪某个进程                    |
+| name               | function                               |
+|--------------------|----------------------------------------|
+| set_ftrace_filter  | function tracer 只跟踪某个函数         |
+| set_ftrace_notrace | function tracer 不跟踪某个函数         |
+| set_graph_function | function_graph tracer 只跟踪某个函数   |
+| set_graph_notrace  | function_graph tracer 不跟踪某个函数   |
+| set_event_pid      | trace event 只跟踪某个进程             |
 | set_ftrace_pid     | function/function_graph tracer 只跟踪某个进程 |
-
 
 跟踪某个进程内核态的某个函数：set_event_pid/set_ftrace_pid
 
 使用脚本来跟踪运行时间很短的进程
 
-- 函数名雷同，可以使用正则匹配
+-   函数名雷同，可以使用正则匹配
 
-#+begin_src bash
+<!--listend-->
+
+```bash
 echo 'dev_attr_*' > set_ftrace_filter
-#+end_src
+```
 
-- 追加某个函数
+-   追加某个函数
 
-#+begin_src bash
+<!--listend-->
+
+```bash
 echo 'dev_attr_*' > set_ftrace_filter
 echo ip_rcv >> set_ftrace_filter
-#+end_src
+```
 
-- 基于模块过滤
+-   基于模块过滤
 
-格式为：<function>:<command>:<parameter>，例如，过滤 ext3 module 的 write* 函数：
+格式为：&lt;function&gt;:&lt;command&gt;:&lt;parameter&gt;，例如，过滤 ext3 module 的 write\* 函数：
 
-#+begin_src bash
+```bash
 echo 'write*:mod:ext3' > set_ftrace_filter
-#+end_src
+```
 
-- 从过滤列表中删除某个函数，使用“感叹号”
+-   从过滤列表中删除某个函数，使用“感叹号”
 
-#+begin_src bash
+<!--listend-->
+
+```bash
 echo '!ip_rcv' >> set_ftrace_filter
-#+end_src
+```
 
-** 用户态，内核态联动
 
-用户态程序只需要打开 trace_marker 节点可以向其中写入内容，写入的内容会体现在 trace 文件中
-，与内核态的各种 trace 融合在一起，提供时间线、事件参考。
+### 用户态，内核态联动 {#用户态-内核态联动}
 
-#+begin_src bash
+用户态程序只需要打开 trace_marker 节点可以向其中写入内容，写入的内容会体现在 trace 文件中，与内核态的各种 trace 融合在一起，提供时间线、事件参考。
+
+```bash
 cd /sys/kernel/debug/tracing
 echo 'hello ftrace' > trace_marker
 cat trace
 ...
            <...>-2157    [001] ....  1227.772963: tracing_mark_write: hello ftrace
-#+end_src
+```
 
 
-** 控制 trace 开关
+### 控制 trace 开关 {#控制-trace-开关}
 
-*** 用户态
+
+### 用户态 {#用户态}
 
 通过 tracing_on 可以灵活控制
 
-*** 内核态
 
-可以通过 set_ftrace_filter 实现的，控制范式:function>:<command>:<parameter>
+### 内核态 {#内核态}
+
+可以通过 set_ftrace_filter 实现的，控制范式:function&gt;:&lt;command&gt;:&lt;parameter&gt;
 
 简单示例：遇到 __schedule_bug 函数后关闭 trace
 
-#+begin_src bash
+```bash
 echo '__schedule_bug:traceoff' > set_ftrace_filter
-#+end_src
+```
 
-* ftrace-cmd
+
+## ftrace-cmd {#ftrace-cmd}
 
 安装
 
-#+begin_src bash
+```bash
 sudo apt install trace-cmd
-#+end_src
-
+```
 
 使用
 
-#+begin_src bash
+```bash
 trace-cmd start -p function_graph --max-graph-depth 2 -g bit_xfer #查看 bit_xfer 内部执行细节
 trace-cmd stop #停止 trace
 trace-cmd show #查看 trace 的结果
 trace-cmd reset #重置
 
 trace-cmd start -p function -l intel_hpd_irq_handler --func-stack
-#+end_src
+```
 
-* Reference
 
-*[Ftrace 基本用法](https://tinylab.org/ftrace-usage/)
+## Reference {#reference}
 
-[Ftrace 进阶用法](https://tinylab.org/ftrace-2/)
+\*[Ftrace 基本用法](<https://tinylab.org/ftrace-usage/>)
 
-*[Ftrace 前端工具 trace cmd 介绍](https://tinylab.org/trace-cmd/)
+[Ftrace 进阶用法](<https://tinylab.org/ftrace-2/>)
 
-*[Ftrace 实现原理与开发实践](https://tinylab.org/ftrace-principle-and-practice/)
+\*[Ftrace 前端工具 trace cmd 介绍](<https://tinylab.org/trace-cmd/>)
 
-*[Ftrace 官方文档](https://www.kernel.org/doc/html/v4.18/trace/)
+\*[Ftrace 实现原理与开发实践](<https://tinylab.org/ftrace-principle-and-practice/>)
 
-*[高效调试与分析：利用 ftrace 进行 Linux 内核追踪](https://zhuanlan.zhihu.com/p/661794875)
+\*[Ftrace 官方文档](<https://www.kernel.org/doc/html/v4.18/trace/>)
 
-*[1 小时掌握 ftrace 内核跟踪技术](https://zhuanlan.zhihu.com/p/659390893)
+\*[高效调试与分析：利用 ftrace 进行 Linux 内核追踪](<https://zhuanlan.zhihu.com/p/661794875>)
 
-[使用 ftrace 跟踪内核](https://linux.cn/article-9838-1.html)
+\*[1 小时掌握 ftrace 内核跟踪技术](<https://zhuanlan.zhihu.com/p/659390893>)
 
-[问题排查利器：Linux 原生跟踪工具 Ftrace 必知必会](https://www.ebpf.top/post/ftrace_tools/)
+[使用 ftrace 跟踪内核](<https://linux.cn/article-9838-1.html>)
 
-* 实践举例
+[问题排查利器：Linux 原生跟踪工具 Ftrace 必知必会](<https://www.ebpf.top/post/ftrace_tools/>)
+
+
+## 实践举例 {#实践举例}
 
 内核当中函数是：amdgpu_gem_create_ioctl ，但是发现在关机阶段没法调试。
 
 
-* bpftrace 的使用
+## bpftrace 的使用 {#bpftrace-的使用}
 
 安装
-#+begin_src bash
-sudo apt install bpfcc-tools python3-bpfcc libbpfcc libbpfcc-dev
-#+end_src
 
+```bash
+sudo apt install bpfcc-tools python3-bpfcc libbpfcc libbpfcc-dev
+```
 
 使用
-#+begin_src bash
+
+```bash
 sudo funccount-bpfcc '*edid*' #统计edid有关函数的调用次数
 sudo stackcount-bpfcc drm_load_edid_firmware #查看drm_load_edid_firmware的调用栈
 sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/Xorg:RRGetInfo' #跟踪用户层函数调用
 sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/modules/drivers/radeon_drv.so:drmmode_handle_uevents' #跟踪.so函数调用
-#+end_src
-
-
+```
