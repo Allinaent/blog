@@ -261,4 +261,7 @@ sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/Xorg:RRGetInfo' #跟踪用户�
 sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/modules/drivers/radeon_drv.so:drmmode_handle_uevents' #跟踪.so函数调用
 #+end_src
 
+arm 的机器无法使用 bpfcc 的，只能使用 bpftrace ：
+
+
 
