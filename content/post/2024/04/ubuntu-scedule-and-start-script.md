@@ -1,7 +1,7 @@
 +++
 title = "开发环境的定时启动脚本"
 date = 2024-04-03T11:21:00+08:00
-lastmod = 2024-04-06T13:41:33+08:00
+lastmod = 2024-04-07T17:29:40+08:00
 categories = ["technology"]
 draft = false
 toc = true
@@ -65,6 +65,25 @@ sudo ln -s ~/.script/startneko.sh /etc/profile.d/
 ```
 
 这个 qt 程序的开机自起一直有 xcb 的报错，不弄了。用 nekoup 写个 alias 非常地好用。
+
+
+### 发现了一个好办法 {#发现了一个好办法}
+
+vim ~/.config/autostart/nekoray.desktop
+
+```nil
+[Desktop Entry]
+Type=Application
+Exec=/home/uos/.script/startneko.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Nekoray
+```
+
+chmod +x nekoray.desktop
+
+亲测可用，这样开机启动是没有问题了。并且确实是以 root 权限做的启动。qt-gui 的程序估计是不能用 daemon 的方式运行的。qt-core 的程序才能以 root 的方式运行。
 
 
 ### 关闭 ubuntu 的错误报告 {#关闭-ubuntu-的错误报告}

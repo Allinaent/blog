@@ -1,0 +1,21 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../
+#+HUGO_SECTION: post/2024/04
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-04-08 一 00:26]
+#+TITLE: 线性代数第三章——向量
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: exam
+
+* n 维向量的概念与运算
+
+* 线性表出、线性相关
+
+* 极大线性无关组、秩
+
+* Schmidt 正交化、正交矩阵
+
+
+
