@@ -83,6 +83,26 @@ alias ela='emacsclient -tc -s ela'
 
 这样我可以非常方便的打开内核源码，并打开其中的文件。
 
+** autojump
+
+sudo apt install autojump
+
+这个在终端下非常地好用。
+
+** dirvish
+
+#+begin_src elisp
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file)
+  (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))
+  (define-key dired-mode-map (kbd "<left>") '(lambda () (interactive) (find-alternate-file "..")))
+  (define-key dired-mode-map (kbd "<right>") 'dired-find-alternate-file)
+  )  ; was dired-up-directory)
+#+end_src
+
+现在看代码和画图都完美了，没有什么理由再不去看代码逻辑了。虽说花屏的问题很难分析，
+但是还是可以找到分析的路径的。加油！
+
 * dirvish
 
 这个插件在 tui 下没有问题。另外用“ (”来打开和关闭 dired 显示的细节，非常好。

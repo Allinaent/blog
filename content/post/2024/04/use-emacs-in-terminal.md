@@ -1,7 +1,7 @@
 +++
 title = "在终端下使用 emacs"
 date = 2024-04-08T23:08:00+08:00
-lastmod = 2024-04-09T11:47:16+08:00
+lastmod = 2024-04-09T13:28:21+08:00
 categories = ["emacs"]
 draft = false
 toc = true
@@ -78,6 +78,27 @@ alias ela='emacsclient -tc -s ela'
 ```
 
 这样我可以非常方便的打开内核源码，并打开其中的文件。
+
+
+### autojump {#autojump}
+
+sudo apt install autojump
+
+这个在终端下非常地好用。
+
+
+### dirvish {#dirvish}
+
+```elisp
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file)
+  (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file "..")))
+  (define-key dired-mode-map (kbd "<left>") '(lambda () (interactive) (find-alternate-file "..")))
+  (define-key dired-mode-map (kbd "<right>") 'dired-find-alternate-file)
+  )  ; was dired-up-directory)
+```
+
+现在看代码和画图都完美了，没有什么理由再不去看代码逻辑了。虽说花屏的问题很难分析，但是还是可以找到分析的路径的。加油！
 
 
 ## dirvish {#dirvish}
