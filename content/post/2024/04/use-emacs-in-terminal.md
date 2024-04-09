@@ -1,7 +1,7 @@
 +++
 title = "在终端下使用 emacs"
 date = 2024-04-08T23:08:00+08:00
-lastmod = 2024-04-09T00:47:54+08:00
+lastmod = 2024-04-09T11:47:16+08:00
 categories = ["emacs"]
 draft = false
 toc = true
@@ -52,6 +52,32 @@ tui 的 server-name 用 s1 s2 s3 s4 s5 ，命令是 e1 e2 e3 e4 e5 。数量绝�
 ### 升级 {#升级}
 
 比如我 p1 ~/gh/blog/ 打开一个项目，用 e1 就是对应的 server 用 emacsclient 打开。这是最好的方法，一键打开。tmux 的实力也能全部发挥出来了，非常棒！！！
+
+
+### 现在阶段性的方案 {#现在阶段性的方案}
+
+```bash
+################################################################################
+# 重大优化
+myopenAmdKernel() {
+    emacs -nw --eval "(setq server-name \"amd\")" --eval "(server-start)" \
+          --eval "(find-file \"~/gg/x86-src/x86-kernel/\")" \
+          --eval "(eval-after-load \"init\" (lambda()(kill-buffer \"*dashboard*\")))"
+}
+alias Eam=myopenAmdKernel
+alias eam='emacsclient -tc -s amd'
+
+myopenLaKernel() {
+    emacs -nw --eval "(setq server-name \"la\")" --eval "(server-start)" \
+          --eval "(find-file \"~/gg/loongarch-kernel/Loongarch-kernel\")" \
+          --eval "(eval-after-load \"init\" (lambda()(kill-buffer \"*dashboard*\")))"
+}
+alias Ela=myopenLaKernel
+alias ela='emacsclient -tc -s ela'
+
+```
+
+这样我可以非常方便的打开内核源码，并打开其中的文件。
 
 
 ## dirvish {#dirvish}
