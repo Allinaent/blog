@@ -1,2 +1,10 @@
-<script src="/imgzoom/zoom-vanilla.min.js"></script>
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script> -->
+<!-- <script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.umd.js"></script> -->
+<script src="https://testingcf.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script src="https://testingcf.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.umd.js"></script>
+<script>
+  // 获取文章中的img 标签 不包括封面
+  $('.main img').not(".cover").each(function () {
+      //添加 data-fancybox="gallery"
+      $(this).attr("data-fancybox","gallery"); })
+</script>

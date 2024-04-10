@@ -141,20 +141,32 @@ Date:   Thu Dec 8 18:09:07 2022 +0800
 https://pms.uniontech.com/bug-view-235603.html
 
 【问题场景】【1070 第二轮】【浪潮 CE720F 】待机唤醒后重启会闪现绿屏现象
+
 【概率问题】必现
+
 【问题影响】体验
+
 【问题根因】
+
 1 、1060U2 也有同样问题存在，但 1060 版本正常
+
 2 、需求修改暴露问题：原本在关机的时候 startdde 会调用
+
 org.freedesktop.login1.Manager.Reboot(0) 调用
+
 org.freedesktop.login1.Session.Terminate() 将自身退出；后面就改成调用 .Reboot(0) 后
 ，不再调用 Terminate(). 让 systemd 自行处理关闭进程；
+
 3 、1060 待机唤醒后，进入桌面直接执行 org.freedesktop.login1.Manager.Reboot(0) ，也
 会出现这个现象
+
 4 、modesetting 不能复现，对比 modesetting 和 amdgpu_drv 的实现可能是一个思吃点，但
 短时间无法解决此问题；
+
 【评审结论】遗留
+
 【评审人员】
+
 【评审时间】2024.04.02
 
 ** 把思路汇总一下
