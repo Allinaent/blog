@@ -9,7 +9,7 @@
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: plan
 #+HUGO_WEIGHT: 1
-#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/my_plan.jpg
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/plan.jpg
 
 * 计划的任务
 

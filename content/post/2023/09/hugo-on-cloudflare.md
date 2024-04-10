@@ -1,7 +1,7 @@
 +++
 title = "在cloudfare中搭建hugo博客"
 date = 2023-09-18T16:35:00+08:00
-lastmod = 2024-01-11T17:56:05+08:00
+lastmod = 2024-04-10T11:36:21+08:00
 tags = ["emacs", "hugo"]
 categories = ["classic"]
 draft = false
@@ -276,3 +276,43 @@ e themes/hugo-theme-stack/data/external.yaml，选用了七牛云的 CDN。
 原主题的 Twikoo 版本是 1.16.115，这里也顺便升级成匹配我部署的后端版本 1.16.21。
 
 其他的评论系统也以此类推，折腾的同学有很多，我应该也会帮助到一些人吧。时间长了就逐渐理解这些开源的项目了。
+
+
+### 灯箱最终用了 fancybox {#灯箱最终用了-fancybox}
+
+参考的这篇文章：
+
+<http://www.heiyunw.com/post/2257.html>
+
+git show HEAD themes/hugo-theme-stack/
+
+```diff
+diff --git a/themes/hugo-theme-stack/layouts/partials/footer/custom.html b/themes/hugo-theme-stack/layouts/partials/footer/custom.html
+index c332b98..2c707d8 100644
+--- a/themes/hugo-theme-stack/layouts/partials/footer/custom.html
++++ b/themes/hugo-theme-stack/layouts/partials/footer/custom.html
+@@ -1,2 +1,10 @@
+-<script src="/imgzoom/zoom-vanilla.min.js"></script>
+-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_SVG"></script> -->
++<!-- <script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script> -->
++<!-- <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.umd.js"></script> -->
++<script src="https://testingcf.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
++<script src="https://testingcf.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.umd.js"></script>
++<script>
++  // 获取文章中的img 标签 不包括封面
++  $('.main img').not(".cover").each(function () {
++      //添加 data-fancybox="gallery"
++      $(this).attr("data-fancybox","gallery"); })
++</script>
+diff --git a/themes/hugo-theme-stack/layouts/partials/head/custom.html b/themes/hugo-theme-stack/layouts/partials/head/custom.html
+index 48144ec..b730512 100644
+--- a/themes/hugo-theme-stack/layouts/partials/head/custom.html
++++ b/themes/hugo-theme-stack/layouts/partials/head/custom.html
+@@ -1 +1,3 @@
+-<link href="/imgzoom/zoom.css" rel="stylesheet">
++<!--<link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css">-->
++<!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.css">-->
++<link rel="stylesheet" href="https://testingcf.jsdelivr.net/npm/@fancyapps/ui@4.0.12/dist/fancybox.css">
+```
+
+博客越来越实用，现在可以尽情写有技术文档了。

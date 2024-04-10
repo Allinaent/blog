@@ -1,12 +1,12 @@
 +++
 title = "置顶：博客计划与完成"
 date = 2023-10-12T11:04:00+08:00
-lastmod = 2024-03-18T23:10:52+08:00
+lastmod = 2024-04-10T13:40:13+08:00
 categories = ["plan"]
 draft = false
 weight = 1
 toc = true
-image = "https://r2.guolongji.xyz/my_plan.jpg"
+image = "https://r2.guolongji.xyz/plan.jpg"
 +++
 
 ## 计划的任务 {#计划的任务}
