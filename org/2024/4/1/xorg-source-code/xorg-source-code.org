@@ -196,7 +196,528 @@ org.freedesktop.login1.Session.Terminate() 将自身退出；后面就改成调�
 最好再找一块 radeon 520 的显卡。这样子就比较好了，或者至少也是一块 a 卡。用 bpftrace 来分析。只有一块卡的话
 就先在 x86 上搞清楚流程，搞清楚了之后，再用 loongarch 来二分。
 
+#+begin_src
+        drm_fb_helper_restore_fbdev_mode_unlocked+0
+        drm_fb_helper_hotplug_event.part.29+152
+        drm_fb_helper_restore_fbdev_mode_unlocked+152
+        drm_fb_helper_set_par+44
+        fb_set_var+552
+        fbcon_blank+132
+        do_unblank_screen+312
+        complete_change_console+156
+        vt_ioctl+4584
+        tty_ioctl+464
+        do_vfs_ioctl+164
+        ksys_ioctl+120
+        __arm64_sys_ioctl+28
+        el0_svc_common+144
+        el0_svc_handler+156
+
+#+end_src
+
+drm_fb_helper_restore_fbdev_mode_unlocked 这个函数是哪里调用的？
+
+都是这个 helper 类当中的。
+#+begin_src c
+/**
+ * drm_fb_helper_set_par - implementation for &fb_ops.fb_set_par
+ * @info: fbdev registered by the helper
+ *
+ * This will let fbcon do the mode init and is called at initialization time by
+ * the fbdev core when registering the driver, and later on through the hotplug
+ * callback.
+ */
+int drm_fb_helper_set_par(struct fb_info *info)
+{
+	struct drm_fb_helper *fb_helper = info->par;
+	struct fb_var_screeninfo *var = &info->var;
+
+	if (oops_in_progress)
+		return -EBUSY;
+
+	if (var->pixclock != 0) {
+		DRM_ERROR("PIXEL CLOCK SET\n");
+		return -EINVAL;
+	}
+
+        // 这里调用
+	drm_fb_helper_restore_fbdev_mode_unlocked(fb_helper);
+
+	return 0;
+}
+EXPORT_SYMBOL(drm_fb_helper_set_par);
+#+end_src
+
+核心的结构体是这个 fb_ops 这个，还有 fb_info ，这些都是干什么用的？
+
+** fb_info
+fb_info 这个结构体是存储 fb 的信息的，其中的 lock 是 open release ioctl 的时候用的。
+这里面的“par ”代表私有。
+
+在 Linux 内核中，fbcon_par 结构体通常包含与帧缓冲控制台相关的私有数据，这些数据可能
+包括控制台的配置信息、显存地址、显示模式等。这些数据对于控制台的初始化、显示内容的
+渲染等操作都是必要的。
+
+fbcon_par 结构体的具体内容和用途会根据不同的帧缓冲设备驱动程序而有所不同，但通常它
+会包含一些与控制台操作相关的信息，以便内核能够正确地管理和显示控制台内容。
+
+#+begin_src c
+struct fb_info {
+	atomic_t count;
+	int node;
+	int flags;
+	/*
+	 * -1 by default, set to a FB_ROTATE_* value by the driver, if it knows
+	 * a lcd is not mounted upright and fbcon should rotate to compensate.
+	 */
+	int fbcon_rotate_hint;
+	struct mutex lock;		/* Lock for open/release/ioctl funcs */
+	struct mutex mm_lock;		/* Lock for fb_mmap and smem_* fields */
+	struct fb_var_screeninfo var;	/* Current var */
+	struct fb_fix_screeninfo fix;	/* Current fix */
+	struct fb_monspecs monspecs;	/* Current Monitor specs */
+	struct work_struct queue;	/* Framebuffer event queue */
+	struct fb_pixmap pixmap;	/* Image hardware mapper */
+	struct fb_pixmap sprite;	/* Cursor hardware mapper */
+	struct fb_cmap cmap;		/* Current cmap */
+	struct list_head modelist;      /* mode list */
+	struct fb_videomode *mode;	/* current mode */
+
+#ifdef CONFIG_FB_BACKLIGHT
+	/* assigned backlight device */
+	/* set before framebuffer registration, 
+	   remove after unregister */
+	struct backlight_device *bl_dev;
+
+	/* Backlight level curve */
+	struct mutex bl_curve_mutex;	
+	u8 bl_curve[FB_BACKLIGHT_LEVELS];
+#endif
+#ifdef CONFIG_FB_DEFERRED_IO
+	struct delayed_work deferred_work;
+	struct fb_deferred_io *fbdefio;
+#endif
+
+	struct fb_ops *fbops;
+	struct device *device;		/* This is the parent */
+	struct device *dev;		/* This is this fb device */
+	int class_flag;                    /* private sysfs flags */
+#ifdef CONFIG_FB_TILEBLITTING
+	struct fb_tile_ops *tileops;    /* Tile Blitting */
+#endif
+	union {
+		char __iomem *screen_base;	/* Virtual address */
+		char *screen_buffer;
+	};
+	unsigned long screen_size;	/* Amount of ioremapped VRAM or 0 */ 
+	void *pseudo_palette;		/* Fake palette of 16 colors */ 
+#define FBINFO_STATE_RUNNING	0
+#define FBINFO_STATE_SUSPENDED	1
+	u32 state;			/* Hardware state i.e suspend */
+	void *fbcon_par;                /* fbcon use-only private area */
+	/* From here on everything is device dependent */
+	void *par;
+	/* we need the PCI or similar aperture base/size not
+	   smem_start/size as smem_start may just be an object
+	   allocated inside the aperture so may not actually overlap */
+	struct apertures_struct {
+		unsigned int count;
+		struct aperture {
+			resource_size_t base;
+			resource_size_t size;
+		} ranges[0];
+	} *apertures;
+
+	bool skip_vt_switch; /* no VT switch on suspend/resume required */
+};
+#+end_src
+
+** fb_ops
+
+fb_ops 这个结构体是操作 fb 的接口。
+#+begin_src c
+/*
+ * Frame buffer operations
+ *
+ * LOCKING NOTE: those functions must _ALL_ be called with the console
+ * semaphore held, this is the only suitable locking mechanism we have
+ * in 2.6. Some may be called at interrupt time at this point though.
+ *
+ * The exception to this is the debug related hooks.  Putting the fb
+ * into a debug state (e.g. flipping to the kernel console) and restoring
+ * it must be done in a lock-free manner, so low level drivers should
+ * keep track of the initial console (if applicable) and may need to
+ * perform direct, unlocked hardware writes in these hooks.
+ */
+
+struct fb_ops {
+	/* open/release and usage marking */
+	struct module *owner;
+	int (*fb_open)(struct fb_info *info, int user);
+	int (*fb_release)(struct fb_info *info, int user);
+
+	/* For framebuffers with strange non linear layouts or that do not
+	 * work with normal memory mapped access
+	 */
+	ssize_t (*fb_read)(struct fb_info *info, char __user *buf,
+			   size_t count, loff_t *ppos);
+	ssize_t (*fb_write)(struct fb_info *info, const char __user *buf,
+			    size_t count, loff_t *ppos);
+
+	/* checks var and eventually tweaks it to something supported,
+	 * DO NOT MODIFY PAR */
+	int (*fb_check_var)(struct fb_var_screeninfo *var, struct fb_info *info);
+
+	/* set the video mode according to info->var */
+	int (*fb_set_par)(struct fb_info *info);
+
+	/* set color register */
+	int (*fb_setcolreg)(unsigned regno, unsigned red, unsigned green,
+			    unsigned blue, unsigned transp, struct fb_info *info);
+
+	/* set color registers in batch */
+	int (*fb_setcmap)(struct fb_cmap *cmap, struct fb_info *info);
+
+	/* blank display */
+	int (*fb_blank)(int blank, struct fb_info *info);
+
+	/* pan display */
+	int (*fb_pan_display)(struct fb_var_screeninfo *var, struct fb_info *info);
+
+	/* Draws a rectangle */
+	void (*fb_fillrect) (struct fb_info *info, const struct fb_fillrect *rect);
+	/* Copy data from area to another */
+	void (*fb_copyarea) (struct fb_info *info, const struct fb_copyarea *region);
+	/* Draws a image to the display */
+	void (*fb_imageblit) (struct fb_info *info, const struct fb_image *image);
+
+	/* Draws cursor */
+	int (*fb_cursor) (struct fb_info *info, struct fb_cursor *cursor);
+
+	/* wait for blit idle, optional */
+	int (*fb_sync)(struct fb_info *info);
+
+	/* perform fb specific ioctl (optional) */
+	int (*fb_ioctl)(struct fb_info *info, unsigned int cmd,
+			unsigned long arg);
+
+	/* Handle 32bit compat ioctl (optional) */
+	int (*fb_compat_ioctl)(struct fb_info *info, unsigned cmd,
+			unsigned long arg);
+
+	/* perform fb specific mmap */
+	int (*fb_mmap)(struct fb_info *info, struct vm_area_struct *vma);
+
+	/* get capability given var */
+	void (*fb_get_caps)(struct fb_info *info, struct fb_blit_caps *caps,
+			    struct fb_var_screeninfo *var);
+
+	/* teardown any resources to do with this framebuffer */
+	void (*fb_destroy)(struct fb_info *info);
+
+	/* called at KDB enter and leave time to prepare the console */
+	int (*fb_debug_enter)(struct fb_info *info);
+	int (*fb_debug_leave)(struct fb_info *info);
+};
+#+end_src
+
+
 ** 代码流程梳理
+
+明哥定位到的位置是这些函数调用的地方，我也出一个内核，把串口调好，然后看看花屏的地
+方是不是这些函数。首选这些地方可以加上打印，还有就是对 hotplug 的过程进行一下梳理。
+
+** drm_fb_helper_hotplug_event
+
+#+begin_src c
+/**
+ * drm_fb_helper_hotplug_event - respond to a hotplug notification by
+ *                               probing all the outputs attached to the fb
+ * @fb_helper: driver-allocated fbdev helper, can be NULL
+ *
+ * Scan the connectors attached to the fb_helper and try to put together a
+ * setup after notification of a change in output configuration.
+ *
+ * Called at runtime, takes the mode config locks to be able to check/change the
+ * modeset configuration. Must be run from process context (which usually means
+ * either the output polling work or a work item launched from the driver's
+ * hotplug interrupt).
+ *
+ * Note that drivers may call this even before calling
+ * drm_fb_helper_initial_config but only after drm_fb_helper_init. This allows
+ * for a race-free fbcon setup and will make sure that the fbdev emulation will
+ * not miss any hotplug events.
+ *
+ * RETURNS:
+ * 0 on success and a non-zero error code otherwise.
+ */
+int drm_fb_helper_hotplug_event(struct drm_fb_helper *fb_helper)
+{
+	int err = 0;
+
+	if (!drm_fbdev_emulation || !fb_helper)
+		return 0;
+
+	mutex_lock(&fb_helper->lock);
+	if (fb_helper->deferred_setup) {
+		err = __drm_fb_helper_initial_config_and_unlock(fb_helper,
+				fb_helper->preferred_bpp);
+		return err;
+	}
+
+	if (!fb_helper->fb || !drm_fb_helper_is_bound(fb_helper)) {
+		fb_helper->delayed_hotplug = true;
+		mutex_unlock(&fb_helper->lock);
+		return err;
+	}
+
+	DRM_DEBUG_KMS("\n");
+
+	drm_setup_crtcs(fb_helper, fb_helper->fb->width, fb_helper->fb->height);
+	drm_setup_crtcs_fb(fb_helper);
+	mutex_unlock(&fb_helper->lock);
+
+	drm_fb_helper_set_par(fb_helper->fbdev);
+
+	return 0;
+}
+EXPORT_SYMBOL(drm_fb_helper_hotplug_event);
+#+end_src
+
+在 S3 当中，热插拔检查的逻辑是什么样的？与我现在分析的 A 卡相关的函数有三个，分别是：
+
+#+begin_src c
+int drm_fb_helper_restore_fbdev_mode_unlocked(struct drm_fb_helper *fb_helper);
+
+void drm_fb_helper_output_poll_changed(struct drm_device *dev);
+
+static int drm_fbdev_client_hotplug(struct drm_client_dev *client);
+#+end_src
+
+- 先来看第一个 drm_fb_helper_restore_fbdev_mode_unlocked
+#+begin_src
+/**
+ * drm_fb_helper_restore_fbdev_mode_unlocked - restore fbdev configuration
+ * @fb_helper: driver-allocated fbdev helper, can be NULL
+ *
+ * This should be called from driver's drm &drm_driver.lastclose callback
+ * when implementing an fbcon on top of kms using this helper. This ensures that
+ * the user isn't greeted with a black screen when e.g. X dies.
+ *
+ * RETURNS:
+ * Zero if everything went ok, negative error code otherwise.
+ */
+#+end_src
+
+这是切换到 fbcon 的过程时会调用的吗？这个看代码 lastclose 只是在 amdgpu 当中有使用，那先看一下过程。分别是
+一处定义和三处调用：
+#+begin_src
+amdgpu_kms.c:815: * amdgpu_driver_lastclose_kms - drm callback for last close
+amdgpu_kms.c:821:void amdgpu_driver_lastclose_kms(struct drm_device *dev)
+amdgpu_kms.c:823:	drm_fb_helper_lastclose(dev);
+amdgpu.h:1822:void amdgpu_driver_lastclose_kms(struct drm_device *dev);
+#+end_src
+
+amdgpu 用实现了 drm_driver ，drm_driver 用 kms_driver 来命名。drm_driver 有一些函数指针。比如这个 lastclose
+和 postclose 。没事的时候就看代码，梳理流程并画图是非常地有用的。
+
+
+display/modeset 只能被一个 drm_file 和 drm_device 所拥有。drm_file 和 drm_device 都有 is_master 属性。
+
+
+#+begin_src c
+/**
+ * @delayed_hotplug:
+ *
+ * A hotplug was received while fbdev wasn't in control of the DRM
+ * device, i.e. another KMS master was active. The output configuration
+ * needs to be reprobe when fbdev is in control again.
+ */
+bool delayed_hotplug;
+#+end_src
+
+这个是什么意思呢？ drm 不再控制 fbdev 的时候会收到一个热插拔信号。举例就是另一个 KMS 主被激活。当 fbdev 被重
+新控制的时候 output 配置需要被重新被重新检测。
+
+别想一口吃成一个胖子，做调试的次数是不可能避免的。先用 WARN_ON 看一下调用。打印一些变量。调用多处没法看，也不
+知道在哪里加上变量的打印，所以先 WARN_ON 为敬。或者 ftrace ？
+
+
+
+* 现在知道了大概率是 tty 唤醒时出现的白屏
+
+那么可以用代码二分法的方式找问题的，首先要知道有哪些过程：
+
+当系统从 Xorg 切换到 TTY（例如按下 Ctrl + Alt + F1 切换到 TTY1）时，涉及到以下主要步骤和函数：
+
+用户输入触发： 用户按下 Ctrl + Alt + F1 或类似组合键，通知 Xorg 切换到 TTY1。
+
+Xorg 暂停： Xorg 会暂停其运行，并释放对图形设备的控制权。
+
+TTY 切换处理： 内核会处理 TTY 切换事件，并执行相应的操作。这通常由内核中的输入子系统处理。
+
+TTY 设备重新激活： 内核会重新激活 TTY1 设备，以便用户可以在控制台中继续操作。这包括重新激活键盘、鼠标等输入设备，并初始化控制台显示。
+
+Console 切换通知： 内核可能会触发一个控制台切换通知，以便用户空间程序或驱动程序可以相应地调整。
+
+在 Linux 内核中，与 TTY 切换相关的函数通常位于 drivers/tty/tty_io.c 文件中。以下是一些可能涉及的函数：
+
+tty_switch_to_vc(): 切换到指定的虚拟控制台。
+
+tty_reset()：重置当前的 TTY 设备状态。
+
+con_switch()：执行控制台切换操作。
+
+vt_activate()：激活指定的虚拟终端。
+
+这些函数负责处理控制台切换事件并执行必要的操作，以便用户可以在 TTY 控制台中继续操作。
+
+** 后续的测试可以用代码二分法
+
+
+
+
+
+
+
+
+
+
+* 临时修改
+
+#+begin_src c
+int
+DPMSSet(ClientPtr client, int level)
+{
+    int rc, i;
+
+    DPMSPowerLevel = level;
+
+    if (level != DPMSModeOn) {
+        if (isUnblank(screenIsSaved)) {
+            rc = dixSaveScreens(client, SCREEN_SAVER_FORCER, ScreenSaverActive);
+            if (rc != Success)
+                return rc;
+        }
+    } else if (!isUnblank(screenIsSaved)) {
+        rc = dixSaveScreens(client, SCREEN_SAVER_OFF, ScreenSaverReset);
+        if (rc != Success)
+            return rc;
+    }
+
+    for (i = 0; i < screenInfo.numScreens; i++)
+        if (screenInfo.screens[i]->DPMS != NULL)
+            screenInfo.screens[i]->DPMS(screenInfo.screens[i], level);
+
+    for (i = 0; i < screenInfo.numGPUScreens; i++)
+        if (screenInfo.gpuscreens[i]->DPMS != NULL)
+            screenInfo.gpuscreens[i]->DPMS(screenInfo.gpuscreens[i], level);
+
+    return Success;
+}
+
+
+static int
+ProcDPMSDisable(ClientPtr client)
+{
+    /* REQUEST(xDPMSDisableReq); */
+
+    REQUEST_SIZE_MATCH(xDPMSDisableReq);
+
+    DPMSSet(client, DPMSModeOn);
+
+    DPMSEnabled = FALSE;
+
+    return Success;
+}
+
+static int
+ProcDPMSDispatch(ClientPtr client)
+{
+    REQUEST(xReq);
+
+    switch (stuff->data) {
+    case X_DPMSGetVersion:
+        return ProcDPMSGetVersion(client);
+    case X_DPMSCapable:
+        return ProcDPMSCapable(client);
+    case X_DPMSGetTimeouts:
+        return ProcDPMSGetTimeouts(client);
+    case X_DPMSSetTimeouts:
+        return ProcDPMSSetTimeouts(client);
+    case X_DPMSEnable:
+        return ProcDPMSEnable(client);
+    case X_DPMSDisable:
+        return ProcDPMSDisable(client);
+    case X_DPMSForceLevel:
+        return ProcDPMSForceLevel(client);
+    case X_DPMSInfo:
+        return ProcDPMSInfo(client);
+    default:
+        return BadRequest;
+    }
+}
+
+static int _X_COLD
+SProcDPMSDisable(ClientPtr client)
+{
+    REQUEST(xDPMSDisableReq);
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xDPMSDisableReq);
+
+    return ProcDPMSDisable(client);
+}
+#+end_src
+
+
+#+begin_src c
+void
+mieqProcessInputEvents(void)
+{
+    if (DPMSPowerLevel != DPMSModeOn)
+            DPMSSet(serverClient, DPMSModeOn);
+}
+#+end_src
+
+
+** 尝试一
+
+#+begin_src c
+        DPMSSet(serverClient, DPMSModeOn);
+        UndisplayDevices();
+        DisableAllDevices();
+#+end_src
+
+在关闭的时候这样设置是正确的，不要用 FatalError 来打印，用 LogMessage(X_INFO, ""); 来打印。
+
+** 尝试二
+#+begin_src c
+/**
+ * Implement the screensaver by just calling down into the driver DPMS hooks.
+ *
+ * Even for monitors with no DPMS support, by the definition of our DPMS hooks,
+ * the outputs will still get disabled (blanked).
+ */
+Bool
+xf86SaveScreen(ScreenPtr pScreen, int mode)
+{
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+
+    if (xf86IsUnblank(mode))
+        xf86DPMSSet(pScrn, DPMSModeOn, 0);
+    else
+        xf86DPMSSet(pScrn, DPMSModeOff, 0);
+
+    return TRUE;
+}
+#+end_src
+
+** 尝试三
+
+#+begin_src c
+ DPMSForceLevel(dmxScreen->beDisplay, DPMSModeOn);
+#+end_src
 
 
 
