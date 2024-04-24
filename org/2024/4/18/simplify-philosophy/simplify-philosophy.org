@@ -62,6 +62,16 @@ alias Ema=myopenmath
 
 后面再优化一些快捷键，C-1 定义的是 counsel-fzf ；C-2 定义的是 helm-ag 或者 helm-rg ；
 
+* org-noter 的使用
+
+org-noter 简单而好用，记住三个快捷键，C-c SPC l ；pdfview 当中复制链接地址。
+
+C-c C-l ；在 orgmode 当中选择复制好的链接地址。设置跳转的内容。
+
+C-c C-o ；打开链接，这样的话，orgmode 笔记当中可以索引无数的文件，把各类信息骤合到 emacs
+的 orgmode 当中，这就让 orgmode 成为了学习任何知识的好工具。剩下的就是专注于学习的内容
+本身，真正的更上一层楼。
+
 * enjoy
 
 M-<f1> 即可打开我的复习环境，C-1 即可搜之前的博客或者笔记。

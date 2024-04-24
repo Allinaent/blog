@@ -1,7 +1,7 @@
 +++
 title = "简化的哲学"
 date = 2024-04-18T15:43:00+08:00
-lastmod = 2024-04-19T14:19:35+08:00
+lastmod = 2024-04-19T17:38:59+08:00
 categories = ["emacs"]
 draft = false
 toc = true
@@ -55,6 +55,16 @@ alias Ema=myopenmath
 ```
 
 后面再优化一些快捷键，C-1 定义的是 counsel-fzf ；C-2 定义的是 helm-ag 或者 helm-rg ；
+
+
+## org-noter 的使用 {#org-noter-的使用}
+
+org-noter 简单而好用，记住三个快捷键，C-c SPC l ；pdfview 当中复制链接地址。
+
+C-c C-l ；在 orgmode 当中选择复制好的链接地址。设置跳转的内容。
+
+C-c C-o ；打开链接，这样的话，orgmode 笔记当中可以索引无数的文件，把各类信息骤合到 emacs
+的 orgmode 当中，这就让 orgmode 成为了学习任何知识的好工具。剩下的就是专注于学习的内容本身，真正的更上一层楼。
 
 
 ## enjoy {#enjoy}
