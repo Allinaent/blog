@@ -1,8 +1,8 @@
 +++
 title = "线性代数第三章——向量"
 date = 2024-04-08T00:26:00+08:00
-lastmod = 2024-04-19T17:15:40+08:00
-categories = ["exam"]
+lastmod = 2024-04-26T16:23:17+08:00
+categories = ["exam", "math"]
 draft = false
 toc = true
 +++
@@ -46,7 +46,8 @@ toc = true
 -   概念 用人话说就是向量组再多添一个任意向量就会让新的向量组线性相关，而极大无关组中向量的个数则称为秩。
 -   有关秩的定理
 
-如果向量组 I 可由 II 线性表出。则 \\(r(\uppercase\expandafter{\romannumeral1}) \leq r(\uppercase\expandafter{\romannumeral2})\\)
+如果向量组 I 可由 II 线性表出。则 \\(r(\mathrm{I}) \leq
+r(\mathrm{II})\\)
 
 如果向量组等价，则秩相等。
 

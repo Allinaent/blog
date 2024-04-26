@@ -1,7 +1,7 @@
 +++
 title = "emacs kitty ranger rime 等的一些优化"
 date = 2023-11-17T11:43:00+08:00
-lastmod = 2023-11-17T13:17:21+08:00
+lastmod = 2024-04-22T13:52:42+08:00
 tags = ["emacs"]
 categories = ["technology"]
 draft = false
@@ -67,6 +67,21 @@ gzip -d rc.conf.gz
 修改 background_opacity 为 0.8 即可，经过实验 0.8 的效果是最好的。
 
 现在我的 onlyconfig 配置又要多几个了。 kitty 的 rc.conf ， ranger 的配置。还有 fcitx5 的配置。这些配置组合在一起，让我的开发环境看起来很好看。当然最关键的还是好用。
+
+
+### emacs-rime 退出崩溃的问题 {#emacs-rime-退出崩溃的问题}
+
+在有的系统上会退出的时候卡住，鼠标在点一下才能崩溃退出。
+
+<https://github.com/DogLooksGood/emacs-rime/issues/161#issuecomment-979907791> issue 有提到。
+
+解决的方案非常地简单：
+
+```lisp
+(add-hook 'kill-emacs-hook #'rime-lib-finalize)
+```
+
+任何这些细节的问题都是开源社区中那些肯投入精力的人一点一滴的积累，解决的。
 
 
 ### 设置 fcitx5 的主题 {#设置-fcitx5-的主题}
@@ -140,6 +155,12 @@ emacs 启动时增加两个环境变量就可以了：GTK_IM_MODULE=emacs XMODIF
 系统的改键，需要启动后手动执行一下，xmodmap ~/.Xmodmap ，有一点奇怪。后续再看。
 
 困难输入的情况现在已经几乎没有了，现在已经非常好好用了，目前到此为止。
+
+
+## emacs 与系统的快捷键冲突 {#emacs-与系统的快捷键冲突}
+
+去系统的快捷键设置中把 C-M-v 这个绐关闭了，这个系统的剪切板根本没有用。emacs 现在可以用
+C-M-v 这个快捷键了。
 
 
 ## 最终的优化 {#最终的优化}

@@ -1,0 +1,90 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/04
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-04-23 二 09:36]
+#+TITLE: 线性代数第五章——特征值、特征向量、相似矩阵
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: exam math
+
+* 特征值、特征向量
+
+[[pdf:~/mydata/orgmode/gtd/2021李永乐复习全书【数学二】.pdf::303++1.32][2021李永乐复习全书【数学二】.pdf: Page 303]]
+
+特征值的作用：1. 简化计算 2. 数据压缩 ; 没错就是这样简单的需求
+
+一、定义：方阵的情况， $A\alpha=\lambda\alpha(\alpha \neq 0)$ ；
+
+还有一个定义：即 $|\lambda E-A|=0$ ，其中的 $\lambda E$ 是单位的对角矩阵
+
+二、特征值的性质
+
+1. $\sum\limits_{i=1}^{n}\lambda_{i}=\sum\limits_{i=1}^{n}a_{ii}$ ;
+2. $\prod\limits_{i=1}^{n}\lambda_{i}=|A|$
+
+三、求特征值、特征向量的方法
+
+方法一：求解 $|\lambda E-A|=0$ 得到所有的 $\lambda_{i}$ ，再代入 $(\lambda_{i}E-A)x=0$ 求得所有的特征向量
+
+方法二：利用定义，即满足 $A\alpha=\lambda\alpha$ 的数 $\lambda$ 即是 A 的特征值。
+
+* 相似矩阵、矩阵的相似对角化
+
+一、相似矩阵定义：若 $P^{-1}AP=B$ ，则 $A\sim B$ ; 若 $A\sim \Lambda$ （对角矩阵），则称 A 可以相似对角化。
+$\Lambda$ 是 A 的相似标准形。
+
+二、矩阵可以相似对角化的充分必要条件
+
+1. n 阶矩阵 A 可相似对角化 $\Leftrightarrow$ A 有 n 个线性无关的特征向量。
+2. $\lambda_{1}\neq \lambda_{2}$ 是 A 的特征值 $\Rightarrow$ A 的对应于 $\lambda_{1}$,$\lambda_2$ 的特征向量
+   $\alpha_{1},\alpha_{2}$ 线性无关。推论：n 阶矩阵 A 有 n 个互不相同的特征值，则 A 可相似对角化。
+3. $\lambda$ 是 n 阶矩阵 A 的 $r_{i}$ 重特征值，则其对应的线性无关特征向量个数少于等于 $r_{i}$ 个。
+推论： n 阶矩阵 A 可相似对角化 $\Leftrightarrow$ A 的每一个 $r_{i}$ 重特征值对应的线性无关的向量个数等于该特
+征值的重数 $r_{i}$ 。当 A 的 $r_{i}$ 重特征值 $\lambda_{i}$ 对应的线性无关特征向量个数少于特征值的重数
+$r_{i}$ 时，A 不能相似于对角阵。
+
+三、相似矩阵的性质
+
+1. $A\sim A$
+2. $A \sim B$ $\Rightarrow$ $B \sim A$
+3. 若 $A \sim B$ ， $B\sim C$ $\Rightarrow$ $A\sim C$
+
+两个矩阵相似的必要条件：
+
+$A\sim B$ $\Rightarrow$ $|\lambda E -A|=|\lambda E -B|$
+
+$r(A)=r(B)$
+
+A , B 有相同的特征值；
+
+$|A|=|B|=\prod\limits_{i=1}^{n}\lambda_{i}$
+
+$\prod\limits_{i=1}^{n}a_{ii}=\prod\limits_{i=1}^{n}b_{ii}=\prod\limits_{i=1}^{n}\lambda_{i}$ ，即 $trA = trB = tr\Lambda$
+
+此处很难理解，矩阵的左乘，右乘，证明，很容易看晕。反复看吧。
+
+* 实对称矩阵的相似对角化
+
+一、什么是实对称阵？即 $\Leftrightarrow$ $A^T=A$ ，且 $\bar{A}=A$
+
+二、实对称阵的特征值，特征向量及相似对角化
+
+定理：实对称矩阵的特征值全部是实数
+
+定理：实对称矩阵的不同特征值对应的特征向量相互正交
+
+定理：实对称矩阵必相似于对角阵。即：$Q^{-1}AQ=Q^{T}AQ=\Lambda$
+
+三、实对称矩阵相似对角化的步骤
+
+1. 解特征方程，求得全部特征值（均为实数，去除复数）
+2. 求基础解系
+3. 将每个属于 $\lambda_{i}$ 的特征向量 $\alpha_{i1},\alpha_{i2},...,\alpha_{ik}$ 正交化。正交后的向量组记成
+   $\beta_{i1},\beta_{i2},...,\beta_{ik_{i}}$ 。
+4. 将全部特征向量单位化
+5. 将 n 个单位正交特征向量合并成正交矩阵。
+
+此处不好理解，要多做题。
+

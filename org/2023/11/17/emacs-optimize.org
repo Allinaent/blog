@@ -73,6 +73,20 @@ https://sw.kovidgoyal.net/kitty/conf/ ，这个里面有大量的配置可以选
 现在我的 onlyconfig 配置又要多几个了。 kitty 的 rc.conf ， ranger 的配置。还有 fcitx5 的配置。这些配置组合
 在一起，让我的开发环境看起来很好看。当然最关键的还是好用。
 
+** emacs-rime 退出崩溃的问题
+
+在有的系统上会退出的时候卡住，鼠标在点一下才能崩溃退出。
+
+https://github.com/DogLooksGood/emacs-rime/issues/161#issuecomment-979907791 issue 有提到。
+
+解决的方案非常地简单：
+
+#+begin_src lisp
+(add-hook 'kill-emacs-hook #'rime-lib-finalize)
+#+end_src
+
+任何这些细节的问题都是开源社区中那些肯投入精力的人一点一滴的积累，解决的。
+
 ** 设置 fcitx5 的主题
 
 现在万事大吉了。需要把 fcitx5 的主题再配置一下才好看。

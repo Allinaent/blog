@@ -7,7 +7,7 @@
 #+DATE: [2024-04-08 一 00:26]
 #+TITLE: 线性代数第三章——向量
 #+HUGO_TAGS:
-#+HUGO_CATEGORIES: exam
+#+HUGO_CATEGORIES: exam math
 
 * n 维向量的概念与运算
 
@@ -50,7 +50,8 @@
 - 概念 用人话说就是向量组再多添一个任意向量就会让新的向量组线性相关，而极大无关组中向量的个数则称为秩。
 - 有关秩的定理
 
-如果向量组 I 可由 II 线性表出。则 $r(\uppercase\expandafter{\romannumeral1}) \leq r(\uppercase\expandafter{\romannumeral2})$
+如果向量组 I 可由 II 线性表出。则 $r(\mathrm{I}) \leq
+r(\mathrm{II})$
 
 如果向量组等价，则秩相等。
 
