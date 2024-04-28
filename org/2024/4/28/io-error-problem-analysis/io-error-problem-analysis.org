@@ -1,0 +1,692 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/04
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-04-28 日 09:54]
+#+TITLE: 浪潮产线硬盘压测重启后io-error 问题
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+
+又是一篇韬哥写的分析过程，os 部分的核心在于公共部分。因为内核不是硬件厂商。各个子系统公共部分的代码都非常多。
+而最提高分析问题能力的是在公共部分绐出详细准确的逻辑说明。各种超时，缓存，等待，后写。
+
+任务，内存，信号，文件，这些子系统才是搞内核最该学习的部分。
+
+这是一个解决周期比较长，问题链路很长，内部原因很复杂的问题……过程里几乎涉及到了我们面对此类问题可能会遇到的
+困境的方方面面，是一个非常典型的问题案例，很有参考意义。
+
+okay，let's get started!
+
+* 问题概述
+
+这是 pms 的 bug 单：
+
+- BUG #250755 【MP】【桌面专业版】【浪潮】【D2000】【CE520F】【1060】搭配双 sata 生产的时候，有 18%的概率
+（45/251）出现系统盘 sda5 的 io error 报错，且报错位置都是这个 sda5 也就是系统盘根目录_trsid009369 - 桌面专业版 V20 - 禅道
+
+** 浪潮的问题报告
+
+这是浪潮最开始给出的邮件：
+
+
+主题: CE520F 产线压力测试后 UOS1060 系统重启出现硬盘 I/O error 问题咨询——20240412——急！！ 重要性: 高 单良
+老师、旭升老师 您好， CE520F 搭配 1060 镜像进行产线订单生产过程中有 18%以上概率，在 Diag 检查测试的压力测试，
+系统启动出现 I/O error 报错。 除非重新进行压力测试或者重装设备操作，否则每次重启该 IO 报错都会存在，且信息完
+全一致，对应 sda5 系统根分区的 I/O 报错，可以参考附件日志 4 月 11 日下午 17:30:57 重启后的日志信息； OS 初步
+分析应该属于硬盘问题，可能是压力测试中 FIO 项目只对 sda5 根分区压力测试，触发了硬盘本身的问题，导致系统每次启
+动都识别到了相同 block 下的 IO 报错； 为了更好的协助项目定位问题，需要统信这边帮忙看看： 1、 是否可以通过日志
+和图中测试项目，确认具体引发 IO 报错的原因？ 2、 系统每次启动后，是通过什么服务或者进程识别硬盘可能的 IO 问题
+？ 3、 重装可以解决问题我们能理解，但是为什么不重装，只是重新跑这个压力测试，重启也不会提示有这个 IO 报错了呢
+？是不是系统下有机制，可以规避硬盘的坏区或者坏道，以便维持系统正常运行？ 烦请帮忙解答一下，谢谢
+
+浪潮提到的日志：
+
+#+begin_src
+2024-04-11 17:31:30 deepin kernel: [ 96.733676] sd 1:0:0:0: [sda] tag#16 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+2024-04-11 17:31:30 deepin kernel: [ 96.733682] sd 1:0:0:0: [sda] tag#16 CDB: Write(10) 2a 00 02 c3 60 00 00 08 00 00
+2024-04-11 17:31:30 deepin kernel: [ 96.733685] print_req_error: I/O error, dev sda, sector 46358528
+2024-04-11 17:31:30 deepin kernel: [ 96.739713] EXT4-fs warning (device sda5): ext4_end_bio:324: I/O error 10 writing to inode 660038 (offset 33554432 size 8388608 starting block 5795072)
+2024-04-11 17:31:30 deepin kernel: [ 96.739716] Buffer I/O error on device sda5, logical block 1010944 ……
+#+end_src
+
+我们来结合日志解读一下浪潮的问题报告：
+
+- 硬盘压力测试后重启，有一定概率会有 io-error 的报错。
+- 每次重启都检测到了这个报错，而且报错完全一样，block 都相同。
+- 重装系统，或者重新跑压力测试，报错会消失。——这个看起来最诡异对吧？
+- 批量问题，影响产线订单生产；而且因为硬盘/数据相关，需要严肃对待。
+
+所以浪潮希望我们给出澄清一些疑点：
+
+- 是引发 io-error 的原因。——因为有内核日志的线索。
+- 系统启动后识别 io 问题的流程。——因为每次启动都会给出这个报告，所以浪潮有此一问。
+- 系统的自动 fix 或者规避机制。——为什么重跑压力测试就会消失？
+
+后文我们将会看到，如果顺着这个思路往下追查，那可能完全走错了方向。
+
+** 初回复
+
+收到问题后，单良咨询了产线里的相关技术人员，给出了第一次的回复：
+
+#+begin_src
+林老师，好！ 18%以上概率都出现这种压测 i/o 报错，都是搭配的大唐的硬盘吗？ 1、 是否可以通过日志和图中测试项目
+，确认具体引发 IO 报错的原因？ diag 测试中的 i/o 报错，主要还是跟硬盘相关，看着像坏道块，建议你们找硬盘厂商那
+边看一下。 2、 系统每次启动后，是通过什么服务或者进程识别硬盘可能的 IO 问题？ 系统引导时，会通过 fsck 来检测
+磁盘的，有问题的话会尝试修复，修复失败可能就无法启动。 3、 重装可以解决问题我们能理解，但是为什么不重装，只是
+重新跑这个压力测试，重启也不会提示有这个 IO 报错了呢？是不是系统下有机制，可以规避硬盘的坏区或者坏道，以便维
+持系统正常运行？ fsck 检测到后，会进行屏蔽，所以重启就不会提示这个 IO 报错了，这也是为了保证系统能正常运行。
+当前硬盘实际功能使用可能是不受影响吧？但是如果坏道多了，硬盘的容量和性能也会下降，这些影响硬盘厂商应该比我们
+更清楚。
+#+end_src
+
+这个回复里，只有第一句是对的（这一句看起来是单良自己问的:)）：这么多 io 报错，用的是哪家的硬盘？——是不是切
+换了新的硬盘？是不是盘有问题？这是一个值得关注的关键信息点。
+
+技术回复基本都是错的，或者偏题的，或者不准确的：
+
+- 上面的 io-error 里，可以看到 scsi 的报告是 DRIVER_TIMEOUT，这和坏块完全不是一回事。
+- 上面的 io-error 里，出现时间是在大约系统启动后 100s，这个时间怎么可能跑 fsck？root 的 fsck 是在 initramfs 里
+完成的，其他 data 分区的 fsck 是在 systemd 的 local-fs.target 之前完成的，都是在系统启动过程里，时间线明显不
+对。
+- 上面的 io-error 里，发生错误时明显是在写文件数据，这和 fsck 更是完全不着边。而且 fsck 只能修复文件系统结构
+，是不可能修复文件数据的。
+
+总之，上面的错误报告和磁盘坏块、fsck 等之间，那是真的看起来完全不是一回事。
+
+这种回复在我看来是相当糟糕的，过于随意，显得我们很不专业，而且会对厂商排查的方向造成误导。
+
+** 浪潮的质疑
+
+邮件如下：
+
+#+begin_src
+感谢单良老师给出的说明，这边产线及项目还有想要咨询的内容，如下： 1、 硬盘厂家分析出来没有坏道或者新增坏块，确
+认硬盘无异常；OS下是否有日志可以确认硬盘问题？ 2、 在压力测试中针对sda5系统根目录进行的，涉及硬盘的测试主
+要还是FIO硬盘压力测试，是否有可能这个IO报错是因为测试完毕到关机时间较短，以至于部分内存数据未能正常落到物
+理硬盘上，导致下次系统启动引导的fsck硬盘校检出现问题，提示IO报错？ 烦请提供一下相关说明，谢谢。
+#+end_src
+
+果然，对方请硬盘厂家做了分析，并没有坏块。所以浪潮要我们提供日志来确认是硬盘问题。——也就是硬盘厂家根据我们
+的回复，很容易地做了澄清，所以问题又被抛回来了。
+
+第二点，浪潮受到我们给的结论的误导，纠结 fsck 去了。
+
+在这个时间点上，问题流转到了我这边，我根据日志做了初步的分析，在当天下午给了一个简单的邮件回复。
+
+** 我的回复
+
+下面是邮件原文：
+
+#+begin_src md
+我想先确认一下我所理解的信息是否准确：
+
+- 在压测（根分区、fio）后，重启时日志里会有io报错，如上。
+- 每一次的报错信息都相同，包括信息中所说的sector值，logic block值，所涉及的inode号等等（请确认）
+- 报错不影响系统正常启动。 上面的报错来看，当然是和磁盘io相关，但是和fsck关系不大：
+- fsck会检查文件系统的整体完整性，会访问各种metadata，但是并不会访问某个文件的data，也不会触发上面的报错。
+- fsck的触发位置，根分区是在initramfs里，其它分区是在systemd-mount相关的service/target里，并不是在上
+  面的位置。
+
+上面的错误，明显是这个inode所代表的文件被访问了，触发过程不是fsck，而是open+write。 实际上还有更多的信息：
+
+- 每一次启动都会触发，而且是write。
+- 在根分区，大概在系统启动之后，90s左右触发错误。
+- 大小为8388608，众所周知，它恰好是8M。 那大小是8M，每一次启动系统之后都要访问，而且都是write，是什么文件？
+
+——当然是journal的日志文件了呀！它是8M、8M加的……所以我猜测这个文件是journal的日志文件，如果有环境的话，
+可以用stat、debugfs等工具验证一下这个inode是不是。 回到io错误来，我对sata/scsi的了解不深，看log的意
+思是write操作底下timeout了。
+
+——了解不深的原因很直观：我们从来没有更改过，以后估计也不会更改这一块的基础代码，而且这一块代
+码从来没有出过问题:) 所以当这一块出现io报错时，一般是底下的硬件问题。（但我并不特指硬盘，实际上硬盘的io完
+成要经过一条很长的数据链路，涉及到很多组件，比如pci iommu dma 各种controller等等）。 那为什么在再次压测之
+后可以恢复呢？我不是很确定，也许仅仅是因为磁盘的空间分布被更改了，也有可能是硬件状态发生了变化。但是我们可以
+有测试的办法，log中有给出磁盘的sector值，那我们可以用dd或者其它工具直接读/dev/sda，或者读出来后原数据再
+写入（写入需谨慎！如果是journal的话那可以随意一点）。
+
+可以做一些对比测试：
+
+- 1 当发现有error log时，在启动之后，再操作它（不管是基于文件还是裸盘），会失败吗？
+——这引入了时间变量的区别。
+
+- 2 如果还是会失败，那把硬盘取下来，用另外的机器测试它，会失败吗？
+——可以排除掉io硬件链路上的其它因素，比如iommu dma之类的。
+
+- 3 再次跑fio之后，启动不报错了，但是我们还是操作原来的sector，会失败吗？
+
+——这可以真正确定再次压测是否导致问题消失了，还是说仅仅因为磁盘空间变化不见了。
+
+- 4 …… 总的来说，上层或者内核层，都不太可能引发底层硬件的io错误，我们可以通过做一些对比来缩小问题根因范
+围。 如果问题非常重要/紧急的话，请邮寄机器到武汉，同时提供较为稳定的复现路径（比如直接用fio如何复现），我会
+第一时间进行排查。
+#+end_src
+
+我尝试做的几件事：
+
+1. 确认现象：比如复现方式、报错信息是否完全一致、系统状态等等。
+2. 澄清这个问题看起来和 fsck 没有关系。
+3. 根据报错的特征，写 8M，是 write 等等，猜测是 journal 相关的日志文
+4. 指出更有可能是某一环节的硬件问题，并且对再次压测可以恢复的现象给出可能性说明。
+5. 给出一些对比测试的手法，尝试获取更多信息，以往下推进。
+
+* 阶段一：确认信息
+
+** 确认日志信息
+
+之后，单良帮我们拉通了外部群，大家欢聚一堂，进行了持久的、亲切友好的交流。😃
+
+首先，我拿到了多次报错的日志。——这是非常重要的，我们需要通过多份日志的对比、总结，来找出某些“特征”，而这些
+特征往往意味着通往真相的线索。
+
+#+begin_src
+[ 96.733676] sd 1:0:0:0: [sda] tag#16 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_TIMEOUT
+[ 96.733682] sd 1:0:0:0: [sda] tag#16 CDB: Write(10) 2a 00 02 c3 60 00 00 08 00 00
+[ 96.733685] print_req_error: I/O error, dev sda, sector 46358528
+[ 96.739713] EXT4-fs warning (device sda5): ext4_end_bio:324: I/O error 10 writing to inode 660038 (offset 33554432 size 8388608 starting block 5795072)
+[ 96.739716] Buffer I/O error on device sda5, logical block 1010944
+#+end_src
+
+下面是日志的一些特征：
+
+- 报错时间，都是在 90-120s 之间。——这是一个非常有趣的、不尴不尬的时间。（为什么说尴尬呢？因为某些负载重的服
+  务可能会选择延迟一段时间后启动，避开 boot 阶段的高峰期。而这个延迟一般就是 30，60,90,120,180……不信你去问一下 deepin-anything:)）
+- 都是在根分区 sda5 上，都是 8M 整段的 io，都是 write。——看起来就是同一个文件。
+- io 的报错都是 scsi 的 DRIVER_TIMEOUT。
+
+更重要的是，通过查看日志和找对方确认，澄清了之前的问题报告中一个非常关键的错误信息：
+
+浪潮说“每次启动都会检测到错误”，这里的“检测”，不是说在每次启动的 dmesg 里都看到了 error，而是他们有一个测试程
+序，会在启动后扫描/var/log/下的所有的 messages 文件，来查看在之前的压力测试中是否发生过错误。——所以只要有一
+次报错，之后的每一次重启都会查到它。
+
+所以真正的现象是：
+
+- 在压力测试之后的首次重启，会有 io-error 报错。
+- 之后的重启，不会有 io-error 报错了。
+
+所以为什么重新跑压力测试之后这个错误会消失？因为测试时间长，会产生大量的信息，会冲掉之前的 message 文件。所以
+就查不到了。
+
+所以这个过程里并没有什么 fsck 或者恢复机制，就是有一次文件写的 io-error，这种小错误很容易地被 fs 给忽略了。
+——ext4 只有在检测到 metadata 类的严重错误时，才会定义为是 fs-error，将自己 remount 为 read-only。对于某个文
+件数据的写错误，就当是丢了……
+
+——至少问题影响的严重等级被大大降低了对吧……
+
+** 确认现场
+
+浪潮方想办法搭了一个远程的桥（先向日葵到他们的办公电脑，再 ssh 到产线机器……），让我查了一下问题现场，拿到了
+更多信息。
+
+首先是确认一下文件系统的状态信息：
+
+- 一切正常，没有坏块，没有任何错误。
+
+其次是硬盘信息：
+
+- 直接操作裸盘，这个块是可以正常读写的，不会发生任何 io 错误。（写的时候当然要写读出来再写进去，慎重！）
+
+最后是文件信息：
+
+- ext4 上可以做逆向工程，找到日志中所提示的 block 是属于哪个文件，最终发现是/insp/process.xxxx。
+- 这是一个浪潮的文件，大概是每次启动后都会重新从远端拉下来，用来跑压力测试之类的。
+
+最后对比了一下文件的数据，发现它的数据也是正常的……
+
+** error 路径分析
+
+因为涉及到 io 错误，所以也看了一下相关的错误路径的处理。
+
+fs 方面：
+
+- 因为是文件数据写入过程里发生的 io error，所以 ext4 并不会将它界定为 fs error 而将整个文件系统重新挂载为 read-only 或者直接内核 panic。
+- 对于这类 io-error，fs 的处理方式基本就是不处理，这一次的 write 失败了，仅此而已。（没有深入看 page 的管理，如果保留了 dirty 的话可能会在后续尝试再次落盘，如果没有的话可能就是放弃这个 page 的写）
+
+scsi 方面：
+
+- scsi 的错误处理挺复杂的……粗略看了一下，这个 DRIVER_TIMEOUT 的报错看起来似乎主要发生在 sata 相关设备发生某
+些错误、触发 recovery 的流程里。——我们其实从来没有修改过 scsi/ata 的代码，甚至都不会去关注，这是标准的底层基础设施。
+
+- 看起来有一条路径是最有可能符合我们的问题的：block 层的 request 超时后，会调用 scsi 注册的 timeout 回调函数
+  ，会在这个过程里去做一些 device reset 的工作，进而触发 sata 设备的 reset/recovery，而之前遗留的还在等待回复
+  的 io-request 呢？则会被设其结果为 DRIVER_TIMEOUT，然后 complete 它并向上层传递……
+
+到这里，我开始认为问题的底层现象是磁盘 io 的超时，需要硬盘厂商配合查看：
+
+- 因为任何软件的操作，都不应该导致硬件上的错误才对，所以以这个论据出发，硬盘厂商必须参与进来配合排查。
+
+至于为什么会出现这种有特征的 io 超时？我提出了一种假设和猜测——
+
+- 因为 ext4 的 cache/delay-alloc 之类的缓存策略，我们看到 100s 左右产生的 io 错误，虽然从流程上我们是先下
+载 inspur 文件，然后开始硬盘压测，但下载的时候可能只是写入了内存，产生实际 io 是在 writeback 流程里，而这时候
+可能已经开始硬盘压测了。
+- 而如果这个 flush write 和硬盘压测同时发生时，是否有可能因为硬盘压测触发了某些 host controller
+的 down/recovery，导致了 flush 操作的 io error？或者是否在 heavy io 情况下，会产生 DRIVER TIMEOUT 的错误？
+
+* 阶段二：硬盘排查
+
+** 江波龙的盘
+这一批机器用的是江波龙的盘。而且用长城的盘，用其他厂商的盘都没有问题，只有江波龙的盘才会有 io-eror 的报错。
+
+江波龙入群后，我们进行了一次友好的三方会谈，确认需要江波龙查看硬盘的记录，找到 io-error 的相关信息。
+
+我这边则过一下 scsi 的 error-handler 的相关代码，给江波龙提供 os/host 端的协助。
+
+我本来希望现场开启 scsi 的日志去复现问题，但是因为日志量实在太大了，而且硬盘方找到了新的线索，所以就放弃了。
+
+开启 scsi 日志的办法：
+
+sysctl dev.scsi.logging_level=0x3fffffff
+
+** 江波龙的报告
+
+江波龙有工具可以 trace 磁盘所接收到的所有命令，我向他们提供了关于内核端的一些信息（比如确认数据是否落盘、内
+核 io-error 中的 sector 信息、内核 block/scsi 的超时的设置与错误路径、io 并行方式和队列深度等），最后他们提
+供了一个报告。（见附件）
+
+在接到报告之后，我们以语音会议的方式做了深入的技术交流，明确了很多信息。
+
+核心有以下几点：
+
+其一，江波龙的 sata 盘在重启过程中没有收到 stop 命令（STANDBY IMMEDIATE）。——在关机过程里会收到，在重启过程
+里没有（无论从桌面按钮，还是命令行）。这对于硬盘而言相当于是意外掉电，SSD 内部 FTL 相关的数据结构都没有来得
+及保存，需要在上电后重新生成，相当于是一次 ssd 的 fsck。而因为之前跑了 fio，磁盘状态非常乱，所以这一次
+的 ssd-check 非常耗时。
+
+其二，在 ssd 的 fw 中写了下面的策略：在 ssd-check 的过程里，如果接收到了非常大块的 io，比如 1M，就会优先做后
+台的整理恢复，而只确保在某个 deadline 之前完成它。——从磁盘 log 来看的话，实际完成的耗时基本都在 1.2s 左右
+，FTL 设的阈值可能是 1.5s 左右。
+
+上面有两个核心点：
+
+- 重启过程里，硬盘有意外掉电。
+- 硬盘在整理恢复时，单个 io 的处理时长为 1.2s，且硬盘认为这是合理 ok 的、在 deadline 之内的。
+
+* 阶段 3：timeout
+
+** 时间线
+
+通过追问江波龙的硬盘记录，结合内核 log，我们对上了时间线：
+
+- 内核记录里，在 104s，报告了 timeout 的 io-error。——信息里 sector 号。
+- 磁盘记录里，84s 时，大文件开始写。——它的特征明显，io-size 都是 1M。
+- 磁盘记录里，114s 时，开始处理 io-error 中的 io。——根据 sector 号可以找到对应的。
+- 之后的几个 io，在 os 来看都超时了。——在磁盘来看，最终都成功落盘了。
+
+这里磁盘的时间线是从它上电的时刻开始算的，所以其实是在 bios 上电时开始算的。我们如果估算一下的话，bios 可能大
+约领先 kernel 10s。
+
+所以从内核时间线来看的话，可能是这样：
+
+- -10s，重启，bios 启动，硬盘上电。
+- 0s，内核启动。
+- 74s，开始写 inspur 文件。
+- 104s，内核报告 io 超时。
+- 104s，硬盘开始处理该 io，但是已经晚了……
+
+另外，江波龙给磁盘的恢复工作设置了一个延迟：在上电 60s 开始启动，所以恰好撞上了在启动之后拉取大文件的流程。
+
+** 队列深度
+
+江波龙在磁盘进入恢复整理时，将 io 的完成 deadline 大约设置为了 1.5s，这是否合理？而平均每个 io 需要 1.2s 的
+话，也不是很久，为什么会触发 scsi 层的 timeout error？
+
+核心原因是 io 协议中有队列深度（queue depth）这个概念。
+
+achi 协议中的最大队列深度是 32，一般的 sata 盘都是这个值（包括江波龙的硬盘）；而 nvme 协议允许最多 64K 个 io
+队列，每个队列最多可以有 64K 的深度，但实际的实现一般都没这么大，1023 的队列深度是一个典型值。
+
+一般而言，块设备的队列深度可以查看这里：
+
+#+begin_src bash
+cat /sys/block/nvme0n1/block/queue/nr_requests 1203
+#+end_src
+
+比如 nvme 盘，看这里就 ok。
+
+但是对于 scsi 盘，这里的值是不准确的，需要去看它的 scsi target 上的 queue depth，比如：
+
+#+begin_src bash
+cat /sys/block/sda/block/queue/nr_requests 64 cat /sys/devices/pci0000:00/0000:00:17.0/ata4/host3/target3:0:0/3:0:0:0/queue_depth 32
+#+end_src
+
+这里 32 才是准确的值。
+
+大家也可以通过下面的命令查看：
+
+#+begin_src bash
+$ lsscsi -l [3:0:0:0] disk ATA ST1000DM010-2EP1 CC46 /dev/sda state=running queue_depth=32 scsi_level=6 type=0 device_blocked=0 timeout=30
+#+end_src
+
+可以看到上面的 sysfs 中的设备链路是很长的，但如果了解其内部设备结构体系的话是很清楚的:)）
+
+** scsi 的 timeout
+
+上面 lsscsi 的信息里，不只有 queue depth，还有 timeout 信息：30s。
+
+其实我们也可以通过 sysfs 查看。
+
+对于 4.19 内核：（单位 s）
+
+#+begin_src bash
+cat /sys/block/sda/device/timeout 30
+#+end_src
+
+
+对于更新的内核，同样可以：（这是滴滴的同学在 4.20 加入内核的，单位 ms）
+
+#+begin_src bash
+cat /sys/block/sda/queue/io_timeout 30000
+#+end_src
+
+
+在问题的讨论里，浪潮的同学曾经提出一个问题点要我们 os 澄清：在他们的机器上，不管是 centos 还是 kylin，这
+个 timeout 都是 90s，为什么我们要设置 30s？如果 90s 可能就不会出现 timeout 的 io-error 了。
+
+其实不管 debian，还是 centos 或者 kylin，对于常用的 sata 盘，timeout 都会是 30s。——这实际上是块设备层的一
+个默认值：如果驱动层没有给出要求的 timeout 值，就会是 30s。
+
+而浪潮同学所看见的 90s，是因为那是服务器环境，下面是用的博通的 Megaraid，而它的内核驱动将自己的 timeout 设置
+为了 90s：
+
+#+begin_src c
+/* drivers/scsi/megaraid/megaraid_sas.h */ #define MEGASAS_DEFAULT_CMD_TIMEOUT 90
+#+end_src
+
+——在这个问题的处理过程里，这种类似的澄清发生过很多次……当然我认为这是 os/kernel 的天然职责，要将一切解释
+得清楚、明确，不管是数据、配置，还是代码、流程。
+
+** timeout 的合理值
+
+江波龙在磁盘恢复阶段的 1.5s deadline，合理吗？
+
+到这里，我们可以明确回答说：不合理。
+
+- 队列深度是 32，那如果 kernel 在 74s 一次性推入 32 个 1M 的 io-request，而磁盘顺序处理，每个 1.5s，处理完最
+后一个时将需要 48s，远远超过了设备层 32s 的 timeout 阈值。
+- 在当前问题里，硬盘是 1.2s 一个 io，所以对于一次性推入的 32 个 io，最后几个就超时了，进而引发了一系列的内
+核 io-error 报错。
+
+所以，到这里，结合内核块层、scsi 层、ahci 协议、linux io 模型、队列深度等知识，我们可以明确江波龙在磁盘恢复时
+所使用的策略是不合理的，应当改进。
+
+比如：
+
+在队列深度 32 时，可能应当保证在 500ms 左右完成单个 io，来确保不会发生 timeout。
+
+** 关于内核/os 职责的讨论
+
+我认为这是一个非常典型的例子：我们不能期待硬盘厂商比我们更了解内核。
+
+相反的，在这样的场景下，就是应该由 os 与硬盘厂商有深入的技术交流和合作，来发现和解决类似的问题，最后给终端用
+户提供一个稳定的系统。
+
+——我这里说的系统，不是指“系统层”，而是整个的计算机系统，包括软件硬件的计算机系统，用户直接购买和使用的，用
+户直接拥有和抱有期待的计算机系统，也是最终交付给用户的商品。
+
+同时，如果没有通过 timeout 发现这个问题呢？如果这个问题没有被暴露呢？如果我们没有经过这个过程，了解其中的所
+有细节呢？
+
+那用户可能会发现系统重启后的一段时间，系统或者某个应用非常非常卡顿，莫名其妙的卡顿。——只要触发了大的 io
+写，一个 io 要 1.2s，大家可以想象一下会有多么卡？
+
+而且我们大概绝对猜不到原因，而且如果是从软件层出发去排查，可能想破脑袋也找不到正确的方向……
+
+现在，让我们扪心自问：我们足够了解“计算机系统”吗，足够了解我们 kernel/os 所控制着的一切吗？对这一切有把握和掌
+控吗？
+
+——所以在我看来，我们当前的技术积累是远远不够的，远远远远不够。这种技术积累的不足，最后所表现出来的就是各种
+稳定性、兼容性问题。因为我们缺乏对计算机系统的整理理解和把握，缺乏技术能力和视野，对系统中的所有硬件、所有软
+件进行审视、评判、管理、校正，让一切都处于正确的状态、正确的策略，让整个系统和谐一致。
+
+这是一条很长的路。很多人对此不屑一顾，认为做 os 就是做生态做推广营销，就是做出好看的界面，做出炫酷的、可以写
+到 ppt 去展示的新特性，或者认为在 uos 的成功就是爬上更高的职级岗位，是所谓的在管理上有所作为。
+
+我不这么认为。我认为这一切美好的景象都建立在一个前提之上：技术，底层技术，硬件/内核/os 的底层技术，绝对的技术
+。这是一条绝对的线，直接划出一道界限：你能做什么，你能做好什么，你能 hold 住什么。
+
+所以我在这里，对所有对技术不屑一顾的人发出嘲讽和挑战：来啊，你来查这种问题啊，你来把事情做对啊，你来把系统做
+稳定啊，你来向合作厂商澄清啊，你来给用户交付一个好用的系统啊。你来。
+
+——那些隐藏在人群之中的朋友们，让我们继续对底层技术怀着热情和敬畏之心，让我们走过这条艰难的漫漫长路。
+
+* 阶段 4：重启与掉电
+
+** 意外掉电问题
+
+除了磁盘 io 的 deadline 与 timeout 问题，还有一个更加值得关注的问题：为什么磁盘重启过程里会经历意外掉电？
+
+江波龙给出了磁盘的 trace 信息：
+
+- 在关机流程里，在 flush cache 之后，会收到一个 standy immediate 命令，然后经历了 OOB Sequence（断电上电流程）。
+- 而在重启流程里，flush cache 之后，直接就到了 OOB。
+
+所以江波龙认为责任在于 os：为什么重启过程里没有 stop 命令？
+
+从任何一种角度而言，这种意外掉电都是不应该的，不但可能读磁盘造成伤害，而且会引入不必要的数据丢失风险，同时也
+会引发上面所展示的系统稳定性问题。
+
+** 测试确认
+我首先用虚拟机做了快速的测试：
+
+- debian-sid，kenrel 6.6
+- uos，kernel 4.19
+
+打开 scsi 的 log，做重启和关机动作，通过虚拟串口看它的内核 log 输出。
+
+确实，在关机过程：
+
+#+begin_src
+[ 80.764967] kvm: exiting hardware virtualization
+[ 80.786466] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[ 80.789082] sd 0:0:0:0: tag#17 Send: scmd 0x00000000f831d761
+[ 80.791930] sd 0:0:0:0: tag#17 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[ 80.796709] sd 0:0:0:0: tag#17 Done: SUCCESS Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[ 80.800981] sd 0:0:0:0: tag#17 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[ 80.805504] sd 0:0:0:0: tag#17 scsi host busy 1 failed 0
+[ 80.808824] sd 0:0:0:0: Notifying upper driver of completion (result 0)
+[ 80.812689] sd 0:0:0:0: [sda] Stopping disk
+[ 80.815128] sd 0:0:0:0: tag#18 Send: scmd 0x000000006ee955cc
+[ 80.818432] sd 0:0:0:0: tag#18 CDB: Start/Stop Unit 1b 00 00 00 00 00
+[ 80.822321] sd 0:0:0:0: tag#18 Done: SUCCESS Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[ 80.825989] sd 0:0:0:0: tag#18 CDB: Start/Stop Unit 1b 00 00 00 00 00
+[ 80.828882] sd 0:0:0:0: tag#18 scsi host busy 1 failed 0
+[ 80.831280] sd 0:0:0:0: Notifying upper driver of completion (result 0)
+[ 80.901092] ACPI: Preparing to enter system sleep state S5
+[ 80.904648] reboot: Power down [ 80.907175] acpi_power_off called
+#+end_src
+
+
+而在重启过程：
+
+#+begin_src
+[ 892.601407] kvm: exiting hardware virtualization
+[ 892.622040] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[ 892.623044] sd 0:0:0:0: tag#30 Send: scmd 0x00000000ad7121ae
+[ 892.623763] sd 0:0:0:0: tag#30 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[ 892.624882] sd 0:0:0:0: tag#30 Done: SUCCESS Result: hostbyte=DID_OK driverbyte=DRIVER_OK
+[ 892.625903] sd 0:0:0:0: tag#30 CDB: Synchronize Cache(10) 35 00 00 00 00 00 00 00 00 00
+[ 892.626902] sd 0:0:0:0: tag#30 scsi host busy 1 failed 0
+[ 892.627572] sd 0:0:0:0: Notifying upper driver of completion (result 0)
+[ 892.655947] reboot: Restarting system
+[ 892.656570] reboot: machine restart
+[ 892.658147] ACPI MEMORY or I/O RESET_REG.
+#+end_src
+
+** sd_shutdown()流程
+
+根据“Stopping disk”的 log，可以找到函数 sd_shutdown():
+
+#+begin_src c
+  /* * Send a SYNCHRONIZE CACHE instruction down to the device through * the normal SCSI command structure. Wait for the command to * complete. */
+  static void sd_shutdown(struct device *dev)
+  { struct scsi_disk *sdkp = dev_get_drvdata(dev);
+          if (!sdkp) return; /* this can happen */
+          if (pm_runtime_suspended(dev)) return;
+          if (sdkp->WCE && sdkp->media_present)
+                  { sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n"); sd_sync_cache(sdkp, NULL); }
+          if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop)
+                  { sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n"); sd_start_stop_device(sdkp, 0); }
+  }
+#+end_src
+
+（推荐大家用 rg 来查找内核源码目录，比 grep 快一百倍：apt install ripgrep）
+
+device->manage_start_stop 是 scsi 的属性，可以被配置，默认为 1:
+
+
+cat /sys/devices/pci0000:00/0000:00:17.0/ata4/host3/target3:0:0/3:0:0:0/scsi_disk/3:0:0:0/manage_start_stop 1
+
+而 system_state 是一个全局变量，可以取的值为：
+
+#+begin_src c
+  /* * Values used for system_state. Ordering of the states must not be changed * as code checks for <, <=, >, >= STATE. */
+  extern enum system_states
+  { SYSTEM_BOOTING,
+          SYSTEM_SCHEDULING,
+          SYSTEM_RUNNING,
+          SYSTEM_HALT,
+          SYSTEM_POWER_OFF,
+          SYSTEM_RESTART,
+          SYSTEM_SUSPEND,
+  } system_state;
+#+end_src
+
+SYSTEM_RESTART 就是重启过程中的系统状态，所以 sd_shutdown()的逻辑就是 reboot 过程里不会下发 stop 命令。
+
+这个代码是在很早期，2007 年就被加入内核的，逻辑一直没有变过，直到最新的代码，关于 RESTART 的逻辑还是一样。
+
+** sata 盘的 smart 信息
+
+既然在 reboot 过程里，sd 就是不会下发 stop 命令，那 sata 盘怎么办？是由 bios 来负责在下电之前给磁盘发送 stop
+命令吗？怎样才是 firmware 的合理行为？
+
+在 nvme 盘的 smart 信息里，有一个 unsafe shutdown 字段，可以非常直接地得到意外掉电的次数记录。但是对于 sata
+盘，sata 协议里并没有规定要上报哪些信息，所以很多都是厂商定制的，也没有 unsafe shutdown 的统计。
+
+#+begin_src bash
+$ sudo smartctl -ax /dev/nvme0n1 | grep -i "unsafe shutdown" Unsafe Shutdowns: 41 $ sudo smartctl -ax /dev/sda | grep -i "unsafe shutdown" $
+#+end_src
+
+但是 sata 盘里有电源轮次的属性：
+
+#+begin_src bash
+$ sudo smartctl -ax /dev/sda | grep -ie "power_cycle\|start_stop" 4 Start_Stop_Count -O--CK 100 100 020 - 236 12 Power_Cycle_Count -O--CK 100 100 020 - 237
+#+end_src
+
+（一般的 sda 都有 power cycle 记录，某一些有 start stop 记录）
+
+** firmware 的合理行为
+
+我尝试在网上找相关的协议规范，但是没有找到（我不了解 acpi，可能在这个规范里有？我找时间去看看它的 spec……）。
+
+所以我找了一些机器实际测试：
+
+- 清华同方/x86/intel/AM 固件：
+ - 关机再开机，power cycle++
+ - 重启，power cycle 不变。
+- 华为笔记本/x86/intel/huawei 固件
+ - 关机再开机，power cycle++
+ - 重启，power cycle 不变。
+- 清华同方/arm/飞腾 D2000/昆仑固件：
+ - 关机再开机，power cycle++
+ - 重启，power cycle++
+
+AM（安迈，American Megatrends）和华为固件的行为是与内核保持了一致的：
+- 在 reboot 过程里，内核没有给硬盘发送（不管是 sata 还是 nvme）stop 命令，而固件/主板也并没有给硬盘下电，整个
+过程里只有 reset，而没有 start/stop，没有经历电源周期。
+
+而飞腾的机器，不管是清华同方机器+昆仑固件，还是浪潮机器+浪潮固件，都直接给硬盘下电了。
+
+** cold boot 与 warm boot
+
+这里有一个关于 reboot 类型的争论：因为在内核里，reboot 模式默认都是 reboot_cold 的；但又说重启过程里硬盘/主板
+并没有真正下电，那不应该是 warm boot 吗？
+
+在 5.11+的内核里，可以通过下面的接口查看：
+
+#+begin_src bash
+$ cat /sys/kernel/reboot/mode cold $ cat /sys/kernel/reboot/type acpi
+#+end_src
+
+
+如果用 crash/gdb 的话，可以直接查看它的内核全局变量：reboot_mode, reboot_type。
+
+而关于 cold boot 和 warm boot，我没有找到这一块的规范性定义，但在网上见到了很多人在询问相关的问题：如果以软件方式触发 cold reboot，比如想远程控制某个机器完成一次真正的 cold reboot，来让某些硬件复位；而答案几乎都是：no way。
+
+比如这个链接：
+
+Is there any way to cold reboot via software?
+
+https://ubuntuforums.org/showthread.php?t=2481844
+
+下面这个链接则详细解释了 cold boot 和 warm boot 的差异：（但我不确定它的权威性/规范性）
+
+Difference between Cold booting and Warm booting in Operating System - javatpoint
+
+https://www.javatpoint.com/cold-booting-vs-warm-booting-in-operating-system
+
+其中指出的核心的差异是：
+
+cold boot 是硬件的电源按钮所触发的启动，是完全下电之后的从 0 开始，会经过完整的 POST 自检。
+warm boot 是软件触发的，不需要做 POST。——windows/mac 上的重启也都是 warm boot。
+也就是说，os 级别的所有的 reboot，都是归属于“warm boot”的范畴；而 linux 内核中的所谓“reboot_cold”模式，其实
+也只是“warm boot”中的一种模式，相对而言 cold 一些。
+
+实际上在内核里，对于 x86 架构，只有一个地方引用了它：
+
+#+begin_src c
+  static void native_machine_emergency_restart(void)
+  { int orig_reboot_type = reboot_type;
+          //...
+          /* Tell the BIOS if we want cold or warm reboot */
+          mode = reboot_mode == REBOOT_WARM ? 0x1234 : 0;
+          ,*((unsigned short *)__va(0x472)) = mode;
+          //...
+          for (;;) {
+                  /* Could also try the reset bit in the Hammer NB */
+                  switch (reboot_type)
+                          { case BOOT_ACPI: acpi_reboot();
+                                          reboot_type = BOOT_KBD;
+                                          break;
+                          case BOOT_KBD: // ...
+                          }
+                  //...
+          }
+  }
+#+end_src
+
+当是 reboot_cold 时，会传递一个不同的值给 bios，这个 0x472 大概是为 bios 预留的，且地址/含义固定。
+
+而在内核的通用驱动、core kernel 部分，都不会因为 reboot_cold/reboot_warm 而有不同行为。
+
+（我现在其实还是没搞清楚在 bios 上，reboot_cold 和 reboot_warm 到底会有哪些行为差异……）
+
+** power 问题的 next step
+
+目前问题已经传递到飞腾，他们正在调研与评估。
+
+就我目前所了解的信息来看：
+
+- os reboot 都是 warm boot，规范行为就是系统不会断电，包括硬盘。
+- 如果 firmware 层直接断电，会造成硬件的意外断电，而且可能不只有 scsi/ata，很多 net 驱动的 shutdown 代码里都
+基于 SYSTEM_POWER_OFF 做了判断，在关机和重启过程里会有不同的行为。
+
+所以这个问题其实不只是 sata 盘的问题，而是一个 platform 的通用 power management 问题。
+
+而很值得深思的是，这么长时间了，这个问题直到现在才暴露和被关注，platform 与 os 之间的失协，尤其是硬盘的意外掉
+电，以及潜在的 disk/fs、net/wifi 等系统稳定性问题。
+
+* 最后
+
+让我们深入做技术。
+
+让我们尊重技术、敬畏技术、热爱技术。
+
+让我们给予深入做技术的人以应有的尊重。
+
+os 技术为王。
+
+（有没有同学有志向，真正做懂做透 acpi 和 power management？）
