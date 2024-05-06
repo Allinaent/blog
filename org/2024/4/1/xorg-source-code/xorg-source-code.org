@@ -719,7 +719,11 @@ xf86SaveScreen(ScreenPtr pScreen, int mode)
  DPMSForceLevel(dmxScreen->beDisplay, DPMSModeOn);
 #+end_src
 
+修改是没有问题的，但是却不能解决问题。现在这个问题不是说要解掉，因为了解的不足，又缺乏调试手段。那么最好的方
+式就是学习和总结 A 卡的代码和流程。之前对 A 卡的代码可以说是没有了解的。这一次全方位的对 A 卡的相关的流程做
+一下总结。看看一个 drm 的显卡到底都做哪些事情，都是怎么做的。好久没好好总结代码了。
 
+重要的事情说三遍：总结代码，总结代码，总结代码。
 
 
 
