@@ -1,0 +1,58 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/05
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-05-07 二 11:02]
+#+TITLE: 威联通使用ipv6 加ddns 进行远程访问
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: technology
+
+
+* 首先要开启 ipv6
+
+https://post.smzdm.com/p/ar678qwz/
+
+我家的光猫是新的。需要网上百度一下对应光猫型号的用户和密码。
+
+开起的过程也比较麻烦，算是了解一下 ipv6 的基本设置情况。
+
+
+* 群晖使用 ipv6 加 ssl 访问
+
+https://www.youtube.com/watch?v=MjKfcNihwU8
+
+这个使用方法就是免费的，快速的。效果非常地好。
+
+
+* 威联通 qnap 使用 ipv6 加 ssh 的访问
+
+国区的帐号也可以申请 let's encrypt 的 ssl 证书了。
+
+https://post.smzdm.com/p/am3egqnd/
+
+威联通使用的视频在这里：
+
+https://www.youtube.com/watch?v=IMMZ1MIQrWE
+
+* 机器的安全性
+
+https://www.suncan.com.cn/archives/8029
+
+暴露在公网中的机器都有可能受到攻击，最好的办法是针对特征做好安全。不使用 root，admin
+账号，并禁用。还有一般禁用 ssh，而且打开 ssh 也不要用默认的 22 端口号。
+
+使用 ssl 连接。还有更新安全漏洞的补丁。恩，最好的就是把密码改成自己都觉得太复杂太难记
+的东西，这一点太重要了，不要为了省事，在密码长度上有水份。
+
+想让为了自己方便费时费电的 nas 变成黑客的肉鸡吗？不想的话，就认真对待安全这件最重要的
+事情上。
+
+* 总结
+
+总共就两个步骤，一个是打开 ipv4/ipv6 双通道，使用光猫播号，路由器 ipv6 桥接。
+
+第二个步骤是打开威联通的免费 ssl 证书，通过 ddns 用威联通的域名来访问 nas 设
+备。有了这个就太方便了，随时可以把重要的资料备份到自己的 nas 当中。ssl 的安全性
+是一定程度上能保证的。但是最好也不要用 admin 帐号进行访问。
