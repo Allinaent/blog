@@ -1,7 +1,7 @@
 +++
 title = "线性代数第四章——线性方程组"
 date = 2024-04-22T10:48:00+08:00
-lastmod = 2024-04-26T16:22:28+08:00
+lastmod = 2024-05-07T22:39:24+08:00
 categories = ["exam", "math"]
 draft = false
 toc = true

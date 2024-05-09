@@ -1,7 +1,7 @@
 +++
 title = "我的工作流增加mathjax extension 和一些新感悟"
 date = 2024-04-26T16:35:00+08:00
-lastmod = 2024-04-26T17:20:17+08:00
+lastmod = 2024-04-28T17:27:27+08:00
 categories = ["emacs", "prose"]
 draft = false
 toc = true
@@ -63,7 +63,7 @@ index 818ccc6..ddd7295 100644
 +                newcommand: ['newcommand', 'renewcommand', 'newenvironment', 'renewenvironment', 'def', 'let'],
 +                unicode: ['unicode'],
 +                verb: ['verb']
-+        }
++        })
 +    },
 +    options: {
 +      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']

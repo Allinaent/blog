@@ -63,7 +63,7 @@ index 818ccc6..ddd7295 100644
 +                newcommand: ['newcommand', 'renewcommand', 'newenvironment', 'renewenvironment', 'def', 'let'],
 +                unicode: ['unicode'],
 +                verb: ['verb']
-+        }
++        })
 +    },
 +    options: {
 +      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
