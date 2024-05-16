@@ -1,0 +1,62 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/05
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-05-16 四 14:31]
+#+TITLE: 如臂使指——构建自己的个人知识库
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: emacs prose
+
+知识千千万，能写在博客里查询的只有一少部分。大量的知识在什么地方呢？在浏览器的收藏夹中，
+在笔记中，在电脑 pdf 的书籍中。那么做为一个想把自己的知识系统化的整理，放到一个地方的人，
+应该怎么做呢？
+
+经过一些尝试，踩过一些小坑后。接触到了自己想要的软件 zotero ，开源，免费，可以和我的 emacs
+工作流集成到一起。经过简单的调教后，一旦熟悉，相信能够如臂使指，做到一件事：
+
+活到老，学到老。
+
+* zotero
+
+这个软件的安装很简单。它能整理 pdf 文档，绐 pdf 增加注释。还是保存流览器的链接。界面清爽，
+有 win ，linux ，mac 版本。手机 iOS 的有软件， android 的暂时没有软件，正在研发中，也许
+马上就要出了。
+
+我一般不会在手机上面用。无所谓了。
+
+* 同步方式
+
+难点。坚果云花钱。我有 NAS ，有 ipv6 。想着用 NAS 的 webdav 来访问，刚开始以为就像管理 NAS
+的 https 链接一样使用简单。然而我还是年轻了，中间尝试的方法各有各的坑，现在只是做到可用了。
+但是体验不是特别好（但能用，免费的，要啥自行车）。
+
+
+** 方式一 cloudflare cdn 代理 ipv6 网络
+
+使用我 cloudflare 的域名加 webdav 设置的 https 的端口号。这种方式可以访问，也可以同步，但
+是在同步较大的 pdf 文件（几十兆到 100 兆）的时候会报文件过大的错误。
+
+https://www.ztianzeng.com/posts/Cloudflare%E8%AE%A9IPV6%E4%B8%8D%E5%9C%A8%E9%B8%A1%E8%82%8B/
+
+这可能跟 CDN 服务器的 upload_max_filesize 设置有关系。总之，这个方法不行了。
+
+** 方式二使用樱花的免费内网穿透地址来访问
+
+https://www.natfrp.com/
+
+这个配置完成后，访问 ip 端口，webdav 的址，报错 501 。服务器未能识别请求的方法，原因未知，
+是内网穿透服务器的问题吗？
+
+内网穿透的配置是不是有问题呢？我先配一个 ssh 的服务看看能不能访问题。
+
+** 方式三成功的方法使用 qnap 自带的 ddns http
+
+使用 qnap 自带的 ddns 加上 let's encrypt 的 ssl 证书，用 https 来访问是有问题的。zotero 提示
+是自签名的证书，不让进行同步。退而求其次，用 http 的方式同步。因为公网 ip 是 ipv6 的，所以
+ipv4 的网络无法访问。需要使用支持 ipv6 的代理服务器。
+
+
+
+

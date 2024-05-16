@@ -1,0 +1,58 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/05
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-05-11 六 10:55]
+#+TITLE: 类似wiki 的org-roam
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: emacs
+
+emacs 用 orgmode 来学习总觉得还缺一些东西。就是把所有的记录的比较比较好的
+结合在一起。
+
+感谢金色飞贼小米，一个用 emacs 的数学博士。这真是一个值得尊敬的大佬。
+
+* org-roam
+
+https://www.bilibili.com/video/BV1qV4y1Z7h9
+
+org-roam 有一些类似的插件：roam research ； obsedian ； Logseq ； Notion...
+
+* zotero
+
+搞科研用这个。考研复习不用这个，因为啥呢？因为现在没有时间搞这些，要把这些工作流设置的
+很完美需要一段时间的学习。
+
+** 最佳实践
+
+qnap 使用 webdav
+
+https://post.smzdm.com/p/a4pmggzw/
+
+什么是最佳实践呢？就是用 qnap 做一个 webdav 可以挂载到我的工作机上，那样的话，我就会有
+一套永远不断发展的个人科研库了。时间长了之后，我可能学到更多的东西。最后。最终的目的还
+是学习东西，学习有用的知识。
+
+小米金色飞贼的科研流程总结的非常好，其中也提到了好几个人名。没想到 orgmode 是 2003 年才
+出现的软件，原来这个世界的历史并不是很长。
+
+通过 zotero 导出 sqlite 的数据库。基实本质上无需 zotero ，只需要 org-roam-bibtex 即可，
+可能是 zotero 这个软件 UI 交互更好一些吧。
+
+
+* 我的 nas 还能做什么？
+
+** frp 将工作机的 ssh 做转发
+
+** 将一生的论文和文档做好同步
+
+https://zhuanlan.zhihu.com/p/529294294
+
+* 我的缺点
+
+做事过于粗糙，不细致。这就导致了我对很多东西的认识是过于模糊的。我做事做的不够好的原因就
+是随意性比较强。做事没有体系，缺少认真的态度。做不少的事情都是稀里糊涂的。就感觉很难。
+
+
