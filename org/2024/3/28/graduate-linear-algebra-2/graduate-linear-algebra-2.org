@@ -117,7 +117,7 @@
  + 初等变换法 $(A|E)\xrightarrow{\text{elementary row transformation}}(E|A^{-1})$
  + 若 $AB=E$ 或 $BA=E$ ，则 $A^{-1}=B$
  + 分块矩阵的公式
-   \[
+  \[
    \left [ \begin{matrix}
    B & O \\
    O & C
@@ -127,7 +127,7 @@
    \end{matrix} \right ]
    \]
 
-   \[ \left [ \begin{matrix}
+  \[ \left [ \begin{matrix}
    O & B \\
    C & O
    \end{matrix} \right ]^{-1}=\left [ \begin{matrix}
@@ -160,10 +160,15 @@
 
 - 矩阵秩的公式
  + $r(A)=r(A^{T})$ ; $r(A^{T}A)=r(A)$ ，一个矩阵的转置左乘它自己，秩大小不发生变化。
+
  + $k \neq 0, r(kA)=r(A)$ ； $r(A+B) \leq r(A) + r(B)$ ； $r(AB) \leq \min (r(A)+r(B))$
+
  + $r(AB) \leq min(r(A), r(B))$
+
  + 若 $A$ 可逆，则 $r(AB)=r(B)$ ， $r(BA)=r(B)$
+
  + 若 $A$ 是 $m\times n$ 矩阵，$B$ 是 $n\times s$ 矩阵，$AB=O$ ，则 $r(A)+r(B) \leq n$
+
  + 分块矩阵 $r\left (\begin{array}{cc}A & O \\O & B \\ \end{array}\right)=r(A)+r(B)$
 
 * 分块矩阵
