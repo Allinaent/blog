@@ -1,10 +1,11 @@
 +++
 title = "如何命令行使用qemu 和为调试增加串口输出到终端"
 date = 2024-01-30T16:33:00+08:00
-lastmod = 2024-01-31T14:55:57+08:00
+lastmod = 2024-06-06T13:18:52+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 查找的一些资料 {#查找的一些资料}

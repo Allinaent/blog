@@ -8,6 +8,7 @@
 #+TITLE: 如臂使指——构建自己的个人知识库
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3ebba5ba2655501d082d485a73ba52fb.jpg
 
 知识千千万，能写在博客里查询的只有一少部分。大量的知识在什么地方呢？在浏览器的收藏夹中，
 在笔记中，在电脑 pdf 的书籍中。那么做为一个想把自己的知识系统化的整理，放到一个地方的人，
@@ -138,7 +139,8 @@ https://blog.csdn.net/qq_46450354/article/details/128363917
 https://www.bilibili.com/video/BV1Lc411J7gQ/
 
 Zotero 是一个科研文献管理器，而不是扫描版野生 pdf 的管理器。所认不是论文什么的，不能用 helm-bibtex
-搜到东西。这一点确实有一点不爽。那有没有什么方式能够补救呢？
+搜到东西。这一点确实有一点不爽。那有没有什么方式能够补救呢？有的——直接右键可以生成简化的 bibtex
+信息足够在 emacs 当中查找和使用了。
 
 
 ** 意外的发现 zotero-find

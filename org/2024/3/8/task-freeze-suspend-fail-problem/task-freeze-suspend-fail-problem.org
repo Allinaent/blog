@@ -8,6 +8,7 @@
 #+TITLE: task-freeze/suspend失败问题（文韬大佬）
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 
 这是一个多次出现的 task-freeze 失败，进而导致 suspend 失败的问题，借这个问题介绍一下内核对于 task 的管理，比如 state 管理，wait/wakeup，freeze 过程等等。

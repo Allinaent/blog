@@ -1,10 +1,11 @@
 +++
 title = "使用串口调试"
 date = 2024-02-05T16:51:00+08:00
-lastmod = 2024-02-29T17:42:15+08:00
+lastmod = 2024-06-06T13:18:19+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 使用方法 {#使用方法}

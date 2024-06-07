@@ -1,10 +1,11 @@
 +++
 title = "王勇绐我的一些启示"
 date = 2023-10-19T16:07:00+08:00
-lastmod = 2023-10-19T16:08:41+08:00
+lastmod = 2024-06-06T15:35:24+08:00
 categories = ["prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 王勇的经历绐我的一点启示：

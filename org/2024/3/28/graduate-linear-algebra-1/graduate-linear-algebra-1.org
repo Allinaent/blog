@@ -8,6 +8,7 @@
 #+TITLE: 线代第一章——行列式
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg
 
 线性代数是对运算规则的一种归纳和研究，实际上这方面的研究极大的提高了并行计算的速度。
 可以通过电路模拟电路来提高运算速度。

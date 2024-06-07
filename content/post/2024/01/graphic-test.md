@@ -1,10 +1,11 @@
 +++
 title = "显卡测试的一些命令记录"
 date = 2024-01-03T15:28:00+08:00
-lastmod = 2024-03-14T16:13:29+08:00
+lastmod = 2024-06-06T15:53:47+08:00
 categories = ["graphic"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3f0dd7abfd0dd8b6b893e6da737c3c52.jpg"
 +++
 
 ## glmark2 的测试 {#glmark2-的测试}
@@ -143,7 +144,9 @@ cp /usr/lib/xorg/modules/input/* /home/uos/xorgdist/lib/x86_64-linux-gnu/xorg/mo
 
 创建/home/zzz/xorgdist/var/log日志目录
 
+```bash
 mkdir -p /home/uos/xorgdist/var/log
+```
 
 -   2d驱动配置
 
@@ -155,9 +158,23 @@ cp /usr/share/X11/xorg.conf.d/* /home/uos/xorgdist/share/X11/xorg.conf.d/
 
 -   通过配置启动xorg启动
 
-/etc/lightdm/lightdm.conf
+在 /etc/lightdm/lightdm.conf 当中增加：
 
 xserver-command=/home/uos/xorgdist/bin/Xorg
+
+
+### 重新编译 {#重新编译}
+
+如果代码切换了分支之后。重新编译 Xorg 的话，不用再执行那么多的代码，只需要：
+
+ninja install ，所有的改动都会覆盖上去。后面 sudo systemctl restart lightdm 即可。
+
+
+### 系统升级 {#系统升级}
+
+源当中增加这个，至于源是按什么名称分类的，不太清楚。
+
+deb <http://pools.uniontech.com/ppa/dde-eagle> eagle/1070 main contrib non-free
 
 
 ## 下载所有依赖包 {#下载所有依赖包}

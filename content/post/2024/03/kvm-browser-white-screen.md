@@ -1,10 +1,11 @@
 +++
 title = "kvm 中流览器白屏问题分析"
 date = 2024-03-19T12:26:00+08:00
-lastmod = 2024-03-19T13:22:58+08:00
+lastmod = 2024-06-06T12:26:32+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 一些零散的信息和结论 {#一些零散的信息和结论}

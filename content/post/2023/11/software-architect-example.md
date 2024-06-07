@@ -1,11 +1,12 @@
 +++
 title = "软考考前突击"
 date = 2023-11-01T19:04:00+08:00
-lastmod = 2024-01-11T11:33:35+08:00
+lastmod = 2024-06-06T16:11:32+08:00
 tags = ["examination"]
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/8aae9667673de26e7cd6dabc7ef677de.jpg"
 +++
 
 ## 准备 {#准备}

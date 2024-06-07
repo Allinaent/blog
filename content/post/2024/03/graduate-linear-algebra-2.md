@@ -1,10 +1,11 @@
 +++
 title = "线代第二章——矩阵"
 date = 2024-03-28T22:58:00+08:00
-lastmod = 2024-04-06T23:54:38+08:00
+lastmod = 2024-06-06T11:27:19+08:00
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg"
 +++
 
 ## 行列式与矩阵的区别与联系 {#行列式与矩阵的区别与联系}
@@ -163,10 +164,15 @@ toc = true
 
 -   矩阵秩的公式
     -   \\(r(A)=r(A^{T})\\) ; \\(r(A^{T}A)=r(A)\\) ，一个矩阵的转置左乘它自己，秩大小不发生变化。
+
     -   \\(k \neq 0, r(kA)=r(A)\\) ； \\(r(A+B) \leq r(A) + r(B)\\) ； \\(r(AB) \leq \min (r(A)+r(B))\\)
+
     -   \\(r(AB) \leq min(r(A), r(B))\\)
+
     -   若 \\(A\\) 可逆，则 \\(r(AB)=r(B)\\) ， \\(r(BA)=r(B)\\)
+
     -   若 \\(A\\) 是 \\(m\times n\\) 矩阵，\\(B\\) 是 \\(n\times s\\) 矩阵，\\(AB=O\\) ，则 \\(r(A)+r(B) \leq n\\)
+
     -   分块矩阵 \\(r\left (\begin{array}{cc}A & O \\\O & B \\\ \end{array}\right)=r(A)+r(B)\\)
 
 

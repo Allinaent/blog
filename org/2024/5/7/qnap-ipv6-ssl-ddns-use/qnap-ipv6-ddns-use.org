@@ -8,7 +8,7 @@
 #+TITLE: 威联通使用ipv6 加ddns 进行远程访问
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: technology
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/8691e8be9d779eb4b7fb10aa262ebd1d.png
 
 * 首先要开启 ipv6
 

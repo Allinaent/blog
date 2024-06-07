@@ -1,10 +1,11 @@
 +++
 title = "线性代数第六章——二次型"
 date = 2024-04-24T17:39:00+08:00
-lastmod = 2024-04-26T16:18:34+08:00
+lastmod = 2024-06-06T11:28:32+08:00
 categories = ["exam", "math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg"
 +++
 
 ## 二次型的定义、矩阵表示，合同矩阵 {#二次型的定义-矩阵表示-合同矩阵}

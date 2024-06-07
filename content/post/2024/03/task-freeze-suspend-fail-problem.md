@@ -1,10 +1,11 @@
 +++
 title = "task-freeze/suspend失败问题（文韬大佬）"
 date = 2024-03-08T17:04:00+08:00
-lastmod = 2024-03-08T17:43:01+08:00
+lastmod = 2024-06-06T13:14:00+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 这是一个多次出现的 task-freeze 失败，进而导致 suspend 失败的问题，借这个问题介绍一下内核对于 task 的管理，比如 state 管理，wait/wakeup，freeze 过程等等。

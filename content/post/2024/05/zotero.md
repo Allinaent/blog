@@ -1,10 +1,11 @@
 +++
 title = "如臂使指——构建自己的个人知识库"
 date = 2024-05-16T14:31:00+08:00
-lastmod = 2024-05-31T16:46:14+08:00
+lastmod = 2024-06-04T09:46:59+08:00
 categories = ["emacs", "prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3ebba5ba2655501d082d485a73ba52fb.jpg"
 +++
 
 知识千千万，能写在博客里查询的只有一少部分。大量的知识在什么地方呢？在浏览器的收藏夹中，在笔记中，在电脑 pdf 的书籍中。那么做为一个想把自己的知识系统化的整理，放到一个地方的人，应该怎么做呢？
@@ -136,7 +137,8 @@ zotero 提示是自签名的证书，不让进行同步；但是在手机的 iOS
 <https://www.bilibili.com/video/BV1Lc411J7gQ/>
 
 Zotero 是一个科研文献管理器，而不是扫描版野生 pdf 的管理器。所认不是论文什么的，不能用 helm-bibtex
-搜到东西。这一点确实有一点不爽。那有没有什么方式能够补救呢？
+搜到东西。这一点确实有一点不爽。那有没有什么方式能够补救呢？有的——直接右键可以生成简化的 bibtex
+信息足够在 emacs 当中查找和使用了。
 
 
 ### 意外的发现 zotero-find {#意外的发现-zotero-find}

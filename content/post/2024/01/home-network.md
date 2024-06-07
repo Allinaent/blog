@@ -1,10 +1,11 @@
 +++
 title = "我家里的网络设置"
 date = 2024-01-18T11:06:00+08:00
-lastmod = 2024-01-23T15:54:56+08:00
+lastmod = 2024-06-06T15:11:12+08:00
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png"
 +++
 
 ## 一些基本概念 {#一些基本概念}

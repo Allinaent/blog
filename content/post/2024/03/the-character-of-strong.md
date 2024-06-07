@@ -1,10 +1,11 @@
 +++
 title = "大多数成功人士的品质"
 date = 2024-03-30T23:00:00+08:00
-lastmod = 2024-04-06T13:43:34+08:00
+lastmod = 2024-06-06T12:47:35+08:00
 categories = ["prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 ## 成熟的人是自我的 {#成熟的人是自我的}

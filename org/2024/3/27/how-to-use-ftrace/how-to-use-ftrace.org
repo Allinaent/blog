@@ -8,6 +8,7 @@
 #+TITLE: 如何使用 ftrace 来调试系统问题
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 在无法使用 bpftrace 的时候，我们用 ftrace 来分析内核当中函数的调用流程。
 

@@ -1,11 +1,12 @@
 +++
 title = "在cloudfare中搭建hugo博客"
 date = 2023-09-18T16:35:00+08:00
-lastmod = 2024-04-10T11:36:21+08:00
+lastmod = 2024-06-06T16:04:29+08:00
 tags = ["emacs", "hugo"]
 categories = ["classic"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e1f639758ccc2e0aaa2d805109ecafa0.png"
 +++
 
 ## hugo on cloudflare {#hugo-on-cloudflare}

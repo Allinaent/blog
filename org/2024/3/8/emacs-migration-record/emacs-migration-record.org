@@ -8,6 +8,7 @@
 #+TITLE: emacs 迁移记录
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
 
 
 在 ubuntu 22.04 当中安装 emacs ：

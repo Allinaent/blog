@@ -1,10 +1,11 @@
 +++
 title = "AppArmor"
 date = 2024-01-03T14:03:00+08:00
-lastmod = 2024-01-03T15:17:17+08:00
+lastmod = 2024-06-06T16:01:12+08:00
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png"
 +++
 
 ## 是什么？ {#是什么}

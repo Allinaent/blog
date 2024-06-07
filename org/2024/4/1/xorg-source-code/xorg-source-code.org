@@ -8,6 +8,7 @@
 #+TITLE: xorg 代码琉理
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: graphic
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 遇到了一个 S3 后切 tty 或者关机或者重启会出现短暂的白屏的现象。但是只要不做 S3 就
 不会有问题。

@@ -8,6 +8,7 @@
 #+TITLE: 使用 emacs 和 orgzly 来gtd
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/9a83df14d8b03d6344c68386e59dbdf2.jpg
 
 写在前面，适合自己的就是最好的。我们大多数人往往陷入一种错误的状态当中，认为做什么事
 一定要做到一种最好的结果。或者自己能达到的最好的结果，殊不知这个世界“最好”只是数学上

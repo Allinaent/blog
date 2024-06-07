@@ -8,6 +8,7 @@
 #+TITLE: 如何在内核当中获取dmi 信息
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 #+begin_src diff
 diff --git a/drivers/gpu/drm/amd/amdgpu/si.c b/drivers/gpu/drm/amd/amdgpu/si.c

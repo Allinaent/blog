@@ -1,11 +1,12 @@
 +++
 title = "使用perf和flamegraph来分析bug"
 date = 2023-10-24T15:32:00+08:00
-lastmod = 2023-10-25T15:53:18+08:00
+lastmod = 2024-06-06T15:34:18+08:00
 tags = ["kernel"]
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 感谢晓哥原创，此处记录，并做一个 bug 的分析记录。

@@ -1,10 +1,11 @@
 +++
 title = "一个usb导致开机流程无限阻塞的问题"
 date = 2024-04-24T16:18:00+08:00
-lastmod = 2024-04-24T16:46:06+08:00
+lastmod = 2024-06-06T11:45:04+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 问题背景 {#问题背景}

@@ -1,11 +1,12 @@
 +++
 title = "考研数学二复习开始"
 date = 2024-03-19T17:08:00+08:00
-lastmod = 2024-03-28T15:09:07+08:00
+lastmod = 2024-06-06T11:18:50+08:00
 categories = ["exam"]
 draft = false
 weight = 10
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg"
 +++
 
 摸鱼备考数学二，不会有人发现的。这是是全部第一章的知识点。

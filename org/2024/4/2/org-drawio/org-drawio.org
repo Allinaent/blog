@@ -8,6 +8,7 @@
 #+TITLE: orgmode 使用drawio 画图
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
 
 * 画图测试
 

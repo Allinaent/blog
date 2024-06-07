@@ -1,10 +1,11 @@
 +++
 title = "linux 中u 盘的同步问题"
 date = 2024-03-18T15:13:00+08:00
-lastmod = 2024-03-18T15:32:56+08:00
+lastmod = 2024-06-06T12:45:21+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 linux 有很多不好用的地方

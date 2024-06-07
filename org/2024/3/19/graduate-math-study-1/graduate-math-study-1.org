@@ -9,6 +9,7 @@
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
 #+HUGO_WEIGHT: 10
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg
 
 摸鱼备考数学二，不会有人发现的。这是是全部第一章的知识点。
 

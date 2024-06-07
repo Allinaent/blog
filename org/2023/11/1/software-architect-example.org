@@ -8,7 +8,7 @@
 #+TITLE: 软考考前突击
 #+HUGO_TAGS: examination
 #+HUGO_CATEGORIES: exam
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/8aae9667673de26e7cd6dabc7ef677de.jpg
 
 * 准备
 

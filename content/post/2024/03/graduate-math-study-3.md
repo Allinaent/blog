@@ -1,10 +1,11 @@
 +++
 title = "考研第三章学习——积分"
 date = 2024-03-26T10:15:00+08:00
-lastmod = 2024-03-26T11:19:09+08:00
+lastmod = 2024-06-06T11:19:05+08:00
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg"
 +++
 
 第三章是一元函数积分学

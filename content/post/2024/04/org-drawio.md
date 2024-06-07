@@ -1,10 +1,11 @@
 +++
 title = "orgmode 使用drawio 画图"
 date = 2024-04-02T22:09:00+08:00
-lastmod = 2024-04-05T00:40:22+08:00
+lastmod = 2024-06-06T12:23:38+08:00
 categories = ["emacs"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
 +++
 
 ## 画图测试 {#画图测试}

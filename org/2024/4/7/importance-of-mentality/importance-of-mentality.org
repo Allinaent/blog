@@ -8,6 +8,7 @@
 #+TITLE: 论心态对人生的重要性
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png
 
 * 人生无常，大肠包小肠
 

@@ -5,12 +5,11 @@
 #+HUGO_AUTO_SET_LASTMOD: t
 #+HUGO_DRAFT: false
 #+DATE: [2023-09-21 四 16:55]
-
 #+TITLE: 深度学习必备核心算法
 #+HUGO_TAGS: ai
 #+HUGO_CATEGORIES: learn
 #+STARTUP: nolatexpreview
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg
 
 
 * 机器学习流程:

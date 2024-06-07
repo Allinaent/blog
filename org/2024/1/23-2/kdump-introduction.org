@@ -8,6 +8,7 @@
 #+TITLE: kdump 的总结和介绍
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 kdump 有一篇很好的分享：
 

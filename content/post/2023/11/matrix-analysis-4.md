@@ -1,11 +1,12 @@
 +++
 title = "矩阵分析（四）向量和矩阵的范数"
 date = 2023-11-20T13:36:00+08:00
-lastmod = 2023-11-20T16:16:14+08:00
+lastmod = 2024-06-06T15:47:39+08:00
 tags = ["ai"]
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 ## 证明向量的范数 {#证明向量的范数}

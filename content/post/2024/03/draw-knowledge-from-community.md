@@ -1,10 +1,11 @@
 +++
 title = "如何从内核的开源社区获取资讯"
 date = 2024-03-06T15:59:00+08:00
-lastmod = 2024-03-06T16:10:59+08:00
+lastmod = 2024-06-06T13:17:35+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 如果想要深入内核的底层，并且了解内核前延的问题和发展方向，就上 <https://lwn.net/> 看一个方向的问题。再从

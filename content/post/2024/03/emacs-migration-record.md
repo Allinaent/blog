@@ -1,10 +1,11 @@
 +++
 title = "emacs 迁移记录"
 date = 2024-03-08T11:42:00+08:00
-lastmod = 2024-03-27T14:17:38+08:00
+lastmod = 2024-06-06T13:14:44+08:00
 categories = ["emacs"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
 +++
 
 在 ubuntu 22.04 当中安装 emacs ：

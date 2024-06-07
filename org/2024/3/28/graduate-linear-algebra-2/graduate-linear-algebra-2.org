@@ -8,6 +8,7 @@
 #+TITLE: 线代第二章——矩阵
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg
 
 * 行列式与矩阵的区别与联系
 

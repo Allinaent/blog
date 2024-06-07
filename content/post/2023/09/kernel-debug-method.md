@@ -1,11 +1,12 @@
 +++
 title = "内核一次日志问题的分析"
 date = 2023-09-18T21:01:00+08:00
-lastmod = 2023-09-18T21:42:31+08:00
+lastmod = 2024-06-06T15:49:28+08:00
 tags = ["kernel", "linux"]
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 文韬分享，一次日志分析问题，20230810 {#文韬分享-一次日志分析问题-20230810}

@@ -7,6 +7,7 @@
 #+TITLE: tty和x的切换流程
 #+HUGO_TAGS: gpu
 #+HUGO_CATEGORIES: graphic
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 #+LATEX_HEADER: \usepackage{tikz}
 #+AUTHOR:郭隆基
 # #+LATEX_HEADER: \extrainfo{简单介绍一下概念和学习路线}

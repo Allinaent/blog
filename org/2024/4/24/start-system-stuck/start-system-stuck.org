@@ -8,6 +8,7 @@
 #+TITLE: 一个usb导致开机流程无限阻塞的问题
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 * 问题背景
 

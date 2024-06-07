@@ -8,6 +8,7 @@
 #+TITLE: 简化的哲学
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png
 
 * 简单的东西更好用
 

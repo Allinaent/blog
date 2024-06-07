@@ -8,6 +8,7 @@
 #+TITLE: 线性代数第三章——向量
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam math
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg
 
 * n 维向量的概念与运算
 

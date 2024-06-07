@@ -8,6 +8,7 @@
 #+TITLE: 如何命令行使用qemu 和为调试增加串口输出到终端
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 * 查找的一些资料
 

@@ -8,6 +8,7 @@
 #+TITLE: leetcode 第二天
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: leetcode
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png
 
 做个简单的题压压惊。
 

@@ -1,10 +1,11 @@
 +++
 title = "如何在内核当中获取dmi 信息"
 date = 2024-03-06T16:24:00+08:00
-lastmod = 2024-03-06T16:26:26+08:00
+lastmod = 2024-06-06T13:16:56+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ```diff

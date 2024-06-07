@@ -8,6 +8,7 @@
 #+TITLE: 第五章——常微分方程
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg
 
 未知函数是一元函数的微分方程称作常微分方程。此处的“常”是 Ordinary 表示平常。
 数学于人，是一些深刻的逻辑和概念，最先是概念。有了概念才有了基础，才能展开分析。

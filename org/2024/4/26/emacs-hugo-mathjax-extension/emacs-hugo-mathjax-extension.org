@@ -8,6 +8,7 @@
 #+TITLE: 我的工作流增加mathjax extension 和一些新感悟
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
 
 * orgmode 的 xelatex 没有渲染 \xlongequal
 

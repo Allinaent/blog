@@ -1,10 +1,11 @@
 +++
 title = "考研数学第四章——多元函数微积分学"
 date = 2024-03-26T11:18:00+08:00
-lastmod = 2024-03-28T09:28:10+08:00
+lastmod = 2024-06-06T11:19:18+08:00
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg"
 +++
 
 从 2021 年李永乐的 148 页开始，多元函数的微积分学比较复杂，之前上大学的时候就学的比较浅。要掌握的话要做更多的练习。

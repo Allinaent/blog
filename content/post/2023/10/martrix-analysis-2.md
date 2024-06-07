@@ -1,10 +1,11 @@
 +++
 title = "矩阵分析（二）"
 date = 2023-10-17T09:12:00+08:00
-lastmod = 2023-10-17T16:09:59+08:00
+lastmod = 2024-06-06T15:47:01+08:00
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 数学往往只讲理论，不讲应用。这就很让人摸不着头脑。

@@ -8,6 +8,7 @@
 #+TITLE: 显卡测试的一些命令记录
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: graphic
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3f0dd7abfd0dd8b6b893e6da737c3c52.jpg
 
 * glmark2 的测试
 

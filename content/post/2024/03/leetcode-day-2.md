@@ -1,10 +1,11 @@
 +++
 title = "leetcode 第二天"
 date = 2024-03-15T11:23:00+08:00
-lastmod = 2024-03-18T23:12:54+08:00
+lastmod = 2024-06-06T15:08:07+08:00
 categories = ["leetcode"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png"
 +++
 
 做个简单的题压压惊。

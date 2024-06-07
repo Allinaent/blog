@@ -9,6 +9,7 @@
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: ai
 #+options: h:6
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg
 
 目录渲染不要设置为 pandoc，gitlab ci 可以不用 pandoc 了吧。否则目录不显示 3 级以上的标题。
 还有，也不知道是 ox-hugo 的问题还是 hugo 本身的问题，orgmode 转 md，orgmode 的不要使用二

@@ -1,10 +1,11 @@
 +++
 title = "浪潮产线硬盘压测重启后io-error 问题"
 date = 2024-04-28T09:54:00+08:00
-lastmod = 2024-04-28T13:38:13+08:00
+lastmod = 2024-06-06T11:44:08+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 又是一篇韬哥写的分析过程，os 部分的核心在于公共部分。因为内核不是硬件厂商。各个子系统公共部分的代码都非常多。而最提高分析问题能力的是在公共部分绐出详细准确的逻辑说明。各种超时，缓存，等待，后写。

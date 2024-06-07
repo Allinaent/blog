@@ -8,6 +8,7 @@
 #+TITLE: 大多数成功人士的品质
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png
 
 * 成熟的人是自我的
 

@@ -8,6 +8,7 @@
 #+TITLE: 2023年软考报名
 #+HUGO_TAGS: misc
 #+HUGO_CATEGORIES: learn
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/8aae9667673de26e7cd6dabc7ef677de.jpg
 
 * 软考报名
 

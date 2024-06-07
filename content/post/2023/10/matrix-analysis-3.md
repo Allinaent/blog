@@ -1,11 +1,12 @@
 +++
 title = "矩阵分析（三）"
 date = 2023-10-17T15:38:00+08:00
-lastmod = 2023-11-14T22:02:21+08:00
+lastmod = 2024-06-06T15:47:19+08:00
 tags = ["ai"]
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 第三章是矩阵的标准形

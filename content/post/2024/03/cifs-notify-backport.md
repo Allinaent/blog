@@ -1,10 +1,11 @@
 +++
 title = "cifs的ioctl notify特性backport （学习文韬大佬）"
 date = 2024-03-27T15:07:00+08:00
-lastmod = 2024-03-27T15:24:38+08:00
+lastmod = 2024-06-06T11:46:52+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 问题说明 {#问题说明}

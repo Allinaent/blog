@@ -1,11 +1,12 @@
 +++
 title = "linux上用docker搭建opengrok"
 date = 2023-09-20T14:05:00+08:00
-lastmod = 2023-09-20T14:29:11+08:00
+lastmod = 2024-06-06T15:36:22+08:00
 tags = ["docker", "opengrok"]
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 之前在 21 年底用 latex 写了这篇文章，导出了 pdf，后觉得有用，移到博客当中，方便以后查看。

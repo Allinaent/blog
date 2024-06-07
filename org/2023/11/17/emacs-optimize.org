@@ -8,6 +8,7 @@
 #+TITLE: emacs kitty ranger rime 等的一些优化
 #+HUGO_TAGS: emacs
 #+HUGO_CATEGORIES: technology
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
 
 * emacs-rime 的“探针”中英文切换方法
 

@@ -8,7 +8,7 @@
 #+TITLE: 在cloudfare中搭建hugo博客
 #+HUGO_TAGS: emacs hugo
 #+HUGO_CATEGORIES: classic
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/e1f639758ccc2e0aaa2d805109ecafa0.png
 
 * hugo on cloudflare
 

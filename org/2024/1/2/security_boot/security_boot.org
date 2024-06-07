@@ -8,6 +8,7 @@
 #+TITLE: UOS 安全启动
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: security
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png
 
 * bios 启动
 

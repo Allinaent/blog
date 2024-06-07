@@ -8,7 +8,7 @@
 #+TITLE: 使用 qemu 和 gdb 来学习内核流程
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: technology
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 * 先把韬哥的分享帖出来
 

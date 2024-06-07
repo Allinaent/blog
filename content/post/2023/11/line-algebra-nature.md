@@ -1,11 +1,12 @@
 +++
 title = "线性代数的本质"
 date = 2023-11-13T09:37:00+08:00
-lastmod = 2023-11-14T16:50:03+08:00
+lastmod = 2024-06-06T15:54:54+08:00
 tags = ["ai"]
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 <https://www.bilibili.com/video/av6731067>

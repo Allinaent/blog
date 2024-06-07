@@ -8,6 +8,7 @@
 #+TITLE: 王勇绐我的一些启示
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png
 
 王勇的经历绐我的一点启示：
 

@@ -1,10 +1,11 @@
 +++
 title = "如何使用 ftrace 来调试系统问题"
 date = 2024-03-27T15:26:00+08:00
-lastmod = 2024-03-29T11:37:16+08:00
+lastmod = 2024-06-06T11:46:16+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 在无法使用 bpftrace 的时候，我们用 ftrace 来分析内核当中函数的调用流程。
@@ -270,3 +271,5 @@ sudo stackcount-bpfcc drm_load_edid_firmware #查看drm_load_edid_firmware的调
 sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/Xorg:RRGetInfo' #跟踪用户层函数调用
 sudo funcslower-bpfcc -U -K -m 30 '/usr/lib/xorg/modules/drivers/radeon_drv.so:drmmode_handle_uevents' #跟踪.so函数调用
 ```
+
+arm 的机器无法使用 bpfcc 的，只能使用 bpftrace ：

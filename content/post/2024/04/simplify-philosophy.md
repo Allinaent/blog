@@ -1,10 +1,11 @@
 +++
 title = "简化的哲学"
 date = 2024-04-18T15:43:00+08:00
-lastmod = 2024-04-19T17:38:59+08:00
+lastmod = 2024-06-06T12:45:50+08:00
 categories = ["emacs"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 ## 简单的东西更好用 {#简单的东西更好用}

@@ -1,10 +1,11 @@
 +++
 title = "使用 emacs 和 orgzly 来gtd"
 date = 2024-05-06T16:53:00+08:00
-lastmod = 2024-05-06T17:28:12+08:00
+lastmod = 2024-06-04T09:47:29+08:00
 categories = ["emacs"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/9a83df14d8b03d6344c68386e59dbdf2.jpg"
 +++
 
 写在前面，适合自己的就是最好的。我们大多数人往往陷入一种错误的状态当中，认为做什么事一定要做到一种最好的结果。或者自己能达到的最好的结果，殊不知这个世界“最好”只是数学上的极限，是一种过程，而不是一个结果。

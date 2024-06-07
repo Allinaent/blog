@@ -1,11 +1,12 @@
 +++
 title = "矩阵分析（五）矩阵的分解"
 date = 2023-11-20T16:23:00+08:00
-lastmod = 2023-11-21T17:57:31+08:00
+lastmod = 2024-06-06T15:48:00+08:00
 tags = ["ai"]
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 ## 矩阵的三角分解 {#矩阵的三角分解}

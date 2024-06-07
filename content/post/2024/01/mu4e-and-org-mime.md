@@ -1,10 +1,11 @@
 +++
 title = "如何用emacs mu4e 和 org-mime收发邮件"
 date = 2024-01-09T15:36:00+08:00
-lastmod = 2024-01-09T16:03:12+08:00
+lastmod = 2024-06-06T15:12:17+08:00
 categories = ["emacs"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
 +++
 
 ## 前言 {#前言}

@@ -8,6 +8,7 @@
 #+TITLE: 矩阵分析（五）矩阵的分解
 #+HUGO_TAGS: ai
 #+HUGO_CATEGORIES: math
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg
 
 * 矩阵的三角分解
 

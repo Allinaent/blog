@@ -1,10 +1,11 @@
 +++
 title = "开发环境的定时启动脚本"
 date = 2024-04-03T11:21:00+08:00
-lastmod = 2024-04-07T17:29:40+08:00
+lastmod = 2024-06-06T14:44:52+08:00
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png"
 +++
 
 ## 开机启动并且定时运行 {#开机启动并且定时运行}

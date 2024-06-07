@@ -8,6 +8,7 @@
 #+TITLE: leetcode 第一天
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: leetcode
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png
 
 #+begin_src
 给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。

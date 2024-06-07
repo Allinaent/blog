@@ -1,10 +1,11 @@
 +++
 title = "leetcode 第一天"
 date = 2024-03-06T16:49:00+08:00
-lastmod = 2024-03-07T15:32:32+08:00
+lastmod = 2024-06-06T15:07:40+08:00
 categories = ["leetcode"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png"
 +++
 
 ```nil

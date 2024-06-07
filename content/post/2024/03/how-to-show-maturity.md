@@ -1,10 +1,11 @@
 +++
 title = "放过自己，童心隐匿"
 date = 2024-03-27T15:34:00+08:00
-lastmod = 2024-03-27T17:44:40+08:00
+lastmod = 2024-06-06T12:48:16+08:00
 categories = ["prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 ## celebrity quote {#celebrity-quote}

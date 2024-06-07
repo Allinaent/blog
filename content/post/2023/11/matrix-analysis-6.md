@@ -1,11 +1,12 @@
 +++
 title = "矩阵分析（六）函数矩阵的导数"
 date = 2023-11-21T14:29:00+08:00
-lastmod = 2023-11-21T17:57:17+08:00
+lastmod = 2024-06-06T15:48:17+08:00
 tags = ["ai"]
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 ## 矩阵的导数 {#矩阵的导数}

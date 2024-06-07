@@ -1,10 +1,11 @@
 +++
 title = "UOS 安全启动"
 date = 2024-01-02T14:07:00+08:00
-lastmod = 2024-03-06T16:34:02+08:00
+lastmod = 2024-06-06T16:02:10+08:00
 categories = ["security"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png"
 +++
 
 ## bios 启动 {#bios-启动}

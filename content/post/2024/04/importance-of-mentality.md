@@ -1,10 +1,11 @@
 +++
 title = "论心态对人生的重要性"
 date = 2024-04-07T00:16:00+08:00
-lastmod = 2024-04-07T01:17:54+08:00
+lastmod = 2024-06-06T12:46:53+08:00
 categories = ["prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 ## 人生无常，大肠包小肠 {#人生无常-大肠包小肠}

@@ -1,10 +1,11 @@
 +++
 title = "高数第一章练习题"
 date = 2024-04-28T14:56:00+08:00
-lastmod = 2024-05-01T22:22:27+08:00
+lastmod = 2024-06-05T11:32:05+08:00
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg"
 +++
 
 例一：求函数 \\(y=shx=\frac{e^{x}-e^{-x}}{2}\\) 的反函数
@@ -17,12 +18,18 @@ toc = true
 
 这种题对我来说都有难度，说明我离开数学的时间太久了。
 
-例二：设函数 \\[f(x)=\left\\{\begin{aligned}
+例二：设函数
+
+\begin{equation\*}
+f(x)=\left\\{\begin{aligned}
 & 1-2x^{2},\quad  & x<-1  \\\\
 & x^{3}, \quad  & -1 \leq x \leq 2 \\\\
 & 12x-16, \quad & x>2
 \end{aligned}
-\right.\\] ，求它的反函数。此题无难点，直接分类讨论。但是无难点的题要做的又对又快。
+\right.
+\end{equation\*}
+
+ ，求它的反函数。此题无难点，直接分类讨论。但是无难点的题要做的又对又快。
 
 上同的题就不是非常好，先做重要的题。这些题都很好，题海有了，现在的战术就是多看多做。
 
@@ -57,24 +64,29 @@ dpkg -P xbyyunpan
 
 1.4 即最上面的李永乐的那道例题。分类讨论。
 
-\\[y=f^{-1}(x)=\left\\{\begin{aligned}
-& \sqrt\frac{1-x}{2}, \quad x<1 \\\\
-& \sqrt[3]{x}, \quad -1 \leq x \leq 8 \\\\
-& \frac{16+x}{12} \quad 8 < x < +\infty
+\begin{equation\*}
+y=f^{-1}(x)=\left\\{
+\begin{aligned}
+& \sqrt\frac{1-x}{2}, & \quad x<1 \\\\
+& \sqrt[3]{x}, & \quad -1 \leq x \leq 8 \\\\
+& \frac{16+x}{12} & \quad 8 < x < +\infty
 \end{aligned}
 \right.
-\\]
+\end{equation\*}
 
 这道题做错了第一个区间当中的正负号不对，y 在第一个区间是小于 0 的，所以加加一个负号啊。现在的能力确实弱爆了。
 
 正确答案是：
-\\[y=f^{-1}(x)=\left\\{\begin{aligned}
-& -\sqrt\frac{1-x}{2}, \quad x<-1 \\\\
-& \sqrt[3]{x}, \quad -1 \leq x \leq 8 \\\\
-& \frac{16+x}{12} \quad 8 < x < +\infty
+
+\begin{equation\*}
+y=f^{-1}(x)=\left\\{
+\begin{aligned}
+& -\sqrt\frac{1-x}{2}, \quad & x<-1 \\\\
+& \sqrt[3]{x}, \quad & -1 \leq x \leq 8 \\\\
+& \frac{16+x}{12} \quad & 8 < x < +\infty
 \end{aligned}
 \right.
-\\]
+\end{equation\*}
 
 1.5 设 \\(f(x)=\frac{x}{\sqrt{1+x^{2}}}\\) ， \\(f\_{n+1}(x)=f[f\_{n}(x)\]\(n=1,2,3,...)\\) ，求 \\(f\_{n}(x)\\) 的表达式。
 
@@ -82,7 +94,7 @@ dpkg -P xbyyunpan
 
 没有思路，看答案才知道这道题用的是数学归纳法。也就是答案是观察出来的，观察出来之后再证明一下。
 
-\\(f\_{1}(x)=\frac{\frac{x}{\sqrt{1+x^{2}}}}{\sqrt{1+\frac{x^{2}}{1+x^{2}}}}=\frac{x}{1+2x^{2}\\) ，用数学归纳法推理可得： \\(f\_{n}(x)=\frac{x}{\sqrt{1+(n+1)x^{2}}} \quad (n=1,2,3,...)\\)
+\\(f\_{1+1}(x)=\frac{\frac{x}{\sqrt{1+x^{2}}}}{\sqrt{1+\frac{x^{2}}{1+x^{2}}}}=\frac{x}{1+2x^{2}}\\) ，用数学归纳法推理可得： \\(f\_{n}(x)=\frac{x}{\sqrt{1+(n+1)x^{2}}} \quad (n=1,2,3,...)\\)
 
 好题，好思路。
 
@@ -108,8 +120,10 @@ dpkg -P xbyyunpan
 
 此题不会的原因是对换元法求极限部分不熟练。
 
-\\[\lim\limits\_{n \to \infty}(\frac{n+1}{n-2})^{n} = \lim\limits\_{n\to
-\infty}\frac{(1+\frac{1}{n})^{n}}{(1-\frac{2}{n})^{n}}=\frac{e}{e^{-2}}=e^{3}\\]
+\begin{equation\*}
+\lim\limits\_{n \to \infty}(\frac{n+1}{n-2})^{n} = \lim\limits\_{n\to
+\infty}\frac{(1+\frac{1}{n})^{n}}{(1-\frac{2}{n})^{n}}=\frac{e}{e^{-2}}=e^{3}
+\end{equation\*}
 
 此题乃是一道母题。 \\(\lim\limits\_{n \to \infty}(1+a \frac{1}{n})^{n}=e^{a}\\) 这个成立吗？可以用换元法
 

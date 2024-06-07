@@ -8,7 +8,7 @@
 #+TITLE: 丁至宣小伙伴教我diy键盘
 #+HUGO_TAGS: diy
 #+HUGO_CATEGORIES: keyboard
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/d35ab6283245f69bcfdf80eaf6c89c18.jpg
 
 * 材料准备
 

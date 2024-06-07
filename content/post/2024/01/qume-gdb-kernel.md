@@ -1,10 +1,11 @@
 +++
 title = "使用 qemu 和 gdb 来学习内核流程"
 date = 2024-01-02T16:02:00+08:00
-lastmod = 2024-01-19T13:10:25+08:00
+lastmod = 2024-06-06T15:16:50+08:00
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 ## 先把韬哥的分享帖出来 {#先把韬哥的分享帖出来}

@@ -1,10 +1,11 @@
 +++
 title = "线性代数第五章——特征值、特征向量、相似矩阵"
 date = 2024-04-23T09:36:00+08:00
-lastmod = 2024-04-26T16:21:37+08:00
+lastmod = 2024-06-06T11:28:17+08:00
 categories = ["exam", "math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg"
 +++
 
 ## 特征值、特征向量 {#特征值-特征向量}

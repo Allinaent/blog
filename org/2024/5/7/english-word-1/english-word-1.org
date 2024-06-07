@@ -8,6 +8,7 @@
 #+TITLE: 研究生英语单词 2000 词——1
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/bc99472328e3d7d6e30f6e58d299cec8.jpg
 
 考研英语单词 7000 个。背单词多多益善，我计划分三篇博客将这 7000 个单词中
 我不会的总结出来（一词大概是 2000 词背完后总结），方便没事的时候多看两眼。

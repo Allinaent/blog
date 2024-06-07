@@ -1,4 +1,3 @@
-
 #+OPTIONS: author:nil ^:{}
 #+HUGO_BASE_DIR: ../../../../../
 #+HUGO_SECTION: post/2023/09
@@ -10,7 +9,7 @@
 #+IMAGE: [[file:kernel-debug-method.org.assets/img_20230918_210808.png]]
 #+HUGO_TAGS: kernel linux
 #+HUGO_CATEGORIES: technology
-
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
 
 * 文韬分享，一次日志分析问题，20230810
 

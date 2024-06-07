@@ -1,5 +1,5 @@
 #+OPTIONS: author:nil ^:{}
-#+HUGO_BASE_DIR: ../../../../
+#+HUGO_BASE_DIR: ../../../../../
 #+HUGO_SECTION: post/2023/12
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
@@ -8,6 +8,8 @@
 #+TITLE: 在我的博客和emacs中使用tikz 画图
 #+HUGO_TAGS: emacs
 #+HUGO_CATEGORIES: technology
+#+org-preview-latex-image-directory: ltximg/
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
 
 之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是
 对于发布博客和高亮代码方面对程序员不太友好。latex 的包虽然很多，但是 orgmode 用 emacs 打

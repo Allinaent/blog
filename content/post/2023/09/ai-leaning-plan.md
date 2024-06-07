@@ -1,10 +1,11 @@
 +++
 title = "AI roadmap"
 date = 2023-09-21T09:56:00+08:00
-lastmod = 2023-09-21T16:32:15+08:00
+lastmod = 2024-06-06T16:08:11+08:00
 categories = ["ai"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg"
 +++
 
 目录渲染不要设置为 pandoc，gitlab ci 可以不用 pandoc 了吧。否则目录不显示 3 级以上的标题。还有，也不知道是 ox-hugo 的问题还是 hugo 本身的问题，orgmode 转 md，orgmode 的不要使用二级的标题，否则生成的 md 标题层次不对。2，3级同层。

@@ -1,11 +1,12 @@
 +++
 title = "深度学习必备核心算法"
 date = 2023-09-21T16:55:00+08:00
-lastmod = 2023-12-14T16:50:22+08:00
+lastmod = 2024-06-06T16:08:59+08:00
 tags = ["ai"]
 categories = ["learn"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg"
 +++
 
 ## 机器学习流程: {#机器学习流程}

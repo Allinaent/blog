@@ -1,10 +1,11 @@
 +++
 title = "威联通使用ipv6 加ddns 进行远程访问"
 date = 2024-05-07T11:02:00+08:00
-lastmod = 2024-05-09T23:51:47+08:00
+lastmod = 2024-06-04T09:36:57+08:00
 categories = ["technology"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/8691e8be9d779eb4b7fb10aa262ebd1d.png"
 +++
 
 ## 首先要开启 ipv6 {#首先要开启-ipv6}

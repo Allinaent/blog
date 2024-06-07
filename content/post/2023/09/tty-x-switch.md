@@ -2,11 +2,12 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2024-03-26T14:21:56+08:00
+lastmod = 2024-06-06T15:37:33+08:00
 tags = ["gpu"]
 categories = ["graphic"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
 这篇文档可以在：<https://guolongji.xyz/post/tty-x-switch/> 这里看到更新。
@@ -3481,7 +3482,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 
 ## 画一下流程图 {#画一下流程图}
 
-{{< figure src="/ox-hugo/process1.png" >}}
+{{< figure src="ltximg/process1.png" >}}
 
 那么 setcrtc 这个系统调用是谁调用的呢？我分析的有，但是为啥有的时候就不闪呢？
 

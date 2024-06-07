@@ -1,10 +1,11 @@
 +++
 title = "考研数学二第二章"
 date = 2024-03-20T22:26:00+08:00
-lastmod = 2024-03-24T23:45:28+08:00
+lastmod = 2024-06-06T11:18:42+08:00
 categories = ["exam"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg"
 +++
 
 ## 一元函数微分学 {#一元函数微分学}
