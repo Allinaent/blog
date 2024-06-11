@@ -6,11 +6,16 @@
 <!-- <script src="/fancybox/fancybox.umd.js"></script> -->
 <script>
   // 获取文章中的img 标签 不包括封面
-  $('.main img').not(".cover").each(function () {
+  $('.main .article-content img').not(".article-list").each(function () {
       //添加 data-fancybox="gallery"
       $(this).attr("data-fancybox","gallery"); })
 
-  Fancybox.bind('[data-fancybox="gallery"]', {
-        //
+      Fancybox.bind('[data-fancybox="gallery"]', {
+      //
       });
+  $('.article-header a').each(function () {
+  	$(this).attr('disable', 'true');
+  	$(this).attr('datahref', $(this).attr("href"));
+	$(this).removeAttr('href');
+  })
 </script>
