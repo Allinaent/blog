@@ -1,0 +1,189 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/06
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-06-12 三 12:32]
+#+TITLE: 一波三折的SIGSEGV以及signal相关
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+一开始我以为自己搞懂了，最后发现自己还是太年轻了，做os真是太精（折）彩（磨）了。
+
+* SIGSEGV和SIG_IGN
+
+故事的开始是因为kwin的一段代码：
+#+begin_src c
+main():
+    //...
+    signal(SIGABRT, KWin::unsetDumpable);
+    signal(SIGSEGV, KWin::unsetDumpable);
+    //...
+
+static void unsetDumpable(int sig)
+{
+    prctl(PR_SET_DUMPABLE, 1);
+    signal(sig, SIG_IGN);
+    raise(sig);
+    return;
+}
+#+end_src
+看到这段代码后，我非常疑惑：对于SIGABRT和SIGSEGV这两个表征程序内部执行状态的信号，实
+现一个handler，捕获它之后，先用SIG_IGN（ignore）忽略它，然后再次raise它？这是什么操作……
+
+结合最近现场有一些kwin静默退出、没有报错日志也没有coredump的问题，所以很怀疑它，于是找到
+了它的commit：
+
+#+begin_src txt
+    Install a signal handler for SIGABRT and SIGSEGV for kwin_wayland
+
+    Summary:
+    kwin_wayland disables ptrace on itself. This has the side effect of
+    core dumps no longer be created - which we want as DrKonqi doesn't
+    work for kwin_wayland.
+
+    This change introduces a dedicated signal handler for abort and
+    segfault. The signal handler enables ptrace again, unsets itself as
+    signal handler and raises the signal again, so that the proper crash,
+    abort handling can be performed.
+#+end_src
+
+翻译一下：
+
+- 因为某些原因，kwin disable了它的ptrace，这会导致coredump不可用。
+- 为了让coredump可用，所以实现了一个handler，捕获会导致coredump的信号（SIGABRT/SIGSEGV），在其中使能ptrace，清除掉设置的handler，然后再次raise这个信号。
+
+
+但是众所周知，如何合理地unset一个信号？当然是用SIG_DFL（default）了。SIG_IGN不是会忽略这个信号不处理吗？这算
+哪门子unset？这不是妥妥的bug吗？
+
+#+begin_src bash
+kill -11 `pidof kwin_wayland`
+#+end_src
+
+所以我非常自信地下了一个判断：这个patch引入了bug，会导致某些场景下，虽然kwin访问了野指针，触发了SIGSEGV，但是并不能成功地走到coredump路径，妨碍我们的错误排查。
+
+如何fix？或者改成SIG_DFL，或者直接清理掉disable ptrace的逻辑（上游是这么干的，2022年合入），不要这个handler了。
+
+我手动测试，发现果然没反应：
+
+* force signal
+但是窗管的同事给了一个另外的信息：他们曾经在106x上去掉了unsetDumpable的代码，发现不能生成coredump了；之后在1070上又恢复了这部分代码，又有了coredump，而且他们在很多路径上都成功获得了coredump……
+
+而coredump是否有效，会引出两个不同的排查方向：
+
+- 如果其有效，那说明kwin就是没有触发SIGSEGV，换而言之当前的kwin静默退出，很可能是因为xwayland退出而导致的。（窗管同事的目前核心排查方向）
+- 如果其无效，那我们就需要怀疑是不是kwin自身有我们没发现的SIGSEGV。（我内心希望的方向，因为这意味着在我们修改
+  之后能拿到新的有用的线索）
+
+为了确认，我写了一个简单的测试代码：
+
+#+begin_src c
+#include <signal.h>
+
+int main() {
+	signal(SIGSEGV, SIG_IGN);
+	int *ptr = 0;
+	*ptr = 42;
+	return 0;
+}
+#+end_src
+
+虽然设置了SIG_IGN，它还是成功地通过SIGSEGV退出，并且生成了coredump！——所以我的希望落空了，窗管的同事的怀疑方向是正确的。
+
+那为什么呢？为什么我手动kill -11的时候无效，而真正的空指针访问就能触发？
+
+原来在内核代码里，对于page fault所导致SIGSEGV，会有”force signal“这个说法：如果程序设置的处理方式是block或者
+ignore，则会强制执行，效果和default一样。
+
+#+begin_src c
+/* code in page fault: */
+bad_area_nosemaphore:
+	if (user_mode(regs)) {
+		force_sig_fault(SIGSEGV, code, (void *) address);
+		return;
+	}
+    //...
+
+/*
+ * Force a signal that the process can't ignore: if necessary
+ * we unblock the signal and change any SIG_IGN to SIG_DFL.
+ *
+ * Note: If we unblock the signal, we always reset it to SIG_DFL,
+ * since we do not want to have a signal handler that was blocked
+ * be invoked when user space had explicitly blocked it.
+ *
+ * We don't want to have recursive SIGSEGV's etc, for example,
+ * that is why we also clear SIGNAL_UNKILLABLE.
+ */
+static int
+force_sig_info_to_task(struct kernel_siginfo *info, struct task_struct *t,
+	enum sig_handler handler)
+{
+	unsigned long int flags;
+	int ret, blocked, ignored;
+	struct k_sigaction *action;
+	int sig = info->si_signo;
+
+	spin_lock_irqsave(&t->sighand->siglock, flags);
+	action = &t->sighand->action[sig-1];
+	ignored = action->sa.sa_handler == SIG_IGN;
+	blocked = sigismember(&t->blocked, sig);
+	if (blocked || ignored || (handler != HANDLER_CURRENT)) {
+		action->sa.sa_handler = SIG_DFL;
+		if (handler == HANDLER_EXIT)
+			action->sa.sa_flags |= SA_IMMUTABLE;
+		if (blocked)
+			sigdelset(&t->blocked, sig);
+	}
+
+    //...
+
+}
+#+end_src
+
+所以当设置了SIG_IGN给SIGSEGV，我们手动发送的kill会被忽略掉，但是真正在pagefault中的信号，并不会被忽略掉，而是会正常执行，触发coredump的。
+
+所以窗管同事的怀疑方向是正确的：kwin并没有隐藏的SIGSEGV，静默退出的核心原因可能是xwayland的异常退出。
+
+* 信号来源的trace
+有些时候我们希望追踪系统的信号，尤其是想要追踪信号的来源。（包括现在kwin/xwayland的问题，也有这方面的怀疑：是否有其他进程向它发送了导致它退出的信号）
+
+我们可以用trace-bpfcc追踪信号（在v20上，trace-bpfcc的参数解析比bpftrace更方便可靠）：
+
+#+begin_src bash
+sudo trace-bpfcc -I 'linux/sched.h' -t 'do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p, enum pid_type type) "%s -> %d-%s:%d", $task->comm, p->pid, p->comm, sig'
+#+end_src
+
+可以只关注SIGSEGV信号：
+
+#+begin_src bash
+sudo trace-bpfcc -I 'linux/sched.h' -t 'do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p, enum pid_type type) (sig == 11) "%s -> %d-%s:%d", $task->comm, p->pid, p->comm, sig'
+#+end_src
+
+也可以只关注比如xwayland收到的信号（提前获取其pid）：
+#+begin_src bash
+sudo trace-bpfcc -I 'linux/sched.h' -t 'do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p, enum pid_type type) ( p->pid == XXX ) "%s -> %d-%s:%d", $task->comm, p->pid, p->comm, sig'
+#+end_src
+
+* 典型信号介绍
+
+SIGABRT：6，libc里用的多，比如调用abort()，包括一些assert的底层可能都是它；libc里，会先reset它的handler为DFL，再次raise，来确保程序可以退出。
+
+SIGSEGV：11，段错误，一般是程序访问了非法地址，从内核的page fault里触发。——我目前不知道用户态是否会有程序直接发送它，没听说过。
+
+SIGTERM：15，普通kill一般就是它，用它来terminate一个程序。可以被程序注册handler，来做一些收尾工作。在系统里用的很多，比如在系统关机阶段会由systemd先发送SIGTERM，超时后再发送SIGKILL。
+
+SIGKILL：9，也是kill，但是不能被用户程序捕获，所以必然会导致程序退出。比如systemd会在超时后强制kill。
+
+SIGINTR：2，interrupt，CTRL-C就是产生它。所以可能从keyboard上升来，也可能被外部发送。和SIGTERM一样，一般表示程序的正常中断，只会退出，不会生成coredump。
+
+SIGHUP：了解不多，貌似和tty/console相关。特性和SIGINTR/SIGTERM类似。
+
+SIGTRAP：5，比如gdb断点调试貌似就是用这个。
+
+SIGPIPE：对方关闭了pipe时，这个信号经常会被IGN。
+
+SIGUSR1/SIGUSR2：用户自定义信号，可能拿来注册给内核，比如tty的active/release的信号之类的。
