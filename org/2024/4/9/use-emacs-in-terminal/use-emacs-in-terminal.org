@@ -8,7 +8,7 @@
 #+TITLE: 在终端下使用 emacs
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs
-#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png
 
 emacs 的插件简直太多了。很多没用到但是写了一堆无用代码，定位一个新的 bug 就难了。GUI 的 emacs
 和 TUI 的 emacs 各有优劣。 GUI 下的 emacs 可以图文混排，latex ，orgmode ，公

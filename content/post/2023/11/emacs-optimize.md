@@ -1,12 +1,12 @@
 +++
 title = "emacs kitty ranger rime 等的一些优化"
 date = 2023-11-17T11:43:00+08:00
-lastmod = 2024-06-06T15:19:45+08:00
+lastmod = 2024-06-17T11:27:57+08:00
 tags = ["emacs"]
 categories = ["technology"]
 draft = false
 toc = true
-image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
+image = "https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png"
 +++
 
 ## emacs-rime 的“探针”中英文切换方法 {#emacs-rime-的-探针-中英文切换方法}

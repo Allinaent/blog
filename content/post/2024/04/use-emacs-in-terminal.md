@@ -1,11 +1,11 @@
 +++
 title = "在终端下使用 emacs"
 date = 2024-04-08T23:08:00+08:00
-lastmod = 2024-06-06T11:50:09+08:00
+lastmod = 2024-06-17T11:25:14+08:00
 categories = ["emacs"]
 draft = false
 toc = true
-image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
+image = "https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png"
 +++
 
 emacs 的插件简直太多了。很多没用到但是写了一堆无用代码，定位一个新的 bug 就难了。GUI 的 emacs

@@ -1,11 +1,11 @@
 +++
 title = "我的工作流增加mathjax extension 和一些新感悟"
 date = 2024-04-26T16:35:00+08:00
-lastmod = 2024-06-06T11:36:28+08:00
+lastmod = 2024-06-17T11:24:32+08:00
 categories = ["emacs", "prose"]
 draft = false
 toc = true
-image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
+image = "https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png"
 +++
 
 ## orgmode 的 xelatex 没有渲染 \xlongequal {#orgmode-的-xelatex-没有渲染-xlongequal}

@@ -6,7 +6,7 @@ tags = ["emacs"]
 categories = ["technology"]
 draft = false
 toc = true
-image = "https://r2.guolongji.xyz/allinaent/2024/06/ac208dfef1b86bc4b376a28c1b5471bc.png"
+image = "https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png"
 +++
 
 之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是对于发布博客和高亮代码方面对程序员不太友好。latex 的包虽然很多，但是 orgmode 用 emacs 打开直接是高亮的，这一点 latex-mode 不可以做的很好，因为 latex 的格式太复杂了。
