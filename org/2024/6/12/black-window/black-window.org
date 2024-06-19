@@ -14,11 +14,15 @@
 
 这个分析绐我上了生动的一课，看看别人是怎么分析问题的，一个问题的分析，你和别人会差在哪里？
 
+一方面是沟通能力，这个问题的分析涉及到很多知识点。首先要有自己分析的手段，陈述自己的猜测，对比和别人同一个
+问题有不同
+
 * 一、问题概述
 
 1070 较新版本使用过程中 会出现窗口黑块问题，在长时间使用后容易复现，复现一次后，后面出现黑块的概率会变高。
 
 a)复现后桌面现象：
+
 
 [[https://r2.guolongji.xyz/allinaent/2024/06/d3b65553a8f45ae50b1ffe00c35d6dfd.png]]
 
@@ -120,4 +124,109 @@ Xorg 这不的资源桶就因为泄露变成这种类型，使用时间越久就
 2、Glcreatepixmap 创建失败原因是因为xserver一个上游bug，而刚好kwin的资源泄露加大了复现概率。
 
 3、Xserver 这边对id 的申请算法比较无脑，找到了就返回，且xid 和 客户使用的资源没办法保证原子性，所以才有上游这个bug。
+
+* 对这个问题复盘一下
+
+1.首先看报错日志，这一点大家都一样。
+
+2.有没有机器测试，这一点大家是不一样的，实际上用 intel 集显的机器都能复现。但是刚开始
+不知道。复现的机器和环境认为不多，没有机器的话是无法分析的。
+
+3.窗管同事提供了 grab-offscreen 的程序。这个程序是别人绐的，如果一直分析是可以通过这个
+提供思路的。
+
+4.除此之外还有一些开源的调试工具和手段。比如 wmctrl -l 这个命令可以看到一些窗口信息，这个
+是可以通过 GPT 了解一些调试工具和手段的。还有导出的方式用 xwd -id xxx -out 导出窗口图
+象，这个是对的。这样就和窗管的分析有了不同的地方。这就是突破口。分析代码有什么区别？用
+dbus 来拿图片的方法:
+
+#+begin_src bash
+dbus-send --session --print-reply --dest=org.kde.KWin /Screenshot org.kde.kwin.Screenshot.screenshotForWindowExtend uint64:104857865 uint32:240 uint32:130
+#+end_src
+
+5.怀疑是 resize 旋转引起的问题，从现象推断的，这个方向错了。
+
+6.窗管加日志继续分析。dpkg -i 安装不解析依赖，加日志遇到了一点挫折。
+
+7.窗管同时尝试 intel 的驱动去掉了 damage 部分。简单做就是回退了。问题依旧。复现时间长，导致排除问题
+的时间就也比较长。这样相关的干系人聂大佬也跟进分析。此处排除了用户态 intel 驱动修改的问题。
+
+8.余大佬写个 python 的小程序来模拟创建窗口
+#+begin_src python
+import time
+from pynput.keyboard import Key, Controller
+
+keyboard = Controller()
+
+try:
+    while True:
+        # Press and release the Super key
+        keyboard.press(Key.cmd)
+        keyboard.release(Key.cmd)
+
+        # Wait for one second
+        time.sleep(1)
+except KeyboardInterrupt:
+
+#+end_src
+
+9.使用当前的pixmap id再去xorg获取图片失败； 文管pixmap转到texture之后黑了
+
+[[https://r2.guolongji.xyz/allinaent/2024/06/a56ab5d32660cc88b077fff1b8999d9b.jpg]]
+
+[[https://r2.guolongji.xyz/allinaent/2024/06/72342ee098ec9e6cd3db3723227d6876.png]]
+
+图1 利用现有的pixmap id 通过xcb_composite_name_window_pixmap xcb相关函数再获取一下；
+
+图2 将转换后的texture对象 直接toimage 。这是窗管的代码。
+
+10.这个问题在 9 的时候就有了重大进展。后面看代码，从xorg获取pixmap 是正常，在 glXCreatePixmap 转换到texture之
+后，图像变黑了，而这个 glXCreatePixmap 是 mesa（或者说opengl）当中的。
+
+11.modesettings 这个可能和dri模式有关系，modeset用的dri3,sna用的dri2。sna 驱动就是 intel 集显
+驱动。
+
+pms 的过程保存在知识库当中了。定位到报错的位置是 opengl 。但是修复的地方在 kwin-x11 的 glx backend 当中。
+
+最终的解决是 kwin 找到了上游的代码修复的。
+
+12.最终修复的 patch 是 unmanaged 窗口的问题，能找到这个上游 patch 不知道是如何找到的，要
+对 kwin 是比较熟悉的。
+
+在计算机图形界面的上下文中，"managed" 和 "unmanaged" 窗口通常指的是窗口的管理方式或生命周期管理方式的不同。
+
+- Managed 窗口
+
+Managed 窗口通常由操作系统的窗口管理器来管理。在这种情况下，窗口管理器负责窗口的创建、显示、焦点管理、窗口
+移动和调整大小等操作。具体来说，对于操作系统的窗口管理器，managed 窗口具有以下特征：
+
+由操作系统管理生命周期：操作系统负责创建和销毁这些窗口，确保它们正确地显示在屏幕上，并且可以响应用户输入。
+
+提供标准化的用户体验：窗口管理器确保所有窗口遵循操作系统的用户界面准则，例如窗口的外观和行为。
+
+支持窗口操作：用户可以通过操作系统的窗口装饰和边框来移动、最大化、最小化和关闭窗口。
+
+接收系统事件：managed 窗口可以接收操作系统发送的事件，例如键盘输入、鼠标点击、焦点变化等。
+
+在大多数桌面操作系统中，如Windows、macOS和主流的Linux 桌面环境（如GNOME、KDE等），大部分窗口都是 managed 窗口。
+
+- Unmanaged 窗口
+
+Unmanaged 窗口指的是不受操作系统窗口管理器管理的窗口。通常，这些窗口由应用程序本身直接管理。特点包括：
+
+应用程序负责生命周期管理：应用程序负责创建和销毁这些窗口，以及决定它们的显示和隐藏。
+
+定制化用户体验：应用程序可以自由设计和控制窗口的外观和行为，不受操作系统窗口管理器的限制。
+
+自定义窗口操作：应用程序可以选择是否提供窗口的装饰和边框，以及如何响应窗口的移动、调整大小和关闭操作。
+
+独立处理事件：应用程序需要自行处理来自操作系统的事件，例如输入事件和焦点变化。
+
+Unmanaged 窗口通常用于一些特定的应用场景，例如游戏引擎中的游戏窗口、一些特定类型的工具软件或者需要非标准化界面的应用程序。
+
+总之，"managed" 和 "unmanaged" 窗口的区别主要在于窗口的创建、生命周期管理和用户交互体验上是否由操作系统窗口管理器负责。
+
+分析的两个项目一个是 deepin-kde/kwin ；另外一个是 mesa 。而引入问题的是前者的升级。所以到底是 sna 的问题还是
+kwin 的问题呢？东西大了，就像这个社会一样，不好说谁对谁错了，因为都有看起来对一方面，也都有看起来不对的方面。
+而如何解决问题，也不一定是最好的路径，而是现实妥协的路径。
 
