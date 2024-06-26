@@ -1,0 +1,102 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/06
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-06-20 四 15:21]
+#+TITLE: sysfs 内核考试题
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+如何在sysfs里实现一个接口/sys/uos/param1，能对该接口进行读写。
+
+
+#+begin_src c
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/string.h>
+
+#define BUF_SIZE 1024
+
+static char param1_buf[BUF_SIZE];
+
+// 读取函数
+static ssize_t param1_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf) {
+    return snprintf(buf, BUF_SIZE, "%s\n", param1_buf);
+}
+
+// 写入函数
+static ssize_t param1_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count) {
+    if (count > BUF_SIZE)
+        return -EINVAL;
+
+    strncpy(param1_buf, buf, count);
+    param1_buf[count] = '\0';
+
+    return count;
+}
+
+// 定义一个 kobj_attribute 结构体，关联读写函数
+static struct kobj_attribute param1_attribute =
+    __ATTR(param1, 0664, param1_show, param1_store);
+
+// 在 /sys/uos 下创建一个目录并注册 param1 属性
+static struct attribute *attrs[] = {
+    &param1_attribute.attr,
+    NULL,
+};
+
+static struct attribute_group attr_group = {
+    .attrs = attrs,
+};
+
+static struct kobject *uos_kobj;
+
+static int __init uos_param_init(void) {
+    int retval;
+
+    uos_kobj = kobject_create_and_add("uos", kernel_kobj);
+    if (!uos_kobj)
+        return -ENOMEM;
+
+    retval = sysfs_create_group(uos_kobj, &attr_group);
+    if (retval)
+        kobject_put(uos_kobj);
+
+    return retval;
+}
+
+static void __exit uos_param_exit(void) {
+    kobject_put(uos_kobj);
+}
+
+module_init(uos_param_init);
+module_exit(uos_param_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Longji Guo");
+#+end_src
+
+
+Makefile
+#+begin_src makefile
+obj-m += sysfs_example.o
+
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+#+end_src
+
+sysfs 和 procfs 是有一些区别的。
+
+procfs 用于对进程的管理，而 sysfs 用于对设备的管理。
+
+# Local Variables:
+# eval: (xenops-mode 0)
+# End:

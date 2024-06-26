@@ -621,7 +621,7 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
 #+caption: /mesa 的库文件/
 #+attr_html: :alt mesa 的库文件
-[[https://r2.guolongji.xyz/allinaent/2024/06/04237419aeb65eeb077b506dc53d0b80.png
+https://r2.guolongji.xyz/allinaent/2024/06/04237419aeb65eeb077b506dc53d0b80.png
 
 
 用 GLX 设置上下文，用 GL 来做渲染。
@@ -630,7 +630,7 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 #+caption: /mesa 的库文件/
 #+attr_html: :alt mesa 的库文件
 #+attr_html: :width 900
-[[https://r2.guolongji.xyz/allinaent/2024/06/c72936031e6bc417e6c0a0f49dcd5f28.png
+https://r2.guolongji.xyz/allinaent/2024/06/c72936031e6bc417e6c0a0f49dcd5f28.png
 
 ** Mesa3D 的作用
 

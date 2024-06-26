@@ -1,0 +1,44 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/06
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-06-20 四 16:37]
+#+TITLE: sysctl 内核考试题
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+在sysctl里实现一个接口/proc/sys/kernel/param1，能对该接口进行读写。
+
+
+要在 sysctl 中实现一个接口 /proc/sys/kernel/param1，并且使其能够进行读写操作，你可以按照以下步骤进行设置：
+
+1.创建一个新的 sysctl 参数：
+首先，在 /etc/sysctl.conf 文件中添加以下行来定义新的 sysctl 参数：
+
+kernel.param1 = 0
+这将在 sysctl 中创建一个名为 kernel.param1 的参数，并初始化其值为 0。
+
+2.加载配置：
+在命令行中执行以下命令来加载新的 sysctl 配置：
+
+sudo sysctl -p
+这将应用 /etc/sysctl.conf 中的更改并使新的参数生效。
+
+3.创建一个 proc 文件：
+接下来，你需要创建一个 /proc/sys/kernel/param1 的虚拟文件，以便对其进行读写操作。你可以通过编写一个简单的内核模块来实现这一点，或者使用 /proc 文件系统的接口来创建一个虚拟文件。
+
+4.编写内核模块（可选）：
+如果你选择编写一个内核模块来创建 /proc/sys/kernel/param1 文件，你需要编写一个简单的内核模块，注册一个 proc 文件，并提供读写函数来处理读写操作。
+
+5.使用 proc 接口创建虚拟文件：
+另一种方法是使用 /proc 文件系统的接口在内核模块中创建一个虚拟文件，类似于创建普通的 /proc 文件。这个虚拟文件会映射到你所定义的 sysctl 参数，从而实现对该参数的读写操作。
+
+一旦完成上述步骤，你就可以通过读写 /proc/sys/kernel/param1 文件来操作名为 kernel.param1 的 sysctl 参数了。当
+用户空间程序读写该文件时，内核会调用对应的读写函数，并通过 sysctl 参数进行实际的读写操作。
+
+那么可以参才情 sys 的例子，直接修改一下路径就可以了。
+
+后面的略了。

@@ -1,7 +1,7 @@
 +++
 title = "mesa 中的概念和代码介绍"
 date = 2024-01-11T10:00:00+08:00
-lastmod = 2024-06-11T11:44:19+08:00
+lastmod = 2024-06-24T11:24:49+08:00
 categories = ["graphic"]
 draft = false
 toc = true
@@ -482,11 +482,11 @@ SDL 提供了数种控制图像、声音、输出入的函数，让开发者只�
 
 {{< figure src="https://r2.guolongji.xyz/allinaent/2024/06/4b901a1e51a52ccb881c6b5e64388d3f.png" alt="mesa 的头文件" caption="<span class=\"figure-number\">Figure 4: </span>_mesa 的头文件_" >}}
 
-[[![mesa 的库文件](https://r2.guolongji.xyz/allinaent/2024/06/04237419aeb65eeb077b506dc53d0b80.png)
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/06/04237419aeb65eeb077b506dc53d0b80.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 5: </span>_mesa 的库文件_" >}}
 
 用 GLX 设置上下文，用 GL 来做渲染。
 
-[[<img src="https://r2.guolongji.xyz/allinaent/2024/06/c72936031e6bc417e6c0a0f49dcd5f28.png" alt="mesa 的库文件" width="900" />
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/06/c72936031e6bc417e6c0a0f49dcd5f28.png" alt="mesa 的库文件" caption="<span class=\"figure-number\">Figure 6: </span>_mesa 的库文件_" width="900" >}}
 
 
 ### Mesa3D 的作用 {#mesa3d-的作用}

@@ -87,13 +87,13 @@ menu:
               newTab: true
               icon: rss
 
-    social:
-        - identifier: github
-          name: GitHub
-          url: https://github.com/Allinaent
-          params:
-              newTab: true
-              icon: brand-github
+              #social:
+              #    - identifier: github
+              #      name: GitHub
+              #      url: https://github.com/Allinaent
+              #      params:
+              #          newTab: true
+              #          icon: brand-github
 
 related:
     includeNewer: true

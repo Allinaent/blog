@@ -1,0 +1,365 @@
++++
+title = "ebpf 的学习记录"
+date = 2024-06-21T14:18:00+08:00
+lastmod = 2024-06-26T17:30:21+08:00
+categories = ["kernel"]
+draft = false
+toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+## 简介 {#简介}
+
+<https://ebpf.io/what-is-ebpf/>
+
+这个链接中有一大堆的架构图。
+
+ebpf 不能调用内核函数，只能调用内核的 helper 函数。举例如下：
+
+生成随机数
+
+获取当前时间和日期
+
+eBPF 地图访问
+
+获取进程/cgroup 上下文
+
+操纵网络数据包和转发逻辑
+
+-   BCC
+
+BCC 是一个框架，它使用户能够编写嵌入 eBPF 程序的 Python 程序。该框架主要针对涉及应用程序和系统分析/跟踪的用例，其中 eBPF 程序用于收集统计数据或生成事件，而用户空间中的对应程序则收集数据并以人类可读的形式显示。运行 Python 程序将生成 eBPF 字节码并将其加载到内核中。
+
+-   bpftrace
+
+bpftrace 是一种用于 Linux eBPF 的高级跟踪语言，可用于半新版 Linux 内核 (4.x)。bpftrace 使用 LLVM 作为后端将脚本编译为 eBPF 字节码，并利用 BCC 与 Linux eBPF 子系统以及现有的 Linux 跟踪功能进行交互：内核动态跟踪 (kprobes)、用户级动态跟踪 (uprobes) 和跟踪点。bpftrace 语言的灵感来自 awk、C 以及 DTrace 和 SystemTap 等前代跟踪器。
+
+-   eBPF Go 库
+
+eBPF Go 库提供了一个通用的 eBPF 库，它将获取 eBPF 字节码的过程与 eBPF 程序的加载和管理解耦。
+eBPF 程序通常通过编写更高级的语言来创建，然后使用 clang/LLVM 编译器编译为 eBPF 字节码。
+
+-   直接写
+
+使用 libbpf 库，bpf 程序有自己的语法。
+
+
+## 深入研究 {#深入研究}
+
+下面是深入研究。不管是搞应用还是做内核，网上的资料都是一大把的。关键是多得看不完。也很少需要深入地看下去。
+
+-   初学者：运行bcc工具
+-   中级：开发bpftrace工具
+-   高级：开发bcc工具，为 bcc 和 bpftrace 做出贡献
+
+eBPF对 Linux 的作用就像 JavaScript 对 HTML 的作用一样。（某种程度上。）因此，JavaScript 让您可以定义在鼠标点击等事件上运行的小程序，这些小程序在浏览器中的安全虚拟机中运行，而不是静态 HTML 网站。使用 eBPF，您现在可以编写在磁盘 I/O 等事件上运行的小程序，这些小程序在内核中的安全虚拟机中运行，而不是使用固定的内核。实际上，eBPF 更像是运行 JavaScript 的 v8 虚拟机，而不是 JavaScript 本身。eBPF 是 Linux 内核的一部分。
+
+直接使用 eBPF 编程非常困难，就像使用 v8 字节码编码一样。但没有人使用 v8 编码：他们使用 JavaScript 编码，或者通常使用 JavaScript 之上的框架（jQuery、Angular、React 等）。eBPF 也是如此。人们将通过框架使用它并在其中编码。对于跟踪，主要的是bcc和bpftrace 。它们不在内核代码库中，而是在 github 上名为iovisor的 Linux 基金会项目中。
+
+sudo apt install bpfcc-tools 。初学者先学会用这个工具。
+
+sudo apt install bcc ，或者是这个包。
+
+sudo execsnoop-bpfcc，这个程序可以查看所有的运行中的程序。和 top 类似。
+
+
+### bcc {#bcc}
+
+bcc 的使用教程：<https://github.com/iovisor/bcc/blob/master/docs/tutorial.md>
+
+bcc 的安装教程：<https://github.com/iovisor/bcc/blob/master/INSTALL.md>
+
+针对 linux 内核的扩展，这个真的是一个打开新世界大门的实践参考：
+
+<https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55>
+
+统计 60s 内机器的性能。就一个程序可以组合起来
+
+uptime
+
+dmesg | tail
+
+vmstat 1
+
+mpstat -P ALL 1
+
+pidstat 1
+
+iostat -xz 1
+
+free -m
+
+sar -n DEV 1
+
+sar -n TCP,ETCP 1
+
+top
+
+这些命令。总得来说就是像写 js 一样，来写 bcc 程序。
+
+
+### bpftrace {#bpftrace}
+
+<https://github.com/iovisor/bpftrace/blob/master/docs/tutorial_one_liners.md>
+
+
+### 一篇很好的介绍博客 {#一篇很好的介绍博客}
+
+<https://tonybai.com/2022/07/05/develop-hello-world-ebpf-program-in-c-from-scratch/>
+
+
+## 信号 {#信号}
+
+信号好博客：
+
+<https://blog.csdn.net/tiantianhaoxinqing__/article/details/126467209>
+
+操作系统内核是怎么把信号发送绐进程的？可以自己看内核代码，只需要知道，信号是内核与进程之间的一种异步通信方式，用于对进程的管理。
+
+
+## 中断处理的工作队列 {#中断处理的工作队列}
+
+<https://kerneltravel.net/blog/2020/interrupt_tasklet_hds/>
+
+逻辑上来说，内核的编码和应用的编码没有什么本质区别。比如在异步事件的处理上和队列的使用上，可以说就是一样的。
+
+现代计算机系统中通常有一个机制来处理和管理中断请求，这包括使用一个中断队列来存储和排队中断事件。以下是一些相关概念和机制：
+
+1.中断控制器 (Interrupt Controller)：
+
+-   中断控制器是管理中断请求的硬件组件。常见的中断控制器包括PIC（可编程中断控制器）和APIC（高级可编程中断控制器）。
+-   中断控制器负责接收来自不同设备的中断请求，并根据中断的优先级进行调度和分发。
+
+2.中断队列（Interrupt Queue）：
+
+一些高级的中断控制器或操作系统内核会维护一个中断队列，用于存储待处理的中断事件。当一个中断发生时，它会被放入这个队列中。操作系统内核会根据优先级和当前处理状态，从队列中取出中断事件进行处理。
+
+3.中断屏蔽和优先级：
+
+-   中断控制器和操作系统可以设置中断屏蔽和优先级，以决定哪些中断可以打断当前的处理中断。
+-   高优先级的中断可以优先处理，而低优先级的中断可能会被暂时屏蔽或延迟。
+
+4.中断嵌套和嵌套层次：
+
+-   在某些系统中，允许中断嵌套，即在处理中断A时可以响应更高优先级的中断B。这需要硬件和软件的支持来管理嵌套层次。
+-   中断嵌套可以提高系统的响应能力，但也增加了系统复杂性。
+
+5.软中断（Soft Interrupt）和任务队列：
+
+-   除了硬件中断外，操作系统还支持软中断，通过软件触发中断处理程序。
+-   操作系统内核通常会有一个任务队列（Task Queue）或工作队列（Work Queue），用于调度需要延迟处理的任务，包括软中断处理程序。
+
+总之，现代计算机系统通过硬件中断控制器和操作系统的调度机制，有效地管理和排队中断事件。这种机制确保中断能够得到及时处理，同时防止系统过载或丢失重要的中断请求。
+
+中断至此基本明白了，少的就是一些调试手段和日志的分析。最主要的还是 ebpf 调试信号那块，加深对 ebpf 的理解。过去的邮件和问题可以多总结几篇。熟能生巧。
+
+
+## 调度子系统 {#调度子系统}
+
+在Linux内核中，调度算法的实现主要集中在以下几个文件中：
+
+1.kernel/sched/core.c：
+
+这是调度器的核心文件，包含了调度器的主要逻辑和函数，例如创建、删除和管理调度队列以及任务切换的核心代码。
+
+2.kernel/sched/fair.c：
+
+实现了完全公平调度器（Completely Fair Scheduler, CFS）。CFS 是 Linux 内核中默认的调度算法，它通过一个红黑树的数据结构来管理进程，并试图以一种公平的方式分配 CPU 时间。
+
+3.kernel/sched/rt.c：
+
+实现了实时任务调度器。实时调度器用于处理实时任务，并提供优先级继承和抢占等特性，以满足实时系统的需求。
+
+4.kernel/sched/deadline.c：
+
+实现了基于截止时间的调度算法（Deadline Scheduler）。这个调度器旨在为实时任务提供确定性的调度，以确保它们在指定的截止时间之前完成执行。
+
+5.include/linux/sched.h 和 include/linux/sched/\*.h：
+
+包含了与调度相关的数据结构和函数声明。这些文件定义了任务结构体、调度类和各种调度器使用的辅助函数。
+
+6.kernel/sched/\*.c：
+
+除了上述主要文件外，该目录下还有其他与调度器相关的文件，例如 idle.c 用于空闲任务调度，cpuacct.c 用于 CPU 账户计费等。
+
+这些文件共同组成了Linux内核的调度子系统，通过协同工作来实现复杂的调度功能。每个文件根据其职责实现不同的部分，从核心调度逻辑到具体的调度算法，再到辅助功能和数据结构。
+
+fair.c 也不过 10000 行的代码。
+
+
+### 问题：kernel/sched/fair.c 中算法的核心实现是哪个函数？介绍一下实现的过程。 {#问题-kernel-sched-fair-dot-c-中算法的核心实现是哪个函数-介绍一下实现的过程}
+
+在 kernel/sched/fair.c 中，完全公平调度器（Completely Fair Scheduler, CFS）的核心实现主要体现在以下几个关键函数中：
+
+1.enqueue_task_fair 和 dequeue_task_fair：
+
+-   这些函数负责将任务添加到红黑树（rb-tree）中或从中移除。CFS 使用红黑树来保持任务的排序，以实现公平的调度。
+
+2.pick_next_task_fair：
+
+-   这个函数用于从红黑树中选择下一个要运行的任务。它通常选择虚拟运行时间（vruntime）最小的任务。
+
+3.\__schedule：
+
+-   虽然这个函数位于 kernel/sched/core.c 中，但它调用了各个调度类的 pick_next_task 函数，包括 pick_next_task_fair 来确定下一个要运行的任务。
+
+其中，pick_next_task_fair 是 CFS 算法的核心部分，它负责在每次任务切换时选择下一个要运行的任务。下面是 pick_next_task_fair 的实现过程概述：
+
+pick_next_task_fair
+
+```c
+struct task_struct *pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+{
+    struct cfs_rq *cfs_rq = &rq->cfs;
+    struct sched_entity *se;
+    struct task_struct *p;
+
+    if (!cfs_rq->nr_running)
+        return NULL;
+
+    se = pick_next_entity(cfs_rq, NULL);
+
+    for_each_sched_entity(se) {
+        cfs_rq = cfs_rq_of(se);
+        if (cfs_rq_throttled(cfs_rq))
+            goto pick_next_entity;
+        update_curr(cfs_rq);
+        se = pick_next_entity(cfs_rq, se);
+    }
+
+    p = container_of(se, struct task_struct, se);
+    hrtick_start_fair(rq, p);
+    return p;
+}
+```
+
+实现过程
+
+1.检查是否有运行的任务：
+
+如果当前 CFS 运行队列（cfs_rq）中没有任务，则返回 NULL，表示没有任务可调度。
+
+2.选择下一个调度实体（sched_entity）：
+
+调用 pick_next_entity 函数，从红黑树中挑选下一个调度实体。调度实体可以视为任务的抽象，包含了任务调度相关的信息。
+
+3.遍历调度实体：
+
+使用 for_each_sched_entity 宏遍历所有调度实体。这是因为一个任务可能属于多个调度实体，例如在组调度或多层次调度中。
+
+4.检查调度队列是否被限制：
+
+如果当前调度队列被限制（throttled），则跳转到 pick_next_entity 标签处继续选择下一个实体。
+
+5.更新当前调度实体：
+
+调用 update_curr 函数，更新当前调度实体的虚拟运行时间（vruntime），以反映其最新的执行状态。
+
+6.获取任务结构：
+
+从调度实体中获取实际的任务结构体（task_struct）。
+
+7.启动高分辨率计时器：
+
+调用 hrtick_start_fair 函数，为选定的任务启动高分辨率计时器，以支持精确的时间片管理和抢占。
+
+8.返回下一个任务：
+
+返回选定的任务结构体，供调度器进行上下文切换。
+
+通过这些步骤，pick_next_task_fair 实现了从 CFS 运行队列中选择下一个任务的核心逻辑。CFS 的设计目标是使任务在最接近真实时间的情况下获得公平的 CPU 时间，虚拟运行时间（vruntime）较小的任务会优先获得调度，从而实现公平性。
+
+
+### 问题：内核空间的进程需要调度器吗？是的，需要。 {#问题-内核空间的进程需要调度器吗-是的-需要}
+
+内核空间的进程也需要调度器。尽管在大多数情况下，我们谈到进程调度时主要关注的是用户空间的进程，但内核空间的进程（更准确地说，是内核线程）同样依赖于调度器来管理 CPU 时间的分配。
+
+内核空间中的进程和内核线程
+
+在 Linux 内核中，内核线程是运行在内核态的特殊进程。这些线程执行内核任务，如处理 I/O 操作、管理内存、维护文件系统等。与用户态进程不同，内核线程不直接与用户交互，而是执行系统级的操作。
+
+调度器的作用
+
+调度器的主要职责是决定哪个进程或线程可以使用 CPU，以及在何时进行上下文切换。无论是用户态进程还是内核线程，调度器都要确保它们能够公平且高效地获取 CPU 资源。
+
+为何内核线程需要调度器：
+
+1.资源公平分配：
+
+内核线程和用户态进程都需要访问 CPU 资源。调度器通过时间片和优先级等机制来确保所有进程和线程公平地共享 CPU 资源。
+
+2.响应时间和系统性能：
+
+调度器通过选择适当的任务来运行，可以优化系统的响应时间和总体性能。例如，I/O 密集型任务可能优先于计算密集型任务，以提高系统的响应能力。
+
+3.优先级管理：
+
+一些内核线程可能具有较高的优先级（例如，处理紧急的硬件中断）。调度器负责根据优先级对任务进行排序和调度，确保高优先级的任务能够及时执行。
+
+4.多处理器支持：
+
+在多处理器系统（SMP）中，调度器还负责将任务分配到合适的 CPU 核心上，以优化并行性和负载均衡。
+
+调度器如何处理内核线程
+
+调度器对内核线程和用户态进程的处理方式基本相同。内核线程也有其调度实体（sched_entity），并且会被插入到调度队列中，与其他任务一起进行调度。内核线程与用户态进程共享相同的调度策略，例如完全公平调度器（CFS）。
+
+示例：内核线程的创建和调度
+
+内核线程通过 kthread_create 或 kthread_run 等 API 创建，这些 API 会初始化进程控制块（task_struct），并将新线程插入到调度队列中。然后，由调度器决定何时运行该内核线程。
+
+```c
+struct task_struct *task;
+task = kthread_create(thread_function, data, "my_kernel_thread");
+if (!IS_ERR(task)) {
+    wake_up_process(task);
+}
+```
+
+在这个例子中，kthread_create 创建了一个新的内核线程，并返回其 task_struct 指针。随后，通过 wake_up_process 将其唤醒，使其进入就绪队列，等待调度器进行调度。
+
+总结:
+
+内核空间的进程（即内核线程）同样需要调度器来管理它们的执行。调度器通过公平的资源分配、响应时间优化、优先级管理和多处理器支持，确保系统内所有任务（无论是用户态还是内核态）都能有效地利用 CPU 资源，从而保证系统的稳定和高效运行。
+
+查看所有的内核线程：
+
+```bash
+ps -eLf | grep '\['
+```
+
+这个查到的也用用户态的进程，不准确，需要自行分辨。通过 _proc/fd_ 下的 comm 能看到进程的信息。
+
+问 GPT 下面几个问题，就会对 linux “线程” 的实现有比较好的理解了。
+
+1.linux和windows对于线程的实现哪个更好一些？
+
+2.LWP和一般的linux进程有什么不一样？
+
+LWP 用 clone 实现。可以指定不同的共享程度（如地址空间、文件描述符等）。
+
+3.什么是 LWP？
+
+好了现在任务管理这块扫盲也完成了。
+
+4.什么是 execvc ？
+
+5.什么是 popen ？
+
+6.vfork 有使用的必要性吗？
+
+<https://www.zhihu.com/question/304323673/answer/543264299>
+
+7.什么是 clone_vm ？
+
+1.
+
+
+## 文件系统 {#文件系统}
+
+
+## 天赋 {#天赋}
+
+如果做了三年半的时间，还没有对内存管理，文件系统，进程管理等等非常好熟悉，足以证明我在内核方面是没有很多天赋和进展的。实际上，在工作中，绝大多数问题的解决都是在一知半解的情况下做的梳理。没有需要对内存管理，文件系统有很深的认识。
+
+内核，真的是不好干的。因为，你并不知道工作真正需要你做什么。当然，如果不是有非常大的兴趣，也就不会
