@@ -1,0 +1,311 @@
++++
+title = "缺页异常及其测试用例"
+date = 2024-07-15T16:06:00+08:00
+lastmod = 2024-07-16T10:05:29+08:00
+categories = ["kernel"]
+draft = false
+toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+linux 内核没有什么复杂的东西，我说的是真的。linux 内核驱动只是为了硬件服务的。主要的硬件设备，只有 CPU ，内存，硬盘。而缺页异常 (page fault) 只是将硬件充分利用的一个小机制而已。
+
+page fault 的处理流程如下。
+
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/07/6b244b11c82973d35f474312d900ee8f.png" >}}
+
+这个图没有涉及到透明大页的处理，透明大页的处理在找 VMA 之前。如果是对透明大页的处理，则是走的另外一套流程。
+
+缺页中断是Linux内核内存管理子系统中的核心机制，当进程访问的虚拟地址未映射到物理内存或对应页面没有访问权限时，便会触发缺页中断。
+
+触发缺页中断后，接下来需要确定这个地址是否存在已映射的区域，即寻找对应的VMA，如果找不到这样的区间，说明访问的地址超出了用户空间的范围，属于越界访问。这通常发生在地址高于用户空间上限（例如
+3GB以上）时，试图访问属于系统的空间，最终会转向错误处理（bad_area）。本次只讨论VMA存在的正常处理流程情况（good_area）。根据不同的情况可分为以下几种类型的缺页异常：
+
+
+## PTE （页表项）不存在 {#pte-页表项-不存在}
+
+如果在页表中找不到虚拟地址对应的PTE，说明PTE还没有被建立或PTE的内容已被清空。此时，根据页面的具体类型可以分为两类缺页异常：
+
+-   匿名映射
+
+-   文件映射
+
+
+### 匿名映射缺页异常 {#匿名映射缺页异常}
+
+这种类型的VMA标记为匿名映射，内核调用do_annoymous_page()函数处理。对于这种类型的缺页异常的用例设计思路是通过malloc函数分配页面，然后通过读或写的方式进行初始化，从而触发匿名页面的缺页异常。
+
+annoymous 的意思就是匿名的意思。
+
+测试用例如下：
+
+```c
+int *shared_mem = (int *)malloc(4096*100);
+if (shared_mem == NULL) {
+        perror("内存分配失败\n");
+        return EXIT_FAILURE;
+}
+
+for(int i=0; i<(4096*100) / sizeof(int); i++) {
+        shared_mem[i]=0;
+}
+
+```
+
+这几行代码就触发了匿名映射缺页异常了。
+
+这是因为在调用 malloc时，malloc函数会在进程的虚拟地址空间中预留一块大小为 size 的连续地址区间，并将这一块地址记录在VMA中，但此时并没有实际分配物理内存页，并且PTE也没有被建立。只有当进程第一次访问这部分页面时才会触发缺页中断真正分配物理页并建立PTE。
+
+
+### 文件映射缺页异常 {#文件映射缺页异常}
+
+这种类型的VMA标记为文件映射，内核调用do_fault()函数处理，内核中文件映射过程通过mmap函数完成，
+mmap流程如下：
+
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/07/29a5b1d4a057f7639d63ad0e9e784e39.png" >}}
+
+和malloc函数类似，mmap仅仅是将文件要映射区域的相关信息记录到VMA中，并没有将页面初始化进物理内存中。根据页面访问方式又可以分为三种类型的缺页异常：
+
+-   do_read_fault
+
+-   do_cow_fault
+
+-   do_share_fault
+
+
+### do_read_fault {#do-read-fault}
+
+这种类型的缺页异常是读取未建立映射的页面引起的，基准测试用例设计思路是先通过mmap映射文件页面，然后读取一个映射区域的字节以触发缺页异常。
+
+测试用例如下：（可以用 C-c ' ）来打开 org babel 的 edit buffer ，方便写代码。
+
+还可以使用 <https://www.newocr.com/> ，这个网站来 OCR 代码，准确率奇高。
+
+```c
+void drf_test(int num_tests) {
+        int fd = open("test_file.txt", O _RDONLY);
+        if (fd < 0) {
+                perror("Error opening file");
+                return; // Exit the function if file cannot be opened
+        }
+        for (int i = 0; i < num_tests; itt) {
+                void *addr = mmap(NULL, 4096, PROT READ, MAP PRIVATE, fd, 0);
+                if (addr == MAP FAILED) {
+                        perror("Error mapping file");
+                        close(fd);
+                        return; // Exit the function if mmap fails
+                }
+                // Trigger page fault
+                char a = *((char *)addr); // Read a byte from the mapped area to trigger
+                printf("read: %c ", a);
+                munmap(addr, 4096);
+        }
+        close(fd);
+        return;
+}
+```
+
+值得注意的是，若想触发多次该类型缺页异常，只能通过上述代码中for循环多次映射的方式进行，因为在do_read_fault()过程中存在预取机制，通常一次会读入16个相邻页面，所以并不能通过一次性映射多个页面逐一访问的方式逐一触发。
+
+
+### do_cow_fault {#do-cow-fault}
+
+这种类型是由写操作导致的缺页异常，基准测试用例的设计思路是先通过 mmap 映射文件页面，然后向页面中写入一个字符以触发缺页异常。
+
+```c
+int fd = open("test_file.txt", O_RDWR);
+if (fd < 0) {
+        perror("Error opening file");
+        continue;
+ }
+// Assuming file size is defined elsewhere or needs to be defined
+Size t file size = 4096;
+void *addr = mmap(NULL, file size, PROT WRITE | PROT READ, MAP PRIVATE, fd, 0);
+if (addr == MAP FAILED) {
+        perror("Error mapping file");
+        close(fd);
+        continue;
+ }
+// Trigger page fault
+((char *)addr)[0] = '1'; // write a byte from the mapped area to trigger
+munmap(addr, file size);
+close(fd);
+```
+
+
+### do_share_fault {#do-share-fault}
+
+这种类型是共享文件映射中发生写缺页异常的情况。基准测试用例的设计思路是先通过 mmap 映射共享文件页面，然后fork子进程，在子进程中访问共享页面以触发文件映射写时复制缺页异常。
+
+```c
+int main() {
+        int fd = open("test_file.txt", O_RDWR);
+        if (fd < 0) {
+                perror("Error opening file");
+        }
+        size t file size = 4096 * 100;
+        void *addr = mmap(NULL, file size, PROT WRITE | PROT READ, MAP SHARED, fd, 0);
+        if (addr == MAP FAILED) {
+                perror("Error mapping file");
+                close(fd);
+        }
+        printf("File mapped at address %p\n", addr);
+        pid_t pid = fork();
+        if(pid < 0){
+                perror("Error forking");
+        }else if(pid == 0){
+                printf("Child process PID: %d\n", getpid());
+                printf("Child process writing to file...\n");
+                char *ptr = (char *)addr;
+                for (int i = 0; i < file_size; i++) {
+                        ptr[i] = '1';
+                }
+                printf("Child process finished writing to file.\n");
+                exit(0);
+        }else{
+                printf("Parent process PID:%d\n", getpid());
+                wait(NULL) ;
+        }
+        munmap(addr, file_size);
+        close(fd);
+        return 0;
+}
+```
+
+
+## PTE 存在，但是页面被交换出去 {#pte-存在-但是页面被交换出去}
+
+如果 VMA 存在，说明页面已经被初始化进物理内存，下一步要检查 PTE 的 PRESENT 位，即页面当前是否被交换出去。如果页面已经被交换到交换区，内核通过调用 do_swap_page() 函数处理。该类异常的用例设计思路是利用 SYS_madvise 系统调用，该系统调用会建议内核如何处理指定的内存页，并且在 5.4 内核之后新加了
+MADV_PAGEOUT 参数，该参数的含义是建议内核将指定区域的页面交换出去。所以整体思路是先通过 malloc 函数申请内存并使用 memset 将其初始化进物理内存，然后通过 SYS_madvise 将内存页交换出去，随后再次访问，从而触发对应的缺页异常。
+
+SYS_madvise 写的测试用例如下：
+
+```c
+int result = syscall(SYS_madvise, addr, NUM_PAGES * PAGE SIZE, MADV_PAGEOUT) ;
+if(result == 0){
+        printf("swap succeeded!\n");
+ }selse{
+         perror("madvise failed");
+         free(addr);
+         return 1;
+  }
+```
+
+
+### 监视交换区容量的变化 {#监视交换区容量的变化}
+
+这个功能写在代码当中，可以在短时间内对比 swap 使用的差异，方便理解其原理。
+
+```c
+void print _swap_usage() {
+        FILE *fp;
+        char line[256];
+        int total_swap = 0, used_swap = 0;
+        // 打开 /proc/swaps 文件
+        fp = fopen("/proc/swaps", "r");
+        if (fp == NULL) {
+                perror("Failed to open /proc/swaps");
+                return;
+        }
+        // 读取并忽略第一行 (标题行)
+        fgets(line, sizeof(line), fp);
+        // 逐行读取交换空间数据
+        while (fgets(line, sizeof(line), fp) != NULL) {
+                char dev[256];
+                int total, used, priority;
+                if (sscanf(line, "%s %s %d %d %d", dev, &total, &used, &priority) == 4) {
+                        total_swap += total;
+                        used_swap += used;
+                }
+        }
+        fclose(fp);
+        printf("Total Swap: %d KB, Total Used Swap: %d KB\n", total_swap, used_swap);
+}
+```
+
+
+### 监控指定页面当前的位置 {#监控指定页面当前的位置}
+
+```c
+void check_memory_region(void *addr) {
+        FILE *pagemap;
+        uint64 t pfn;
+        int page_size = PAGE SIZE;
+        int num_pages = NUM_PAGES;
+        unsigned long va;
+        char pagemap_file[256];
+        snprintf(pagemap file, sizeof(pagemap_file), "/proc/self/pagemap");
+        pagemap = fopen(pagemap file, "rb");
+        if (pagemap == NULL) {
+                berzor("无法打开 /proc/self/pagemap");
+                return;
+        }
+        int in_memory count = 0;
+        int in_swap_count = 0;
+        for (int i = 0; i < num_pages; i++) {
+                va = (unsigned long)addr + i * page_size;
+                uinté4 t offset = (va / page_size) * sizeof(uint64 t);
+                if (fseek(pagemap, offset, SEEK SET) != 0) {
+                        perror("fseek sik");
+                        fclose(pagemap);
+                        return;
+                }
+                if (fread(&pfn, sizeof(uint64 t), 1, pagemap) != 1) {
+                        perror("fread ik");
+                        fclose(pagemap) ;
+                        return;
+                }
+                if (pfn & PAGE_PRESENT) {
+                        in_memory_count++;
+                } else if (pfn & PAGE SWAPPED) {
+                        in_swap_countt++;
+                }
+        }
+        fclose(pagemap);
+                 Printf("%d 个页面位于物理内存\n", in_memory_count);
+                 printf("%d 个页面位于交换区\n", in_swap_count);
+}
+```
+
+
+## 写操作导致的缺页异常 {#写操作导致的缺页异常}
+
+如果PTE存在，页面没有被交换出去，并且页面和进程位于同一NUMA节点（本次暂不讨论页面位于其他NUMA节点的情况）。那么还有一种场景就是写操作但PTE是只读导致的缺页异常。根据处理方式的不同又可以分为两种类型，写时复制和原地更新。这里将两种情况放着一起讨论。
+
+写时复制用例的设计思路是父进程通过malloc申请共享内存，然后通过写的方式将其初始化，随后fork子进程，子进程向共享内存中写入数据以触发写时复制的缺页异常；在子进程完成写时复制之后，原来的共享页面会由可写变为只读，此时父进程再向共享页写入数据会触发缺页异常，并且处理方式是修改页面权限为可写，然后写入共享页面，即在原页面上更新。
+
+```c
+void test_cow(int *shared_mem) {
+        pid_t pid = fork(); // 创建子进程
+
+        if (pid < 0) {
+                perror("fork 失败");
+                return;
+        } else if (pid == 0) {
+                // 子进程
+                printf("子进程 PID: %d\n", getpid());
+
+                // 修改子进程的名称
+                prctl(PR_SET_NAME, "child_process", 0, 0, 0);
+
+                for (int i=0; i<100; i++) {
+                        shared_mem[i * 4096 / sizeof(int)] = i; // 修改共享内存，触发写时复制
+                        // printf("子进程：修改第 %d 页\n", i+1);
+                }
+                exit(0); // 结束子进程
+        } else {
+                // 父进程
+                printf("父进程 PID: %d\n", getpid());
+
+                // 等待子进程结束
+                wait(NULL);
+                printf("父进程：子进程已结束\n");
+
+                for (int i = 0; i< 100; i++) {
+                        shared_mem[i*4096 / sizeof(int)]=i; // 修改共享内存，触发原地更新
+                        // printf(" 父进程：修改第 %d 页\n", i + 1);
+                }
+        }
+
+}
+```

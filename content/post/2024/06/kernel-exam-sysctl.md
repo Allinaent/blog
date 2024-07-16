@@ -1,14 +1,19 @@
 +++
 title = "sysctl 内核考试题"
 date = 2024-06-20T16:37:00+08:00
-lastmod = 2024-06-26T17:31:25+08:00
+lastmod = 2024-06-28T09:41:11+08:00
 categories = ["kernel"]
 draft = false
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
+## 题目 {#题目}
+
 在sysctl里实现一个接口/proc/sys/kernel/param1，能对该接口进行读写。
+
+
+## 思路 {#思路}
 
 要在 sysctl 中实现一个接口 /proc/sys/kernel/param1，并且使其能够进行读写操作，你可以按照以下步骤进行设置：
 

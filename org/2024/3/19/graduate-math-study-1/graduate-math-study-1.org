@@ -8,10 +8,13 @@
 #+TITLE: 考研数学二复习开始
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: exam
-#+HUGO_WEIGHT: 10
+# #+HUGO_WEIGHT: 10
 #+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg
 
 摸鱼备考数学二，不会有人发现的。这是是全部第一章的知识点。
+
+这篇文章不因为方便编辑而置顶了，我的笔记后面用 emacs + nas 的 webdav 同步 org-roam 笔记。后
+面只有重要的难点，才发布到博客里，这样比较好一点
 
 
 * 函数、极限、连续
@@ -105,8 +108,7 @@
 - 求数列的极限
  - n 项和的数列极限
   - 利用夹逼原理；
-  - 利用定积分定义 $\int_{a}^{b}f(x)dx=\lim\limits_{\lambda \to 0}\sum\limits_{k=1}^{n}f(\xi_{k})\Delta
-    x_{k}$
+  - 利用定积分定义 $\int_{a}^{b}f(x)dx=\lim\limits_{\lambda \to 0}\sum\limits_{k=1}^{n}f(\xi_{k})\Delta x_{k}$
  - n 项连乘的数列极限
   - 消去分子分母的公因式
   - 夹逼原理
