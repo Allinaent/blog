@@ -1,0 +1,20 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/07
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-07-16 二 13:50]
+#+TITLE: 龙芯新世界旧世界的兼容方案 libLoL 的实现过程
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+
+龙芯的新旧世界有兼容方案了。可以说龙芯做的事情是从走一遍计算机工业的发展史。确实有必要。
+可能现在还是有不少的问题，但是总的来说。为中国奠定了 CPU 架构独立的基础。
+
+https://r2.guolongji.xyz/aoscc-liblol.pdf
+
+
+希望国内这样的公司越来越多，这样，我们每个中国人才能享受到更多经济发展的红利。
