@@ -1,0 +1,72 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/08
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-08-01 四 16:37]
+#+TITLE: 内核知识点杂记
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+
+* 闲谈细语，记了有启发
+
+请教个问题，meminfo显示percpu内存占用达到了11g，系统上也没跑什么业务，只部署了一些aliyundun、titanagent等一些监控程序，
+大家没有有遇到过这种问题。
+
+
+dropcache有效果吗？
+
+#+begin_src bash
+cat /proc/meminfo |grep Percpu
+echo 3 > /proc/sys/vm/drop_caches
+cat /proc/meminfo |grep Percpu
+#+end_src
+
+dropcache以后减小到1.6G ，还是有效果的。
+
+这种状态下应用正常跑就行，系统会有机会回收，理论上不会影响应用正常使用内存。
+
+可以看看是那个进程用了Percpu的内存。
+
+__alloc_percpu_gfp   __alloc_percpu __alloc_reserved_percpu  bpftrace跟一下这三个函数。
+
+#+begin_src bash
+bpftrace -l|grep percpu|grep alloc
+bpftrace -e 'k:__alloc_percpu* {print(kstack)} k:__alloc_reserved_percpu {print(kstack)} '
+#+end_src
+
+
+#+begin_src
+systemd __alloc_percpu
+        __alloc_percpu+0x1 [kernel]
+        cgroup_mkdir+0x241 [kernel]
+        kernfs_iop_mkdir+0x5c [kernel]
+        vfs_mkdir+0x202 [kernel]
+        do_mkdirat+0xf7 [kernel]
+        __x64_sys_mkdir+0x2a [kernel]
+        do_syscall_64+0x37 [kernel]
+
+#+end_src
+
+
+cgroup里面会用到percpu的内存。
+
+
+* linux 修炼之路分享
+
+https://r2.guolongji.xyz/%E4%BB%8ELinux%E5%88%B0UOS%EF%BC%9A%E5%86%85%E6%A0%B8%E4%BF%AE%E7%82%BC%E4%B9%8B%E8%B7%AF0729.pptx
+
+* 用 rust 写内核模块
+
+有上游的例子：
+
+https://github.com/Rust-for-Linux/linux/blob/rust-next/samples/rust/rust_minimal.rs
+
+还有一个例子：
+
+https://github.com/Rust-for-Linux/rust-out-of-tree-module
+
+

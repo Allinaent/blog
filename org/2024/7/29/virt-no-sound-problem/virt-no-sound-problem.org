@@ -1,0 +1,214 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/07
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-07-29 一 14:11]
+#+TITLE: 虚拟机无声音问题学习
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+这是我的同事强哥分析出来的，他是个分析问题能力很强的人，大神就在身边，可以学习和借签的地方很多。
+
+* 环境
+
+#+begin_src
+host系统：1050u2a
+host内核：4.19.0-91.82.152.28.uelc20.loongarch64 #1 SMP
+host qemu：qemu-kvm-4.2.0-34.11.module+uelc20+899+a51b49d5.01
+host libvirt：6.0.0
+host spice-server: 0.14.3-4.0.1.uelc20
+guest spice-gtk-client: 0.38-6.uelc20
+远程客户端系统：ubuntu，spice-gtk-client：0.37
+注：该host环境libvirt版本是安装时候系统默认。
+#+end_src
+
+* 问题现象
+
+远程客户端系统使用spicy或者remote-viewer启动连接服务器虚拟机，接着远程 host_ip和端口号，就接到了 host
+虚拟机上，远程客户端系统所在机器接耳机，此时host虚拟机播放音频，远程客户端系统所在机器接的耳机听不到声音。
+
+* 复现方法
+
+没有具体复现方法，尝试的复现方法如下：
+
+1、在loongarch机器上安装1050u2a服务器系统，下载地址：
+
+https://r2.guolongji.xyz/allinaent/2024/07/38d735154bfb08cda24207ca83bc05f7.png
+
+2、下载安装1060u1-desktop，下载地址：
+
+https://r2.guolongji.xyz/allinaent/2024/07/c43e57b84d734e13dea5ac9f2d34b1dc.png
+
+3、远程主机virt-manager连接该虚拟机，发现此时有声音，此时显示服务器配置如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/be479feba74a09effa6bec6eb92af4d3.png
+
+4、host服务器系统安装spice-server：
+
+https://r2.guolongji.xyz/allinaent/2024/07/f7eb776a6cf0ff61289367f008992ca2.png
+
+5、远程机器安装spice-client-gtk:
+
+https://r2.guolongji.xyz/allinaent/2024/07/cf5810f7847fd27ae56bdfe902667114.png
+
+6、远程客户端连接虚拟机；
+
+1）远程主机spicy -h IP -p port客户端连接guest虚拟机；
+
+https://r2.guolongji.xyz/allinaent/2024/07/af61192c706d2046e70ccb68a3977f74.png
+
+2）远程主机remote-viewer --debug spice://IP:port打开调试信息连接如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/b5daaff838fbf8d1ff8ac4c9cd09b034.png
+
+按照以上步骤，本地搭和客户一样的环境复现不出来，和客户沟通复现步骤没问题，需要远程客户环境调试解决问题。
+
+* 原理简介
+
+为了更好的分析问题，先了解一下spice相关原理。
+
+1、整体架构
+
+spice协议从结构上可以分为四个组成部分：
+
+1）虚拟机（guest）：部署在服务器侧、提供虚拟桌面服务的虚拟机中，用于接收操作系统和应用程序的图形命令，
+如虚拟图形适配器（QXL-driver）以及代理(VDI-Agent)；
+
+2）服务端（spice-server）：以libspice动态库形式供虚拟机监控管理程序(qemu)使用；
+
+3）客户端（spice-client）：用户操作远程虚拟机的程序(remote-viewer、spice-gtk)；
+
+4）协议（spice-protocol）：定义了spice各个组件之间通信的消息和规则。
+
+各部分之间的关系如图所示：
+
+https://r2.guolongji.xyz/allinaent/2024/07/2a80742bb72a48a9420ffaf3d1e2b2ba.png
+
+2、spice服务端
+
+spice server是通过libspice和VDI library实现的。VDI（Virtual Device Interfaces）提供了一个标准的方法来
+发布虚拟设别的接口。这使得其他的软件部件可以和这些virtual device交互。一方面，server使用Spice协议和
+远程client通信，另一方面，它和VDI host应用进行交互。
+
+server为了远程显示的目的，server维护了一个命令序列和一棵树来管理当前对象的依赖关系和覆盖关系。QXL命令被
+处理转换为Spice协议，然后发送给客户端，架构图如下：
+
+
+https://r2.guolongji.xyz/allinaent/2024/07/d6032bd3bd6950607c8fc11731dba67e.png
+
+Server通过channels和client通信。每一个channel类型对应一种特定类型的数据。每一个channel使用专用的TCP port。
+服务端的channel和client的channel 是对应的，也有Main，Inputs，Display，Cursor Playback和Record。
+
+3、spice客户端
+
+Spice 跨平台客户端是终端用户的接口。架构图如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/1ded6e594270da8c90612475d7800be5.png
+
+Spice包含的关键类有：Application、Channels、Screens和Windows
+
+Application包含Clients，monitos和screens，这个类实现了通用的应用功能：命令行解析，主循环，时间处理，
+鼠标事件重定向，全屏切换等等。
+
+Channels：client和服务端通过channels 进行通信，每一个channel类型对应着特定的数据类型。每个channel 使用
+专门的TCP 端口，有一个专门的线程来处理。
+
+* 日志分析
+
+按照上述环境，本地搭环境遇到了一些问题，以为是复现了客户现象，其实不是。最后搭了完全相同的环境发现可以听
+到声音，但是客户现场还是听不到声音，怀疑是spice-server或者client版本不一样导致。然后和客户沟通发现spice版
+本一样，只能远程客户环境调试看看了。
+
+进入客户远程环境看了spice相关包发现确实和本地一样，根据spice相关流程原理（请参考第4章节），我们可以先
+debug一下连接流程是否出了问题，我们打开spice client调试开关，看一下与服务端流程如何，执行下面命令:
+
+remote-viewer --debug spice://192.168.200.246:5904
+
+spice://后面ip、端口是服务器host的IP和虚拟机spice服务器的端口，
+远程客户机器spice-gtk连接过程日志如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/1f24cf065760ad017fbd252a8d1fcd46.png
+
+可以发现，没有建立playback channel，那为什么没有呢，从原理简介可以了解到，对于音频播放，录音功能，需要建
+立playback、record两个通道来实现，我们先通过wireshark抓包看是否有线索，搜索CHANNEL相关包，发现如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/d2a023071c13da6cb4e512d79f0aa3d5.png
+
+可以看到服务端返回的channle类型就没有PLAYBACK，查一下客户端流程，参考网上的有个方案是在spice图形服务器
+xml加上playback通道，也没有生效，目前看是main channel没有建立playback通道，spice客户端请求服务端得到的通道
+链表就没有。看代码反馈客户端是被动接受创建的，那可能还是服务端哪里出了问题，目前还不清楚原因，于是把我用
+的1060u1-desktop.xml也发给客户试一下，经反馈我的xml文件在他那里是好使的，比较了一下两个xml文件差异，发现如下：
+
+客户虚拟机xml：
+
+https://r2.guolongji.xyz/allinaent/2024/07/752e35268d0a33a6d81c9758739b2820.png
+
+本地复现环境xml：
+
+https://r2.guolongji.xyz/allinaent/2024/07/3555d140006c658def6af06b23520bc7.png
+
+可以看到对方没有playback通道，但是这个节点是本地调试加上去的，默认是没有的，没加之前也是有声音的，最终客户
+反馈说需要加上audio节点就有声音了，他目前默认也有audio节点，但是默认是：<audio id='1' type='none'/>，应该
+改成：<audio id='1' type='spice'/>，查了audio节点文档如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/d6b6e302604b3bd565ff70b603fc5ff9.png
+
+经沟通发现客户用的libvirt版本和我不一样，客户版本如下：
+
+https://r2.guolongji.xyz/allinaent/2024/07/6d57d3ca5d09d8ad52edadfe0c8bce29.png
+
+关于audio节点，文档显示需要7.2以上才支持：
+
+https://r2.guolongji.xyz/allinaent/2024/07/43393820bed3df6434607bb5d1d37206.png
+
+本地环境libvirt版本是：
+
+https://r2.guolongji.xyz/allinaent/2024/07/a0117cdaa77782ceabf0b714966e1243.png
+
+xml不需要指定audio和playback就有声音，查了一下启动日志发现如下：
+
+客户虚拟机启动日志参数信息：
+
+https://r2.guolongji.xyz/allinaent/2024/07/ff4c0459a7a1d8513551e6b1bb945a9d.png
+
+本地环境虚拟机启动日志：
+
+https://r2.guolongji.xyz/allinaent/2024/07/d659e23092ff8e9c276fdad2fed04a0c.png
+
+可以看到libvirt 6.0.0的启动日志有宏QEMU_AUDIO_DRV=spice，他指定了audio驱动使用spice协议。
+
+综上所述，对于libvirt 8.0版本，需要使用audio中type指定音频所使用的驱动。
+
+* 解决方案
+
+由于客户升级了源里最新的libvirt相关版本到8.0，关于audio的设置方式和6.0的有差异，因此最终的
+解决方案：libvirt 8.0设置虚拟机xml文件设置audio_type=spice后spice-gtk客户端连接qemu-kvm虚拟机后声音是正常的。
+
+具体方法是在虚拟机xml文件中加入audio节点，格式如下：
+<audio id='1' type='spice'/>
+
+* 参考资料
+
+1、https://www.ctyun.cn/developer/article/422843753607237
+
+2、http://blog.chinaunix.net/uid-796091-id-3297342.html
+
+3、https://www.51cto.com/article/748190.html
+
+4、https://www.spice-space.org/spice-user-manual.html
+
+5、https://www.spice-space.org/static/docs/spice_redhat_summit_2009.pdf
+
+6、https://docs.redhat.com/en/documentation/red_hat_virtualization/4.3/html/administration_guide/sect-spice_log_files
+
+7、https://libvirt.org/formatdomain.html#sound-devices
+
+
+
+
+
+
+

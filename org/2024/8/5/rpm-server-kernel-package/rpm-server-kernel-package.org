@@ -1,0 +1,230 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/08
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-08-05 一 13:18]
+#+TITLE: 服务器内核打包过程
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+* Linux操作系统使用RPMBUILD命令打包RPM的详细步骤
+
+https://www.cnblogs.com/zhangxinglong/p/11904922.html
+
+
+https://gerrit-dev.uniontech.com/admin/repos/Kernel-rpmbuild
+
+
+4.19.90.2407 e 版。
+
+4.19.0.91.82 a 版。
+
+4.19.0.91.77 c 版。源码与a 一样。
+
+今天终于弄懂了 rpm 打包的大致流程。核心的原理是与 debian 差不多的。像是 automake autoconfig
+这样的八股文。
+
+rpm 和 dpkg 打包都不是基于 git 。问了一下 GPT ，它的回答是这样的：
+
+Debian 和 Red Hat 打包的过程确实没有直接基于 Git，而是使用特定的工具和流程来管理和构建软件包。这种做法有其历史和技术原因：
+
+稳定性和可靠性： Debian 和 Red Hat 等主流 Linux 发行版的软件包管理者通常更倾向于使用稳定、经过验证的软件版本。
+尽管 Git 是一个非常强大和流行的版本控制系统，但它的发展速度和更新频率可能会导致某些稳定性和可靠性的担忧。因此，
+软件包的管理者更倾向于使用稳定的软件版本发布作为构建和打包的基础，而不是直接从 Git 中获取。
+
+打包工具和流程： Debian 使用的是 debhelper 和 dpkg，而 Red Hat 则使用 rpmbuild 和 rpm 等工具来构建和管理软件包。这些
+工具和流程已经深度集成到各个发行版的软件包管理系统中，包括依赖解析、版本控制、补丁管理等功能。尽管可以使用 Git 来管
+理软件源代码，但软件包的构建和发布流程通常独立于版本控制系统的使用。
+
+稳定的软件库和更新策略： Debian 和 Red Hat 都有严格的软件包更新策略和安全政策，以确保软件包的稳定性和安全性。他们通常会
+选择已经经过验证和测试的软件版本，而不是直接使用开发中的 Git 版本。这种选择是为了降低软件包引入新问题和不稳定性的风险。
+
+尽管如此，Git 仍然在开发过程中发挥着重要作用，特别是在软件开发团队中和开源社区中。开发者可以使用 Git 来管理和协作开发
+代码，然后将稳定版本发布到适当的软件包管理系统中。
+
+因此，尽管 Git 很好用且广泛使用，但在构建和管理主流 Linux 发行版中的软件包时，传统的打包工具和流程仍然是首选，以确保软
+件包的稳定性、可靠性和安全性。
+
+* 操作过程
+
+打包过程需要源码和 patch ，为了这些 patch 创建了一个项目，叫 Kernel-rpmbuild ，里面的内容是这样的：
+
+#+begin_src
+uos@guolongji:~/gg/Kernel-rpmbuild/lts-4.19/tyy-1060u1a/SOURCES$ ls
+9001-Revert-UOS-add-SM2-SM3-SM4-support.patch  filter-s390x.sh                                   kernel-x86_64.config        Module.kabi_loongarch64
+btf-encrypt-public-key.pem                     filter-x86_64.sh                                  kernel-x86_64-debug.config  Module.kabi_ppc64le
+centos-ca-secureboot.der                       generate_all_configs.sh                           mod-extra-blacklist.sh      Module.kabi_s390x
+centos.pem                                     generate_bls_conf.sh                              mod-extra.list              Module.kabi_x86_64
+centossecureboot001.crt                        kernel-aarch64.config                             mod-extra.sh                Module.kabi_x86_64_cj7
+check-kabi                                     kernel-aarch64-debug.config                       mod-sign.sh                 parallel_xz.sh
+cpupower.config                                kernel-abi-whitelists-4.19.0-91.152.28.1.tar.bz2  Module.kabi_aarch64         process_configs.sh
+cpupower.service                               kernel-kabi-dw-4.19.0-91.152.28.1.tar.bz2         Module.kabi_aarch64_cj7     uefi-db-rsa.crt
+filter-aarch64.sh                              kernel-loongarch64.config                         Module.kabi_dup_aarch64     UOS-scripts-check-kabi-denpend-on-python3-on-centos8.patch
+filter-loongarch64.sh                          kernel-loongarch64-debug.config                   Module.kabi_dup_ppc64le     UOS-UEFI-RSA.pem
+filter-modules.sh                              kernel-ppc64le.config                             Module.kabi_dup_s390x       x509.genkey
+filter-ppc64le.sh                              kernel-ppc64le-debug.config                       Module.kabi_dup_x86_64
+#+end_src
+
+
+而我还差的就是一个内核源码的压缩包。这个压缩包是这样来的。
+
+#+begin_src bash
+git archive -o linux.tar --format=tar glj-tmp-1
+mkdir linux-4.19.0-91.152.28.2
+mv linux.tar linux-4.19.0-91.152.28.2; tar xvf -C linux-4.19.0-91.152.28.2;
+tar -cJf linux-4.19.0-91.152.28.2.tar.xz linux-4.19.0-91.152.28.2/
+#+end_src
+
+然后这个 tar.xz 包就制做好了。
+
+将这两个 kernel-abi-whitelists-4.19.0-91.152.28.1.tar.bz2 ，kernel-kabi-dw-4.19.0-91.152.28.1.tar.bz2 版本号改一下。
+
+最后：rpmbuild -ba kernel.spec --define="_topdir /root/glj/tyy-1060u1a"
+
+编包结束。
+
+rpm -q --requires ./kernel-4.19.0-91.82.152.28.2.uelc20.loongarch64.rpm
+
+原来 kernel 包是一个虚包，要替换内核只需要将生成 kernel-core 包和 kernel-headers 包就可以了。
+是不是需要更新 grub 呢？
+
+vim /boot/grub/grubenv
+
+修改其中的内核版本号。然后重起就会使用新的内核了。
+
+
+* 想查看压缩包的目录结构
+
+tar tJvf linux-4.19.0-91.152.28.2.tar.xz |head -n 10
+
+J 换成 z 就是查看 tar.gz 的。
+
+J 去掉就是查看 tar 包的。
+
+
+* org-roam 网络方式发布
+
+https://hugocisneros.com/notes/
+
+https://hugocisneros.com/blog/my-org-roam-notes-workflow/#
+
+有一个搞机器学习的大佬，做了一个网站，他的网站可以把 org-roam 的wiki 放到网上，但是过程说的比较模糊，有代码
+可以参考。
+
+后期数学学习的东西也可以全部放到博客当中来，方便自己随时保持熟练度。
+
+https://hugocisneros.com/resume/
+
+follow 这个大佬，他是个法国人，可能只比我大两岁，但人家是博士生，起简历比我强太多了。
+
+* 复杂分支下的补丁对比
+
+这个可以查看不同分支的亲缘关系：
+
+git log --graph --decorate --oneline --simplify-by-decoration --all
+
+出问题的情况一般是在 2000 个补丁之内的，所以我可以这么做：
+
+git log --all --oneline --graph --decorate -2000 > all.log
+
+我关心的就两个分支，一个是 lts-1060 这个分支没有问题。另一个就是 proj-tyy3 这个分支是有问题的，对比这两个分支
+有哪些补丁的差异。所以可以先删除掉这两个分支以外的其它的分支的提交。
+
+有共同的祖先：
+
+graph 的图很容易看懂，就是
+
+proj-tyy3 上面多的补丁：
+#+begin_src
+0cf52dbb3e94 (tag: 4.19.0-91.152.28.1, origin/proj-tyy3, proj-tyy3) uos: kabi: add Module.kabi_aarch64 fr arm4k
+45871d0a7726 uos: update to tg3-3.139b
+cfd79e9343e8 stable: KVM: arm64: Remove S1PTW check from kvm_vcpu_dabt_iswrite() [T314809]
+10a714fb8078 uos: arm64: Change PAGE_SIZE from 64K to 4K
+7cffdee17a9a uos: euler :net: hns3: update hns3 version to 22.9.2
+b73c07dee1bf scsi: mpt3sas: Fix error return code of mpt3sas_base_attach()
+f60a30685f5f scsi: mpt3sas: Fix double free warnings
+ba7ee06ff1a8 uos: update megaraid_sas to 07.724.02.00[T353121]
+b38cb3294ce9 uos: Revert "uos: update megaraid_sas to 07.724.02.00[T353121]"
+ef85c99f0e99 uos: update mpt3sas driver to 45.00.00.00[T353125]
+d76d1c1bb856 uos: update megaraid_sas to 07.724.02.00[T353121]
+#+end_src
+
+lts-1060 上多的补丁：
+#+begin_src
+fa57de2af4ef (origin/lts-1060, lts-1060) Merge "euler: mm/memcontrol: fix wrong vmstats for dying memcg [T351649]" into lts-1060
+94a498143a07 euler: mm/memcontrol: fix wrong vmstats for dying memcg [T351649]
+839d7b776ced stable: {CVE-2024-26602} sched/membarrier: reduce the ability to hammer on sys_membarrier [T351223]
+67e02a13ac80 uos: drm/hisilicon/hibmc: add gamma_set function [B187793]
+478fe66f706e uos: drm/hisilicon/hibmc: add DPMS on/off function [B187793]
+d9dbfa0d28ca uos: drm/hisilicon/hibmc: fix 'xset dpms force off' fail [B187793]
+#+end_src
+
+共同的祖先是这个：
+
+0312e83e101c (tag: 4.19.0-91.152.28) euler: net: sctp: update stream->incnt after successful allocation of stream_in[B342737]
+
+满打满算，可疑的补丁只有 4 个：
+
+#+begin_src
+b73c07dee1bf scsi: mpt3sas: Fix error return code of mpt3sas_base_attach()
+f60a30685f5f scsi: mpt3sas: Fix double free warnings
+ba7ee06ff1a8 uos: update megaraid_sas to 07.724.02.00[T353121]
+ef85c99f0e99 uos: update mpt3sas driver to 45.00.00.00[T353125]
+#+end_src
+
+二分就可快就能出来了吧。为了验证，先弄一个 0312e83e101c 的版本。
+
+想从 koji 上面把内核下载下来：
+
+#+begin_src
+uos@guolongji:~/gg/CJlinux-4.19.90$ host koji.uniontech.com
+koji.uniontech.com has address 10.30.32.42
+#+end_src
+
+* 问题找到
+
+一个限制中断数量的 patch ：
+
+git branch -r --contains 0a814fe1
+
+切到不同的分支去察有没有这个 subject 最合理。
+
+#+begin_src
+uos@guolongji:~/gg/CJlinux-4.19.90$ git log --all --grep="loongarch: pci: irq: Add early" --format=%H
+e155d329b32ed9c4eb1dab27ff3e013fd45f8280
+0a814fe1bf1af00e32dc4b962a77d489db06e983
+#+end_src
+
+可以这么做。
+
+#+begin_src bash
+for commit in $(git log --grep="<subject>" --format=%H); do
+    echo "Branches containing commit $commit:"
+    git branch --contains $commit
+    echo
+done
+#+end_src
+
+* 服务器版本的 grub 如何增加内核？
+
+直接加的vmlinuz，生成了一个img
+
+grubby --add-kernel /boot/vmlinuz-版本 --title 版本
+
+添加完了，想指定启动顺序，默认不是有个启动顺序吗，一般在/boot/grub/grub.cfg能看到
+
+在 /boot/loader/entries/ 下。
+
+A版在grub.cfg没有。
+
+grubby --info=ALL
+
+增加grub 没有成功。还是做 rpm 包更靠谱。
+
+
+
+
+
