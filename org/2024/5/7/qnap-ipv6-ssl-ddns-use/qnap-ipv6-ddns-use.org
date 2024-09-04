@@ -195,6 +195,36 @@ https://macin.org/2024/04/20/transdomain-from-godaddy2cloudflare/
 整体转移的过程很顺利，几个小时批准完成就好了 10.18 美元，也就 70 多人民币。打开
 自动续订。完美，这个域名我可以一直保留着了。
 
+* qnap 使用 webdav 同步 zotero
+
+zotero 是一个自己的知识库。在 cloudflare 上修改一下证书模式：
+
+https://blog.csdn.net/asmartkiller/article/details/124542630
+
+在 qnap 上打开 webdav 是很简单的。
+
+在 zotero 上注册完帐号后，就可以选择用 webdav 来同步文件夹。
+
+效果太好了，真的是最方便的知识库了。
+
+** zotero 创建桌面快捷方式
+
+https://blog.csdn.net/m0_44999129/article/details/130225846
+
+* ttm 搜刮
+
+* 在公司访问题 nas 没有 ipv6 速度慢
+
+网站没有被黑（例如 CC 攻击），或者流量不大，就没必要上 cloudflare 的 CDN，对于中文网站来说 cloudflare
+真的是减速 CDN。cloudflare 家的特色是能够免费给 http 的网站加上 SSL，另一方面是能够防攻击。对于海外
+用户来说，用了 cloudflare 的 CDN 可以从就近的节点获取数据，起到加速效果。cloudflare 在中国与百度云
+加速（本质也是 CDN）进行合作，如果网站有备案，在使用百度云加速时，国内节点用百度云加速，国外
+用 cloudflare 加速。如果没有备案，就都走 cloudflare 的节点。综合来看，一般的网站真的没必要上 CDN。
+真正的 CDN 是给电商、直播、媒体、游戏等高富帅网站准备的。
+
+https://www.zhihu.com/question/57496274
+
+
 * 总结
 
 总共就两个步骤，一个是打开 ipv4/ipv6 双通道，使用光猫播号，路由器 ipv6 桥接。
