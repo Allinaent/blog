@@ -1,5 +1,1423 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Allinaent</title><link>https://guolongji.xyz/</link><description>Recent content on Allinaent</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 28 Apr 2024 09:54:00 +0800</lastBuildDate><atom:link href="https://guolongji.xyz/index.xml" rel="self" type="application/rss+xml"/><item><title>置顶：博客计划与完成</title><link>https://guolongji.xyz/post/next_todo/</link><pubDate>Thu, 12 Oct 2023 11:04:00 +0800</pubDate><guid>https://guolongji.xyz/post/next_todo/</guid><description>&lt;img src="https://r2.guolongji.xyz/plan.jpg" alt="Featured image of post 置顶：博客计划与完成" />计划的任务 将开发环境装到 U 盘上随身携带，并借此机会优化和重构我的 emacs 配置。 全过程做一下记录吧。24 年 3 月 6 日。 时间不同步的问题：https:/</description></item><item><title>考研数学二复习开始</title><link>https://guolongji.xyz/post/graduate-math-study-1/</link><pubDate>Tue, 19 Mar 2024 17:08:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-math-study-1/</guid><description>摸鱼备考数学二，不会有人发现的。这是是全部第一章的知识点。 函数、极限、连续 函数的概念及常见的函数 函数的几种特性 有界性 单调性 奇偶性 周期性 例题 求</description></item><item><title>浪潮产线硬盘压测重启后io-error 问题</title><link>https://guolongji.xyz/post/io-error-problem-analysis/</link><pubDate>Sun, 28 Apr 2024 09:54:00 +0800</pubDate><guid>https://guolongji.xyz/post/io-error-problem-analysis/</guid><description>又是一篇韬哥写的分析过程，os 部分的核心在于公共部分。因为内核不是硬件厂商。各个子系统公共部分的代码都非常多。而最提高分析问题能力的是在公共</description></item><item><title>我的工作流增加mathjax extension 和一些新感悟</title><link>https://guolongji.xyz/post/emacs-hugo-mathjax-extension/</link><pubDate>Fri, 26 Apr 2024 16:35:00 +0800</pubDate><guid>https://guolongji.xyz/post/emacs-hugo-mathjax-extension/</guid><description>orgmode 的 xelatex 没有渲染 \xlongequal 解决方法： (setq org-latex-packages-alist (quote ((&amp;#34;&amp;#34; &amp;#34;color&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;minted&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;parskip&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;tikz&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;pgfplots&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;amsmath&amp;#34; t) (&amp;#34;&amp;#34; &amp;#34;extarrows&amp;#34; t) ))) 增加 extarrows 这个 latex 的 ctan 宏包。 博客里的 hugo 也无法渲染 \xlongequal 解决办法： diff --git a/themes/hugo-theme-stack/layouts/partials/article/components/math.html b/themes/hugo-theme-stack/layouts/partials/article/components/math.html index</description></item><item><title>线性代数第六章——二次型</title><link>https://guolongji.xyz/post/graduate-linear-algebra-6/</link><pubDate>Wed, 24 Apr 2024 17:39:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-6/</guid><description>二次型的定义、矩阵表示，合同矩阵 一、二次型的概念 在 \(\mathbb{R}^{n}\) （每个元素是个实数 n 维向量）上的一个二次型是定义在 \(\mathbb{R}^{n}\) 上的函数，表达式为 \(Q(x)=x^{T}Ax\) ，其中 A 是一个 \(n</description></item><item><title>一个usb导致开机流程无限阻塞的问题</title><link>https://guolongji.xyz/post/start-system-stuck/</link><pubDate>Wed, 24 Apr 2024 16:18:00 +0800</pubDate><guid>https://guolongji.xyz/post/start-system-stuck/</guid><description>问题背景 文韬大佬做的分析，在这里做一下记录。 今年 3.20 的时候，前场报告了一个开机卡死问题：（严重程度 2,优先级 2）： BUG #248175 UBXC004802 华为擎云 W515 1060U3 华为 w515 前置</description></item><item><title>线性代数第五章——特征值、特征向量、相似矩阵</title><link>https://guolongji.xyz/post/graduate-linear-algebra-5/</link><pubDate>Tue, 23 Apr 2024 09:36:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-5/</guid><description>特征值、特征向量 file:///home/uos/mydata/orgmode/gtd/2021李永乐复习全书【数学二】.pdf 特征值的作用</description></item><item><title>线性代数第四章——线性方程组</title><link>https://guolongji.xyz/post/graduate-linear-algebra-4/</link><pubDate>Mon, 22 Apr 2024 10:48:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-4/</guid><description>克拉默法则 方程的求解 线性方程组就是矩阵乘法。两者研究的问题完全等效。矩阵 A ，对应的行列式 D ，当 \(D\neq 0\) 时，A 可逆（说的是方阵）。 \(x=A^{-1}b=\frac{1}{D}A^{*}b\) ，此乃求方程组</description></item><item><title>简化的哲学</title><link>https://guolongji.xyz/post/simplify-philosophy/</link><pubDate>Thu, 18 Apr 2024 15:43:00 +0800</pubDate><guid>https://guolongji.xyz/post/simplify-philosophy/</guid><description>简单的东西更好用 emacs 是复杂的，关注了一下懒猫大佬。我发现他的技术栈很是深厚，且 python，lisp 做到了非常精通的地步。lsp-bridge</description></item><item><title>在终端下使用 emacs</title><link>https://guolongji.xyz/post/use-emacs-in-terminal/</link><pubDate>Mon, 08 Apr 2024 23:08:00 +0800</pubDate><guid>https://guolongji.xyz/post/use-emacs-in-terminal/</guid><description>emacs 的插件简直太多了。很多没用到但是写了一堆无用代码，定位一个新的 bug 就难了。GUI 的 emacs 和 TUI 的 emacs 各有优劣。 GUI 下的 emacs 可以图文混排，latex ，or</description></item><item><title>线性代数第三章——向量</title><link>https://guolongji.xyz/post/graduate-linear-algebra-3/</link><pubDate>Mon, 08 Apr 2024 00:26:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-3/</guid><description>n 维向量的概念与运算 概念 n 维向量 零向量 运算 加法 数乘 内积（各个分量相乘并相加） 向量的加法，数乘满足交换率，结合率，分配率。 线性表出、线性相关 概</description></item><item><title>论心态对人生的重要性</title><link>https://guolongji.xyz/post/importance-of-mentality/</link><pubDate>Sun, 07 Apr 2024 00:16:00 +0800</pubDate><guid>https://guolongji.xyz/post/importance-of-mentality/</guid><description>人生无常，大肠包小肠 回想起年轻时的情感经历。有很多事情值得深思。 有拒绝我的，有我拒绝的。 曾经因为吾父一句话，让我感觉受到了侮辱。他说你要是追</description></item><item><title>开发环境的定时启动脚本</title><link>https://guolongji.xyz/post/ubuntu-scedule-and-start-script/</link><pubDate>Wed, 03 Apr 2024 11:21:00 +0800</pubDate><guid>https://guolongji.xyz/post/ubuntu-scedule-and-start-script/</guid><description>开机启动并且定时运行 shell 的 jq 脚本真的是太难用了，调了半天才能用，文档看不懂。 完成的这个重启脚本非常有用： cat nekoray.sh #!/bin/bash cd /opt/nekoray/config/profiles/; port=`expr 0 + &amp;#34;6&amp;#34;$(date &amp;#34;+%m%d&amp;#34;)`; jq --indent 4 --argjson port &amp;#34;$port&amp;#34; &amp;#39;.bean.port |= $port&amp;#39;</description></item><item><title>orgmode 使用drawio 画图</title><link>https://guolongji.xyz/post/org-drawio/</link><pubDate>Tue, 02 Apr 2024 22:09:00 +0800</pubDate><guid>https://guolongji.xyz/post/org-drawio/</guid><description>画图测试 下载的 drawio 的 deb 包，命令名字是 drawio ，而插件用的是 draw.io ，做一个软链接，可以解决 org-drawio-open 的调用。插件自己的代码是在 win 上使用的，不太适合 gnu/linux 环境，显然没有</description></item><item><title>xorg 代码琉理</title><link>https://guolongji.xyz/post/xorg-source-code/</link><pubDate>Mon, 01 Apr 2024 14:26:00 +0800</pubDate><guid>https://guolongji.xyz/post/xorg-source-code/</guid><description>遇到了一个 S3 后切 tty 或者关机或者重启会出现短暂的白屏的现象。但是只要不做 S3 就不会有问题。 现在通过 kill 掉所有的其它显示的组件，比如 dde 的应用 startdde ， dde-greeter ，</description></item><item><title>大多数成功人士的品质</title><link>https://guolongji.xyz/post/the-character-of-strong/</link><pubDate>Sat, 30 Mar 2024 23:00:00 +0800</pubDate><guid>https://guolongji.xyz/post/the-character-of-strong/</guid><description>成熟的人是自我的 什么是自我呢？这个词好像不是形容好人的。但是说实话，现实生活中哪里有绝对的好人呢？人们都赞扬好人，因为所谓的好人被宣传做的好</description></item><item><title>线代第二章——矩阵</title><link>https://guolongji.xyz/post/graduate-linear-algebra-2/</link><pubDate>Thu, 28 Mar 2024 22:58:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-2/</guid><description>行列式与矩阵的区别与联系 区别 矩阵是一个表格，行数和列数可以不一样；而行列式是一个代数和，当元素是数时，它是数，且行数必须等于列数。 两个矩阵相</description></item><item><title>线代第一章——行列式</title><link>https://guolongji.xyz/post/graduate-linear-algebra-1/</link><pubDate>Thu, 28 Mar 2024 10:24:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-linear-algebra-1/</guid><description>线性代数是对运算规则的一种归纳和研究，实际上这方面的研究极大的提高了并行计算的速度。可以通过电路模拟电路来提高运算速度。 概念 n 阶行列式的概念</description></item><item><title>放过自己，童心隐匿</title><link>https://guolongji.xyz/post/how-to-show-maturity/</link><pubDate>Wed, 27 Mar 2024 15:34:00 +0800</pubDate><guid>https://guolongji.xyz/post/how-to-show-maturity/</guid><description>celebrity quote As human beings, we all mature physically from childhood to adolesscence and then info adulthood, but our emotions lag behind. Bernard Sumner 放过自己 每个成年人都会感到有时苦痛。这是因为成年人不能像小孩子一样，心情很不好的时候，找家长</description></item><item><title>如何使用 ftrace 来调试系统问题</title><link>https://guolongji.xyz/post/how-to-use-ftrace/</link><pubDate>Wed, 27 Mar 2024 15:26:00 +0800</pubDate><guid>https://guolongji.xyz/post/how-to-use-ftrace/</guid><description>在无法使用 bpftrace 的时候，我们用 ftrace 来分析内核当中函数的调用流程。 ftrace 查看是否支持 ftrace 可以用来跟踪 S3 过程，而 bpftrace 不能 cd /sys/kernel/debug/tracing #进入 ftrace 工作目录 cat available_tracers #查看系统支持</description></item><item><title>cifs的ioctl notify特性backport （学习文韬大佬）</title><link>https://guolongji.xyz/post/cifs-notify-backport/</link><pubDate>Wed, 27 Mar 2024 15:07:00 +0800</pubDate><guid>https://guolongji.xyz/post/cifs-notify-backport/</guid><description>问题说明 问题来源： BUG #215779 【AMD】【N79Z】【V6】【用户反馈】【文管】文件管理器中共享文件夹新增文件后不会自动刷新，需要手动刷新后才能显现</description></item><item><title>考研数学第四章——多元函数微积分学</title><link>https://guolongji.xyz/post/graduate-math-study-4/</link><pubDate>Tue, 26 Mar 2024 11:18:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-math-study-4/</guid><description>从 2021 年李永乐的 148 页开始，多元函数的微积分学比较复杂，之前上大学的时候就学的比较浅。要掌握的话要做更多的练习。 多元函数的极限、连续、偏导数与全</description></item><item><title>考研第三章学习——积分</title><link>https://guolongji.xyz/post/graduate-math-study-3/</link><pubDate>Tue, 26 Mar 2024 10:15:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-math-study-3/</guid><description>第三章是一元函数积分学 不定积分与定积分的概念、性质、理论 定义 原函数与不定积分 定积分 重要性质、定理、公式 定积分存在定理 原函数存在定理 例题分析 分</description></item><item><title>考研数学二第二章</title><link>https://guolongji.xyz/post/graduate-math-study-2/</link><pubDate>Wed, 20 Mar 2024 22:26:00 +0800</pubDate><guid>https://guolongji.xyz/post/graduate-math-study-2/</guid><description>一元函数微分学 导数与微分，导数的计算 定义 导数 左右导数 函数的微分（即 \(\Delta y\)) 高阶导数（即斜率的斜率的斜率 &amp;hellip; ） 重要性质、定理、公式 重要性质、定理 可导</description></item><item><title>kvm 中流览器白屏问题分析</title><link>https://guolongji.xyz/post/kvm-browser-white-screen/</link><pubDate>Tue, 19 Mar 2024 12:26:00 +0800</pubDate><guid>https://guolongji.xyz/post/kvm-browser-white-screen/</guid><description>一些零散的信息和结论 问题复现时的详细现象 某个浏览器进程下的某个线程会 cpu 100%。——不管是用 top 看，还是用 perf/crash 等工具确认，确实 100%了。 此时在</description></item><item><title>linux 中u 盘的同步问题</title><link>https://guolongji.xyz/post/sync-udisk/</link><pubDate>Mon, 18 Mar 2024 15:13:00 +0800</pubDate><guid>https://guolongji.xyz/post/sync-udisk/</guid><description>linux 有很多不好用的地方 U 盘不能显示进度条 dd 命令制作的启动盘 meta data 不更新，导致无法继续写入 文韬大佬深耕内核多年，中断、文件系统、信号理解的都很深入</description></item><item><title>leetcode 第二天</title><link>https://guolongji.xyz/post/leetcode-day-2/</link><pubDate>Fri, 15 Mar 2024 11:23:00 +0800</pubDate><guid>https://guolongji.xyz/post/leetcode-day-2/</guid><description>做个简单的题压压惊。 给你两个按 非递减顺序 排列的整数数组 nums1 和 nums2，另有两个整数 m 和 n ，分别表示 nums1 和 nums2 中的元素数目。 请你 合并 nums2 到 nums1 中，使合</description></item><item><title>task-freeze/suspend失败问题（文韬大佬）</title><link>https://guolongji.xyz/post/task-freeze-suspend-fail-problem/</link><pubDate>Fri, 08 Mar 2024 17:04:00 +0800</pubDate><guid>https://guolongji.xyz/post/task-freeze-suspend-fail-problem/</guid><description>这是一个多次出现的 task-freeze 失败，进而导致 suspend 失败的问题，借这个问题介绍一下内核对于 task 的管理，比如 state 管理，wait/wakeup，freeze 过程等等</description></item><item><title>emacs 迁移记录</title><link>https://guolongji.xyz/post/emacs-migration-record/</link><pubDate>Fri, 08 Mar 2024 11:42:00 +0800</pubDate><guid>https://guolongji.xyz/post/emacs-migration-record/</guid><description>在 ubuntu 22.04 当中安装 emacs ： 编译安装 sudo apt install libcairo2-dev libharfbuzz-dev libgtk-3-dev librsvg-2-dev libmagickwand-dev make texinfo libxpm-dev libgif-dev libgnutls28-dev libncurses-dev libwebkit2gtk-4.1-dev ./autogen.sh ./configure &amp;ndash;with-x-toolkit=gtk3 &amp;ndash;with-mailutils &amp;ndash;with-rsvg &amp;ndash;with-imagemagick &amp;ndash;with-xwidgets &amp;ndash;with-gnutls 2&amp;gt;&amp;amp;1|tee configure.log [Desktop Entry] Name=Emacs GenericName=Text Editor Comment=Edit text MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++; Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F Icon=emacs Type=Application Terminal=false Categories=Development;TextEditor; StartupNotify=true StartupWMClass=Emacs emacs 启动时增加两个环境变量就</description></item><item><title>leetcode 第一天</title><link>https://guolongji.xyz/post/leetcode-day-1/</link><pubDate>Wed, 06 Mar 2024 16:49:00 +0800</pubDate><guid>https://guolongji.xyz/post/leetcode-day-1/</guid><description>给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。 字母异位词 是由重新排列源单词的所有字母得到的一个新单词。 示例 1: 输</description></item><item><title>如何在内核当中获取dmi 信息</title><link>https://guolongji.xyz/post/how-to-get-dmi/</link><pubDate>Wed, 06 Mar 2024 16:24:00 +0800</pubDate><guid>https://guolongji.xyz/post/how-to-get-dmi/</guid><description>diff --git a/drivers/gpu/drm/amd/amdgpu/si.c b/drivers/gpu/drm/amd/amdgpu/si.c index 4f902e1bcb6a..638df1739048 100644 --- a/drivers/gpu/drm/amd/amdgpu/si.c +++ b/drivers/gpu/drm/amd/amdgpu/si.c @@ -49,6 +49,7 @@ #include &amp;#34;uvd/uvd_4_0_d.h&amp;#34; #include &amp;#34;bif/bif_3_0_d.h&amp;#34; #include &amp;#34;uvd_v3_1.h&amp;#34; +#include &amp;lt;linux/dmi.h&amp;gt; static const u32 tahiti_golden_registers[] = { @@ -2535,6 +2536,16 @@ int si_set_ip_blocks(struct amdgpu_device *adev) if (!pm_suspend_via_s2idle()) amdgpu_device_ip_block_add(adev, &amp;amp;uvd_v3_1_ip_block); /* amdgpu_device_ip_block_add(adev, &amp;amp;vce_v1_0_ip_block); */ + + char const *vendor, *version, *product; + const struct bios_settings *bt = NULL; + + /* get BIOS data */ + vendor = dmi_get_system_info(DMI_SYS_VENDOR);</description></item><item><title>如何从内核的开源社区获取资讯</title><link>https://guolongji.xyz/post/draw-knowledge-from-community/</link><pubDate>Wed, 06 Mar 2024 15:59:00 +0800</pubDate><guid>https://guolongji.xyz/post/draw-knowledge-from-community/</guid><description>如果想要深入内核的底层，并且了解内核前延的问题和发展方向，就上 https://lwn.net/ 看一个方向的问题。再从 https://lore.kernel.org/ 查找一下邮件列表，学习一下别人的代码和改动的内容。还</description></item><item><title>一些好用的网站汇总</title><link>https://guolongji.xyz/post/some-useful-website/</link><pubDate>Wed, 06 Mar 2024 10:00:00 +0800</pubDate><guid>https://guolongji.xyz/post/some-useful-website/</guid><description>去水印的人工智能网站 https://zh-cn.aiseesoft.com/watermark-remover-online/ 这个世界人工智能可以干的事太多了。人工智能真的有一些用武之地了。越来越聪明，越来越精确，以后只会成为更强大的工具。是人</description></item><item><title>使用串口调试</title><link>https://guolongji.xyz/post/serial-port/</link><pubDate>Mon, 05 Feb 2024 16:51:00 +0800</pubDate><guid>https://guolongji.xyz/post/serial-port/</guid><description>使用方法 串口乃是 rs232 放在主板上的接口。有的原型机背面的接口有 rs232 的九针串口。 一般白黄是 rx ，绿是 tx ；有时候会反过来。红是 vcc ，黑是 gnd 。一般是 9 针中的</description></item><item><title>如何命令行使用qemu 和为调试增加串口输出到终端</title><link>https://guolongji.xyz/post/how-to-use-qemu/</link><pubDate>Tue, 30 Jan 2024 16:33:00 +0800</pubDate><guid>https://guolongji.xyz/post/how-to-use-qemu/</guid><description>查找的一些资料 命令安装 qemu 虚拟机。 sudo apt -y install libvirt0 libvirt-daemon qemu virt-manager bridge-utils libvirt-clients python-libvirt qemu-efi uml-utilities virtinst qemu-system-mips https://unix.stackexchange.com/questions/587045/convert-libvirt-xml-into-qemu-command-line https://blog.csdn.net/YuZhiHui_No1/article/details/53909925 virsh domxml-to-native qemu-argv /etc/libvirt/qemu/generic.xml 这个命令可以将 xml 配置的起动命令导出成命令行。 当然也可以这么启动： virsh</description></item><item><title>kdump 的总结和介绍</title><link>https://guolongji.xyz/post/kdump-introduction/</link><pubDate>Tue, 23 Jan 2024 17:29:00 +0800</pubDate><guid>https://guolongji.xyz/post/kdump-introduction/</guid><description>kdump 有一篇很好的分享： file:/Kexec_Kdump_Impl_Appl_v2.pdf</description></item><item><title>emacs 和内核关于邮件的配置</title><link>https://guolongji.xyz/post/how-to-config-emacs-email/</link><pubDate>Tue, 23 Jan 2024 13:31:00 +0800</pubDate><guid>https://guolongji.xyz/post/how-to-config-emacs-email/</guid><description>&lt;img src="https://guolongji.xyz/ox-hugo/img_20240123_133500.jpg" alt="Featured image of post emacs 和内核关于邮件的配置" />emacs 如何配置邮件客户端 首先我要说的是 emacs 的邮件客户端并不是只有优点没有缺点。实际上 emacs 的邮件客户端更适合管理纯文本的邮件，而不适合管理 html 的邮件。e</description></item><item><title>我家里的网络设置</title><link>https://guolongji.xyz/post/home-network/</link><pubDate>Thu, 18 Jan 2024 11:06:00 +0800</pubDate><guid>https://guolongji.xyz/post/home-network/</guid><description>一些基本概念 什么是 NAT? NAT（Network Address Translation，网络地址转换）是路由器功能之一。将一个 ip 进行复用。 什么是 AP 模式？ https://www.zhihu.com/question/435508131 路由的</description></item><item><title>mesa 中的概念和代码介绍</title><link>https://guolongji.xyz/post/mesa-introduction/</link><pubDate>Thu, 11 Jan 2024 10:00:00 +0800</pubDate><guid>https://guolongji.xyz/post/mesa-introduction/</guid><description>&lt;img src="https://guolongji.xyz/ox-hugo/img_20240119_171126.jpg" alt="Featured image of post mesa 中的概念和代码介绍" />mesa 中的一些基本概念 mesa 这个项目是图形系统中的重要的一层。 mesa 的 3d 库有哪些？ Mesa 提供了多个 3D 图形库，用于实现不同的图形 API。以下是 Mesa 中一些常见的 3D</description></item><item><title>如何用emacs mu4e 和 org-mime收发邮件</title><link>https://guolongji.xyz/post/mu4e-and-org-mime/</link><pubDate>Tue, 09 Jan 2024 15:36:00 +0800</pubDate><guid>https://guolongji.xyz/post/mu4e-and-org-mime/</guid><description>前言 用 mu4e 有一段时间了，之前一直认为用 emacs 发 html 的工作邮件不好用。后来突然突破了一些小问题，现在用起来简直是真香了。 一些参考的博客 http://www.cesarolea.com/posts/html-signatures-with-mu4e/ https://www.reddit.com/r/emacs/comments/he885y/is_it_possible_to_add_an_image_to_orgmsg_signature/ https://dataswamp.org/~solene/2016-06-07-13.html https://emacs.stackexchange.com/questions/25045/how-can-i-easily-download-save-an-attachment-in-mu4e https://www.djcbsoftware.nl/code/mu/mu4e/Sending-mail.html https://github.com/org-mime/org-mime 实现</description></item><item><title>显卡测试的一些命令记录</title><link>https://guolongji.xyz/post/graphic-test/</link><pubDate>Wed, 03 Jan 2024 15:28:00 +0800</pubDate><guid>https://guolongji.xyz/post/graphic-test/</guid><description>glmark2 的测试 很多东西，每用一次都要查一遍，非常的麻烦。需要把常用的东西记录下来。 sudo apt install libegl1 libgl1 libgles2 libglvnd0 libglx0 sudo apt install libdrm-amdgpu1 libdrm-common libdrm-nouveau2 libdrm-radeon1 libdrm2 sudo apt install libegl-mesa0 libgbm1 libgl1-mesa-dri libglapi-mesa libglx-mesa0 mesa-va-drivers mesa-vdpau-drivers 安装 glmark2 sudo apt install</description></item><item><title>AppArmor</title><link>https://guolongji.xyz/post/apparmor-introduction/</link><pubDate>Wed, 03 Jan 2024 14:03:00 +0800</pubDate><guid>https://guolongji.xyz/post/apparmor-introduction/</guid><description>是什么？ 管控应用对资源的访问。对文件，网络，linux Capability ，D-Bus ，signal ，rlimit 通过配置文件。 Figure 1: &amp;ldquo;caption&amp;rdquo; 启用 sudo apt install apparmor apparmor-utils apparmor-profiles apparmor-easyprof 查看状</description></item><item><title>使用 qemu 和 gdb 来学习内核流程</title><link>https://guolongji.xyz/post/qume-gdb-kernel/</link><pubDate>Tue, 02 Jan 2024 16:02:00 +0800</pubDate><guid>https://guolongji.xyz/post/qume-gdb-kernel/</guid><description>先把韬哥的分享帖出来 useradd -m glj -s /bin/bash -d /home/glj 前言 这一篇作为开场，主要是介绍最基本的使用方式：基于一个已经完成编译的内核目录，用新生成的内核 image 启动内核，</description></item><item><title>UOS 安全启动</title><link>https://guolongji.xyz/post/security_boot/</link><pubDate>Tue, 02 Jan 2024 14:07:00 +0800</pubDate><guid>https://guolongji.xyz/post/security_boot/</guid><description>bios 启动 Figure 1: &amp;ldquo;caption&amp;rdquo; uefi 启动 Figure 2: &amp;ldquo;caption&amp;rdquo; efibootmanager 这个工具可以修改启动项。 系统启动 Figure 3: &amp;ldquo;caption&amp;rdquo; 开源固件 Figure 4: &amp;ldquo;caption&amp;rdquo; Figure 5: &amp;ldquo;caption&amp;rdquo; Figure 6: &amp;ldquo;caption&amp;rdquo; Figure 7: &amp;ldquo;caption&amp;rdquo; Figure 8: &amp;ldquo;caption&amp;rdquo; 把 shim 提交绐微软，微软绐其它厂商提供签名</description></item><item><title>在我的博客和emacs中使用tikz 画图</title><link>https://guolongji.xyz/post/tikz-config/</link><pubDate>Mon, 11 Dec 2023 15:43:00 +0800</pubDate><guid>https://guolongji.xyz/post/tikz-config/</guid><description>之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是对于发布博客和高亮代码方面对程序员不太友好。latex 的包</description></item><item><title>什么是张量？</title><link>https://guolongji.xyz/post/tensor/</link><pubDate>Wed, 22 Nov 2023 14:03:00 +0800</pubDate><guid>https://guolongji.xyz/post/tensor/</guid><description>什么是张量？ https://www.bilibili.com/video/BV1tr4y117Ja/ 常数 a 是 0 阶张量向量 \(\vec{a}\) 是 1 阶张量用 \(\widetilde{A}\) 表示 2 阶以上的张量 张量是一种不依赖于坐标系来反应物质的物理量。 向量 \(\overrightarrow{MN}=\overrightarrow{ON}-\overrightarrow{OM}\) 不会因为坐标系的变化而</description></item><item><title>矩阵分析（六）函数矩阵的导数</title><link>https://guolongji.xyz/post/matrix-analysis-6/</link><pubDate>Tue, 21 Nov 2023 14:29:00 +0800</pubDate><guid>https://guolongji.xyz/post/matrix-analysis-6/</guid><description>矩阵的导数 之前的目的是看明白反向传播算法的推导过程。现在怎么觉得这个不像呢？ 矩阵的幂级数 上面的 2 当中的 \(\rho(A)\) 是谱半径，也就是所有的特征值当中最大</description></item><item><title>矩阵分析（五）矩阵的分解</title><link>https://guolongji.xyz/post/matrix-analysis-5/</link><pubDate>Mon, 20 Nov 2023 16:23:00 +0800</pubDate><guid>https://guolongji.xyz/post/matrix-analysis-5/</guid><description>矩阵的三角分解 单位下三角矩阵。普通上三角矩阵。矩阵的分解有什么用呢？L 是左， R 是右。 上面黄色的部分是直接抄下来的。 \(a_{21}\) 是第二行乘以第一列这么算</description></item><item><title>矩阵分析（四）向量和矩阵的范数</title><link>https://guolongji.xyz/post/matrix-analysis-4/</link><pubDate>Mon, 20 Nov 2023 13:36:00 +0800</pubDate><guid>https://guolongji.xyz/post/matrix-analysis-4/</guid><description>证明向量的范数 注意这里是向量的范数。 证明矩阵的范数 迹就是对角线元素之和。范数的“范”字的来源：https://zhuanlan.zhihu.</description></item><item><title>emacs kitty ranger rime 等的一些优化</title><link>https://guolongji.xyz/post/emacs-optimize/</link><pubDate>Fri, 17 Nov 2023 11:43:00 +0800</pubDate><guid>https://guolongji.xyz/post/emacs-optimize/</guid><description>emacs-rime 的“探针”中英文切换方法 https://emacs-china.org/t/emacs-rime/12048/838?page=42 https://emacs-china.org/t/emacs-rime/18305 设置了一下能用了，但是不是很好用。 但是我想输入 \(a^{2}+b^{2}=c^{2}\) 这样的式子。不能频繁的切换输入法了。但是输入这种：测试 input test 还是</description></item><item><title>线性代数的本质</title><link>https://guolongji.xyz/post/line-algebra-nature/</link><pubDate>Mon, 13 Nov 2023 09:37:00 +0800</pubDate><guid>https://guolongji.xyz/post/line-algebra-nature/</guid><description>https://www.bilibili.com/video/av6731067 使用 katex 来规范公式的书写，比起 mathjax 和 latex 功能略少，要求公式的语法更为严格，但是渲染速度更快： https://katex.org/docs/supported.html 以后写数学公式要多多参考这个网页，谢谢人类世界，提</description></item><item><title>软考考前突击</title><link>https://guolongji.xyz/post/software-architect-example/</link><pubDate>Wed, 01 Nov 2023 19:04:00 +0800</pubDate><guid>https://guolongji.xyz/post/software-architect-example/</guid><description>准备 git pull ./install-eaf.py -i mindmap ./install-eaf.py --install-core-deps sudo vim ~/.pip/pip.conf [global] index-url = https://pypi.tuna.tsinghua.edu.cn/simple [install] trusted-host = https://pypi.tuna.tsinghua.edu.cn # trusted-host 此参数是为了避免麻烦，否则使用的时候可能会提示不受信任 题目类型： 上午选择题:75 道，共 75 空，每空</description></item><item><title>使用perf和flamegraph来分析bug</title><link>https://guolongji.xyz/post/use-perf-and-flame-graph/</link><pubDate>Tue, 24 Oct 2023 15:32:00 +0800</pubDate><guid>https://guolongji.xyz/post/use-perf-and-flame-graph/</guid><description>感谢晓哥原创，此处记录，并做一个 bug 的分析记录。 什么是 perf？ perf 工具可以用于分析内核和用户态进程的性能，它提供了一种强大的性能分析工具，可以</description></item><item><title>王勇绐我的一些启示</title><link>https://guolongji.xyz/post/wangyong-prose/</link><pubDate>Thu, 19 Oct 2023 16:07:00 +0800</pubDate><guid>https://guolongji.xyz/post/wangyong-prose/</guid><description>王勇的经历绐我的一点启示： https://www.jianshu.com/p/58e5af6149f6 王勇只比我大四岁，早年父母离婚，高中毕业参加工作。一年多的时间通过 emacs 学习到了很多的开源技术。在 emacs 的 IRC freenode 和 Libera Chat 频道</description></item><item><title>矩阵分析（三）</title><link>https://guolongji.xyz/post/matrix-analysis-3/</link><pubDate>Tue, 17 Oct 2023 15:38:00 +0800</pubDate><guid>https://guolongji.xyz/post/matrix-analysis-3/</guid><description>第三章是矩阵的标准形 哈密顿-卡莱定理 数学的本质就是逻辑与设定，如果你觉得反常识那是对设定理解的不深刻。如果推导的速度慢，那是逻辑能力差。 韩国</description></item><item><title>矩阵分析（二）</title><link>https://guolongji.xyz/post/martrix-analysis-2/</link><pubDate>Tue, 17 Oct 2023 09:12:00 +0800</pubDate><guid>https://guolongji.xyz/post/martrix-analysis-2/</guid><description>数学往往只讲理论，不讲应用。这就很让人摸不着头脑。 内积空间 什么是内积空间（也叫准希尔伯特空间）？什么是酉空间？wiki 上的解释也太抽象了。什</description></item><item><title>矩阵分析（一）</title><link>https://guolongji.xyz/post/martrix-analysis-1/</link><pubDate>Mon, 16 Oct 2023 15:40:00 +0800</pubDate><guid>https://guolongji.xyz/post/martrix-analysis-1/</guid><description>学习一点数学基础，没学过的话也不可能真正理解 ai。 线性空间的基于维数 线性空间中的线性变换 线性变换的像、核 这个稍微有一点抽像，但是花一点点的时</description></item><item><title>丁至宣小伙伴教我diy键盘</title><link>https://guolongji.xyz/post/diy-keyboard/</link><pubDate>Wed, 11 Oct 2023 11:18:00 +0800</pubDate><guid>https://guolongji.xyz/post/diy-keyboard/</guid><description>材料准备 3D 打印的壳子： Figure 1: &amp;ldquo;壳子&amp;rdquo; 一大堆的芯片、线还有电池 Figure 2: &amp;ldquo;芯片和线&amp;rdquo; 其他 还需要电烙铁，</description></item><item><title>tty和x的切换流程</title><link>https://guolongji.xyz/post/tty-x-switch/</link><pubDate>Mon, 25 Sep 2023 10:31:00 +0800</pubDate><guid>https://guolongji.xyz/post/tty-x-switch/</guid><description>这篇文档可以在：https://guolongji.xyz/post/tty-x-switch/ 这里看到更新。 概念 Console Console 意即控制台。Conso</description></item><item><title>深度学习必备核心算法</title><link>https://guolongji.xyz/post/core-algorithms-for-mathine-learning/</link><pubDate>Thu, 21 Sep 2023 16:55:00 +0800</pubDate><guid>https://guolongji.xyz/post/core-algorithms-for-mathine-learning/</guid><description>机器学习流程: 特征工程建立模型评估与应用数据获取 特征工程的作用: 数据特征决定了模型的上限预处理和特征提取是最核心的算法与参数选择决定了如何逼</description></item><item><title>AI roadmap</title><link>https://guolongji.xyz/post/ai-leaning-plan/</link><pubDate>Thu, 21 Sep 2023 09:56:00 +0800</pubDate><guid>https://guolongji.xyz/post/ai-leaning-plan/</guid><description>目录渲染不要设置为 pandoc，gitlab ci 可以不用 pandoc 了吧。否则目录不显示 3 级以上的标题。还有，也不知道是 ox-hugo 的问题还是 hugo 本身的问题，org</description></item><item><title>2023年软考报名</title><link>https://guolongji.xyz/post/ruankao-sign-up/</link><pubDate>Wed, 20 Sep 2023 15:56:00 +0800</pubDate><guid>https://guolongji.xyz/post/ruankao-sign-up/</guid><description>软考报名 http://rsj.beijing.gov.cn/ywsite/bjpta/zcwj/2023zc/202309/P020230919491905692213.pdf 9 月 21 日到 27 日报名缴费。报名费 57 元。 10 月 24 日到 27 日打印准考证。 11 月 4 日到 5 日考试。 12 月中旬登录中国计算机技术职业资格网查询考试成绩</description></item><item><title>linux上用docker搭建opengrok</title><link>https://guolongji.xyz/post/linux-opengrok-read-kernel/</link><pubDate>Wed, 20 Sep 2023 14:05:00 +0800</pubDate><guid>https://guolongji.xyz/post/linux-opengrok-read-kernel/</guid><description>之前在 21 年底用 latex 写了这篇文章，导出了 pdf，后觉得有用，移到博客当中，方便以后查看。 23 年了 opengrok 可能有新的版本了，但是 21 年的版本也不算旧。折腾一</description></item><item><title>内核一次日志问题的分析</title><link>https://guolongji.xyz/post/kernel-debug-method/</link><pubDate>Mon, 18 Sep 2023 21:01:00 +0800</pubDate><guid>https://guolongji.xyz/post/kernel-debug-method/</guid><description>文韬分享，一次日志分析问题，20230810 这次分享呢我认为可能有一点收获。 关抢占，原子上下文。在 kernel/sched/core.c 当中。不允许别人打断我的执行。关抢占之后</description></item><item><title>在cloudfare中搭建hugo博客</title><link>https://guolongji.xyz/post/hugo-on-cloudflare/</link><pubDate>Mon, 18 Sep 2023 16:35:00 +0800</pubDate><guid>https://guolongji.xyz/post/hugo-on-cloudflare/</guid><description>hugo on cloudflare 我的博客就要开通了，codeberg pages + orgmode + hugo + stack theme， Codeberg 是一个快速开源 GitHub 替代品，是一个面向开源社区的非营利性代码托管平台。它提</description></item><item><title>Chinese Test</title><link>https://guolongji.xyz/post/index.zh-cn/</link><pubDate>Wed, 09 Sep 2020 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/post/index.zh-cn/</guid><description>&lt;img src="https://guolongji.xyz/post/index.zh-cn/helena-hertz-wWZzXlDpMog-unsplash.jpg" alt="Featured image of post Chinese Test" />正文测试 而这些并不是完全重要，更加重要的问题是， 带着这些问题，我们来审视一下学生会退会。 既然如何， 对我个人而言，学生会退会不仅仅是一个重大的</description></item><item><title>Archives</title><link>https://guolongji.xyz/archives/</link><pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/archives/</guid><description/></item><item><title>Markdown Syntax Guide</title><link>https://guolongji.xyz/post/markdown-syntax/</link><pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/post/markdown-syntax/</guid><description>&lt;img src="https://guolongji.xyz/post/markdown-syntax/pawel-czerwinski-8uZPynIu-rQ-unsplash.jpg" alt="Featured image of post Markdown Syntax Guide" />&lt;p>This article offers a sample of basic Markdown syntax that can be used in Hugo content files, also it shows whether basic HTML elements are decorated with CSS in a Hugo theme.&lt;/p></description></item><item><title>مثال نص</title><link>https://guolongji.xyz/post/index.ar/</link><pubDate>Sat, 09 Mar 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/post/index.ar/</guid><description>&lt;img src="https://guolongji.xyz/post/index.ar/matt-le-SJSpo9hQf7s-unsplash.jpg" alt="Featured image of post مثال نص" />فقرة 1 هذا النص هو مثال لنص يمكن أن يستبدل في نفس المساحة، لقد تم توليد هذا النص من مولد النص العربى، حيث يمكنك أن تولد مثل هذا النص أو العديد من النصوص الأخرى إضافة إلى زيادة عدد الحروف التى يولدها التطبيق. إذا كنت تحتاج إلى عدد أكبر من الفقرات يتيح لك مولد النص العربى زيادة عدد الفقرات كما تريد، النص لن يبدو مقسما ولا يحوي أخطاء لغوية، مولد النص العربى مفيد لمصممي المواقع على وجه الخصوص، حيث يحتاج العميل فى كثير من الأحيان أن يطلع على صورة حقيقية لتصميم الموقع.</description></item><item><title>Math Typesetting</title><link>https://guolongji.xyz/post/math-typesetting/</link><pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/post/math-typesetting/</guid><description>&lt;p>Mathematical notation in a Hugo project can be enabled by using third party JavaScript libraries.&lt;/p></description></item><item><title>Emoji Support</title><link>https://guolongji.xyz/post/emoji-support/</link><pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/post/emoji-support/</guid><description>&lt;img src="https://guolongji.xyz/post/emoji-support/the-creative-exchange-d2zvqp3fpro-unsplash.jpg" alt="Featured image of post Emoji Support" />&lt;p>Emoji can be enabled in a Hugo project in a number of ways.&lt;/p></description></item><item><title>About</title><link>https://guolongji.xyz/about/</link><pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/about/</guid><description>Written in Go, Hugo is an open source static site generator available under the Apache Licence 2.0. Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.
-Hugo makes use of a variety of open source projects including:
-https://github.com/yuin/goldmark https://github.</description></item><item><title>Links</title><link>https://guolongji.xyz/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/links/</guid><description>To use this feature, add links section to frontmatter.
-This page&amp;rsquo;s frontmatter:
-links: - title: GitHub description: GitHub is the world&amp;#39;s largest software development platform. website: https://github.com image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png - title: TypeScript description: TypeScript is a typed superset of JavaScript that compiles to plain JavaScript. website: https://www.typescriptlang.org image: ts-logo-128.jpg image field accepts both local and external images.</description></item><item><title>Search</title><link>https://guolongji.xyz/search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://guolongji.xyz/search/</guid><description/></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Allinaent</title>
+        <link>http://localhost:1313/</link>
+        <description>Recent content on Allinaent</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Mon, 19 Aug 2024 09:34:00 +0800</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Intel机器510内核环境虚拟机安装完成后无法启动根因——另附庖丁解牛13式</title>
+        <link>http://localhost:1313/post/debug-kvm-start-error/</link>
+        <pubDate>Mon, 19 Aug 2024 09:34:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/debug-kvm-start-error/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post Intel机器510内核环境虚拟机安装完成后无法启动根因——另附庖丁解牛13式" /&gt;&lt;p&gt;uos 的庖丁解牛13 招：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://r2.guolongji.xyz/%E5%BA%96%E4%B8%81%E8%A7%A3%E7%89%9B%E5%8D%81%E4%B8%89%E5%88%805.13.pdf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;下载链接&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这部分有时间总结一下，调试能力确实重要。&lt;/p&gt;
+&lt;h2 id=&#34;环境&#34;&gt;环境&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;[root@localhost ~]# uosinfo
+#################################################
+Release:  UOS Server release 20 (kongzi)Kernel :  5.10.0-46.31.uelc20.x86_64Build  :  UOS Server 20 (1060a) 20231130 amd64
+#################################################
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>服务器内核打包过程</title>
+        <link>http://localhost:1313/post/rpm-server-kernel-package/</link>
+        <pubDate>Mon, 05 Aug 2024 13:18:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/rpm-server-kernel-package/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 服务器内核打包过程" /&gt;&lt;h2 id=&#34;linux操作系统使用rpmbuild命令打包rpm的详细步骤&#34;&gt;Linux操作系统使用RPMBUILD命令打包RPM的详细步骤&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.cnblogs.com/zhangxinglong/p/11904922.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.cnblogs.com/zhangxinglong/p/11904922.html&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>linux 虚拟化原理学习</title>
+        <link>http://localhost:1313/post/linux-virtualization/</link>
+        <pubDate>Thu, 01 Aug 2024 10:25:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/linux-virtualization/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/08/7d3d234d9f752880f9d77137385c25b3.jpg" alt="Featured image of post linux 虚拟化原理学习" /&gt;&lt;p&gt;写在前面：&lt;/p&gt;
+&lt;p&gt;道不足则多术，德不足则多欲；&lt;/p&gt;
+&lt;p&gt;气不足则多食，神不足则多眠；&lt;/p&gt;
+&lt;p&gt;智不足则多疑，能不足则多患；&lt;/p&gt;
+&lt;p&gt;爱不足则多情，信不足则多言；&lt;/p&gt;
+&lt;p&gt;威不足则多怒，量不足则多怨；&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>从欧拉 510 内核中找到调度低延时的补丁</title>
+        <link>http://localhost:1313/post/low-latency-euler-olk510/</link>
+        <pubDate>Mon, 29 Jul 2024 17:30:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/low-latency-euler-olk510/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 从欧拉 510 内核中找到调度低延时的补丁" /&gt;&lt;p&gt;这个问题是从欧拉的内核当中找到金融相关低延时的补丁。&lt;/p&gt;
+&lt;h2 id=&#34;补丁整理&#34;&gt;补丁整理&lt;/h2&gt;
+&lt;p&gt;（1
+0002-loop-use-lo-lo_disk-for-kobject_uevent.patch&lt;/p&gt;
+&lt;p&gt;这个是 loop_device 的 bugfix 与低延时无关。&lt;/p&gt;
+&lt;p&gt;（2
+0009-driver-core-Fix-kabi-broken.patch&lt;/p&gt;
+&lt;p&gt;这个是防止 kabi 被破坏的一个修改，与低延时无关。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>虚拟机无声音问题学习</title>
+        <link>http://localhost:1313/post/virt-no-sound-problem/</link>
+        <pubDate>Mon, 29 Jul 2024 14:11:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/virt-no-sound-problem/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 虚拟机无声音问题学习" /&gt;&lt;p&gt;这是我的同事强哥分析出来的，他是个分析问题能力很强的人，大神就在身边，可以学习和借签的地方很多。&lt;/p&gt;
+&lt;h2 id=&#34;环境&#34;&gt;环境&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;host系统：1050u2a
+host内核：4.19.0-91.82.152.28.uelc20.loongarch64 #1 SMP
+host qemu：qemu-kvm-4.2.0-34.11.module+uelc20+899+a51b49d5.01
+host libvirt：6.0.0
+host spice-server: 0.14.3-4.0.1.uelc20
+guest spice-gtk-client: 0.38-6.uelc20
+远程客户端系统：ubuntu，spice-gtk-client：0.37
+注：该host环境libvirt版本是安装时候系统默认。
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>龙芯新世界旧世界的兼容方案 libLoL 的实现过程</title>
+        <link>http://localhost:1313/post/lol/</link>
+        <pubDate>Tue, 16 Jul 2024 13:50:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/lol/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 龙芯新世界旧世界的兼容方案 libLoL 的实现过程" /&gt;&lt;p&gt;龙芯的新旧世界有兼容方案了。可以说龙芯做的事情是从走一遍计算机工业的发展史。确实有必要。可能现在还是有不少的问题，但是总的来说。为中国奠定了 CPU 架构独立的基础。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>缺页异常及其测试用例</title>
+        <link>http://localhost:1313/post/page-fault/</link>
+        <pubDate>Mon, 15 Jul 2024 16:06:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/page-fault/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 缺页异常及其测试用例" /&gt;&lt;p&gt;linux 内核没有什么复杂的东西，我说的是真的。linux 内核驱动只是为了硬件服务的。主要的硬件设备，只有 CPU ，内存，硬盘。而缺页异常 (page fault) 只是将硬件充分利用的一个小机制而已。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>实现一个杂项设备 mmap ioctl</title>
+        <link>http://localhost:1313/post/uos-misc-dev/</link>
+        <pubDate>Wed, 26 Jun 2024 17:01:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/uos-misc-dev/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 实现一个杂项设备 mmap ioctl" /&gt;&lt;h2 id=&#34;题目&#34;&gt;题目&lt;/h2&gt;
+&lt;p&gt;实现一个杂项设备/dev/uosmisc，并实现它的mmap、ioctl接口。要求：
+mmap时，写入的数据，在下次映射时能读出来。
+ioctl实现命令：UOS_IOC_SETINFO:设置一些信息，UOS_IOC_GETINFO：读取设置的信息。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>ebpf 的学习记录</title>
+        <link>http://localhost:1313/post/learn-ebpf/</link>
+        <pubDate>Fri, 21 Jun 2024 14:18:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/learn-ebpf/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post ebpf 的学习记录" /&gt;&lt;h2 id=&#34;简介&#34;&gt;简介&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://ebpf.io/what-is-ebpf/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://ebpf.io/what-is-ebpf/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这个链接中有一大堆的架构图。&lt;/p&gt;
+&lt;p&gt;ebpf 不能调用内核函数，只能调用内核的 helper 函数。举例如下：&lt;/p&gt;
+&lt;p&gt;生成随机数&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>sysctl 内核考试题</title>
+        <link>http://localhost:1313/post/kernel-exam-sysctl/</link>
+        <pubDate>Thu, 20 Jun 2024 16:37:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kernel-exam-sysctl/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post sysctl 内核考试题" /&gt;&lt;h2 id=&#34;题目&#34;&gt;题目&lt;/h2&gt;
+&lt;p&gt;在sysctl里实现一个接口/proc/sys/kernel/param1，能对该接口进行读写。&lt;/p&gt;
+&lt;h2 id=&#34;思路&#34;&gt;思路&lt;/h2&gt;
+&lt;p&gt;要在 sysctl 中实现一个接口 /proc/sys/kernel/param1，并且使其能够进行读写操作，你可以按照以下步骤进行设置：&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>sysfs 内核考试题</title>
+        <link>http://localhost:1313/post/kernel-exam-sysfs/</link>
+        <pubDate>Thu, 20 Jun 2024 15:21:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kernel-exam-sysfs/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post sysfs 内核考试题" /&gt;&lt;p&gt;如何在sysfs里实现一个接口/sys/uos/param1，能对该接口进行读写。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/module.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/kernel.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/init.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/fs.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/string.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#define BUF_SIZE 1024
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; param1_buf[BUF_SIZE];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 读取函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;ssize_t&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;param1_show&lt;/span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobject &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;kobj, &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobj_attribute &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;attr, &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;buf) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;snprintf&lt;/span&gt;(buf, BUF_SIZE, &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt;, param1_buf);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 写入函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;ssize_t&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;param1_store&lt;/span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobject &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;kobj, &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobj_attribute &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;attr, &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;buf, &lt;span style=&#34;color:#8be9fd&#34;&gt;size_t&lt;/span&gt; count) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (count &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;gt;&lt;/span&gt; BUF_SIZE)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;EINVAL;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#50fa7b&#34;&gt;strncpy&lt;/span&gt;(param1_buf, buf, count);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    param1_buf[count] &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; count;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 定义一个 kobj_attribute 结构体，关联读写函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobj_attribute param1_attribute &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#50fa7b&#34;&gt;__ATTR&lt;/span&gt;(param1, &lt;span style=&#34;color:#bd93f9&#34;&gt;0664&lt;/span&gt;, param1_show, param1_store);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 在 /sys/uos 下创建一个目录并注册 param1 属性
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; attribute &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;attrs[] &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;amp;&lt;/span&gt;param1_attribute.attr,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;NULL&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; attribute_group attr_group &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .attrs &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; attrs,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; kobject &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;uos_kobj;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;int&lt;/span&gt; __init &lt;span style=&#34;color:#50fa7b&#34;&gt;uos_param_init&lt;/span&gt;(&lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8be9fd&#34;&gt;int&lt;/span&gt; retval;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    uos_kobj &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;kobject_create_and_add&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;uos&amp;#34;&lt;/span&gt;, kernel_kobj);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ff79c6&#34;&gt;!&lt;/span&gt;uos_kobj)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;ENOMEM;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    retval &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;sysfs_create_group&lt;/span&gt;(uos_kobj, &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;amp;&lt;/span&gt;attr_group);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (retval)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#50fa7b&#34;&gt;kobject_put&lt;/span&gt;(uos_kobj);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; retval;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt; __exit &lt;span style=&#34;color:#50fa7b&#34;&gt;uos_param_exit&lt;/span&gt;(&lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#50fa7b&#34;&gt;kobject_put&lt;/span&gt;(uos_kobj);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;module_init&lt;/span&gt;(uos_param_init);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;module_exit&lt;/span&gt;(uos_param_exit);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;MODULE_LICENSE&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;GPL&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;MODULE_AUTHOR&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Longji Guo&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>procfs 内核考试题</title>
+        <link>http://localhost:1313/post/kernel-exam-procfs/</link>
+        <pubDate>Thu, 20 Jun 2024 14:16:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kernel-exam-procfs/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post procfs 内核考试题" /&gt;&lt;p&gt;在procfs里实现一个接口/proc/uos/param1，能对该接口进行读写。&lt;/p&gt;
+&lt;p&gt;此题 GPT 完很简单，先易后难，找找自信。&lt;/p&gt;
+&lt;p&gt;procfs_example.c&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/module.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/kernel.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/init.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/proc_fs.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;linux/uaccess.h&amp;gt;  // for copy_to_user and copy_from_user&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;#define BUF_SIZE 1024
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; param1_buf[BUF_SIZE];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; proc_dir_entry &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;proc_entry;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 读取函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#8be9fd&#34;&gt;ssize_t&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;param1_read&lt;/span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; file &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;file, &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; __user &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;buf, &lt;span style=&#34;color:#8be9fd&#34;&gt;size_t&lt;/span&gt; count, &lt;span style=&#34;color:#8be9fd&#34;&gt;loff_t&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;ppos) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;simple_read_from_buffer&lt;/span&gt;(buf, count, ppos, param1_buf, &lt;span style=&#34;color:#50fa7b&#34;&gt;strlen&lt;/span&gt;(param1_buf));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 写入函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#8be9fd&#34;&gt;ssize_t&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;param1_write&lt;/span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; file &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;file, &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;char&lt;/span&gt; __user &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;buf, &lt;span style=&#34;color:#8be9fd&#34;&gt;size_t&lt;/span&gt; count, &lt;span style=&#34;color:#8be9fd&#34;&gt;loff_t&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;*&lt;/span&gt;ppos) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (count &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;gt;&lt;/span&gt; BUF_SIZE)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;EINVAL;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#50fa7b&#34;&gt;copy_from_user&lt;/span&gt;(param1_buf, buf, count))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;EFAULT;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    param1_buf[count] &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;\0&amp;#39;&lt;/span&gt;;  &lt;span style=&#34;color:#6272a4&#34;&gt;// Null-terminate the buffer
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; count;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;// 文件操作结构体
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#6272a4&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;struct&lt;/span&gt; file_operations param1_fops &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .owner &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; THIS_MODULE,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .read &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; param1_read,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .write &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; param1_write,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;int&lt;/span&gt; __init &lt;span style=&#34;color:#50fa7b&#34;&gt;uos_param_init&lt;/span&gt;(&lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    proc_entry &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;proc_create&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;uos/param1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#bd93f9&#34;&gt;0666&lt;/span&gt;, &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;NULL&lt;/span&gt;, &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;amp;&lt;/span&gt;param1_fops);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ff79c6&#34;&gt;!&lt;/span&gt;proc_entry) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;ENOMEM;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#bd93f9&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt; __exit &lt;span style=&#34;color:#50fa7b&#34;&gt;uos_param_exit&lt;/span&gt;(&lt;span style=&#34;color:#8be9fd&#34;&gt;void&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#50fa7b&#34;&gt;proc_remove&lt;/span&gt;(proc_entry);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;module_init&lt;/span&gt;(uos_param_init);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;module_exit&lt;/span&gt;(uos_param_exit);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;MODULE_LICENSE&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;GPL&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;MODULE_AUTHOR&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Your Name&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b&#34;&gt;MODULE_DESCRIPTION&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;A simple procfs interface for /proc/uos/param1&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>SW 架构 A 卡 LTP 卡死问题分析</title>
+        <link>http://localhost:1313/post/sw-ltp/</link>
+        <pubDate>Wed, 19 Jun 2024 11:16:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/sw-ltp/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post SW 架构 A 卡 LTP 卡死问题分析" /&gt;&lt;p&gt;这两个是胡晓东大佬先分析，余晟锦大佬又分析了后面的问题。这个问题很典型，这是个典型的信号量 bug ，也是申威架构考虑不周全的地方。或者说是用户态的 xorg 对 sw 架构的考虑不周全。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>内核考试题</title>
+        <link>http://localhost:1313/post/linux-kernel-exam/</link>
+        <pubDate>Wed, 19 Jun 2024 10:10:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/linux-kernel-exam/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 内核考试题" /&gt;&lt;p&gt;内核考试的范围广，难度大，想要在没有网络，仅参考内核代码的情况下写出符和题目要求的程序是极难的。那如何在规则允许的情况下，快速读懂问题，找到关键信息，合理编码解决问题呢？这个问题很大。但是第一步，是对各个模块的基本概念熟悉，不要因为概念的混乱导致做题成一个糊涂蛋！&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>loongarch 平台 amdgpu 驱动问题分析</title>
+        <link>http://localhost:1313/post/loongarch-amdgpu/</link>
+        <pubDate>Wed, 19 Jun 2024 09:15:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/loongarch-amdgpu/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post loongarch 平台 amdgpu 驱动问题分析" /&gt;&lt;p&gt;王昱力同学追踪的问题，从他的详细说明中我们可以看到，SOC 的设计有着细节上的缺陷是很正常的。估计就是 A 卡驱动的工程师默认中断的速度小于 DMA 的速度。而在某些情况下，这个情况不成立了，那么就迎来了
+bug 。关键是这个问题是如何分析出来的呢？这种问题需要用专用的硬件设备看寄存器的状态吗？我觉得是不需要的。因为有很多上游的问题分析并不是龙芯官方绐出的，而其它人怎么会单独为了龙芯买昂贵的 ejtag 呢？&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>人生的主旋律是受苦——姜萍数学竞赛有感</title>
+        <link>http://localhost:1313/post/jiangping/</link>
+        <pubDate>Mon, 17 Jun 2024 09:34:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/jiangping/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/532be4feeb59744b31b5f41e05fe62da.png" alt="Featured image of post 人生的主旋律是受苦——姜萍数学竞赛有感" /&gt;&lt;h2 id=&#34;姜萍最近的事迹在网上爆火&#34;&gt;姜萍最近的事迹在网上爆火&lt;/h2&gt;
+&lt;p&gt;网上关于姜萍的报道太多了。很多的自媒体和甚至数学界学者都点评了姜萍。她无疑是一个天才。各路自媒体大神讲的都太好了。网友都说自己是人间凑数的每一天。为什么，普通人就一定要在人间凑数呢？&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>手机、电脑、知识库的同步</title>
+        <link>http://localhost:1313/post/about-sync/</link>
+        <pubDate>Fri, 14 Jun 2024 11:13:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/about-sync/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 手机、电脑、知识库的同步" /&gt;&lt;h2 id=&#34;折腾的目的是为了不折腾或少折腾&#34;&gt;折腾的目的是为了不折腾或少折腾&lt;/h2&gt;
+&lt;p&gt;需求是第一位的。&lt;/p&gt;
+&lt;p&gt;一个中专的学服装设计的女生考了阿里数学大赛的全球第十二名。这说明了什么？全部自学，喜欢做难题，有志者事竟成。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>一波三折的SIGSEGV以及signal相关</title>
+        <link>http://localhost:1313/post/sigsegv/</link>
+        <pubDate>Wed, 12 Jun 2024 12:32:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/sigsegv/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 一波三折的SIGSEGV以及signal相关" /&gt;&lt;p&gt;一开始我以为自己搞懂了，最后发现自己还是太年轻了，做os真是太精（折）彩（磨）了。&lt;/p&gt;
+&lt;h2 id=&#34;sigsegv和sig-ign&#34;&gt;SIGSEGV和SIG_IGN&lt;/h2&gt;
+&lt;p&gt;故事的开始是因为kwin的一段代码：&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>1070 窗口黑屏问题分析</title>
+        <link>http://localhost:1313/post/black-window/</link>
+        <pubDate>Wed, 12 Jun 2024 11:08:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/black-window/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/d3b65553a8f45ae50b1ffe00c35d6dfd.png" alt="Featured image of post 1070 窗口黑屏问题分析" /&gt;&lt;p&gt;——聂诚、余昇锦、罗朝江&lt;/p&gt;
+&lt;p&gt;这个分析绐我上了生动的一课，看看别人是怎么分析问题的，一个问题的分析，你和别人会差在哪里？&lt;/p&gt;
+&lt;p&gt;一方面是沟通能力，这个问题的分析涉及到很多知识点。首先要有自己分析的手段，陈述自己的猜测，对比和别人同一个问题有不同&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>国人的素质</title>
+        <link>http://localhost:1313/post/chinese-quality/</link>
+        <pubDate>Tue, 11 Jun 2024 14:37:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/chinese-quality/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/5f96c24f2a4af4f0edf6f2e1f3b92773.jpg" alt="Featured image of post 国人的素质" /&gt;&lt;p&gt;国人的素质，或者所有人类的素质。有讨厌的，恶的一面，这会让疾恶如仇的人非常地不爽。&lt;/p&gt;
+&lt;h2 id=&#34;举例一&#34;&gt;举例一&lt;/h2&gt;
+&lt;p&gt;食堂插队。非熟人面前，很常见的是道德的矮子。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>如臂使指——构建自己的个人知识库</title>
+        <link>http://localhost:1313/post/zotero/</link>
+        <pubDate>Thu, 16 May 2024 14:31:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/zotero/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3ebba5ba2655501d082d485a73ba52fb.jpg" alt="Featured image of post 如臂使指——构建自己的个人知识库" /&gt;&lt;p&gt;知识千千万，能写在博客里查询的只有一少部分。大量的知识在什么地方呢？在浏览器的收藏夹中，在笔记中，在电脑 pdf 的书籍中。那么做为一个想把自己的知识系统化的整理，放到一个地方的人，应该怎么做呢？&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>研究生英语单词 2000 词——1</title>
+        <link>http://localhost:1313/post/english-word-1/</link>
+        <pubDate>Tue, 07 May 2024 14:40:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/english-word-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/bc99472328e3d7d6e30f6e58d299cec8.jpg" alt="Featured image of post 研究生英语单词 2000 词——1" /&gt;&lt;p&gt;考研英语单词 7000 个。背单词多多益善，我计划分三篇博客将这 7000 个单词中我不会的总结出来（一词大概是 2000 词背完后总结），方便没事的时候多看两眼。&lt;/p&gt;
+&lt;h2 id=&#34;文艺复兴基金创始人-詹姆斯西蒙斯&#34;&gt;文艺复兴基金创始人——詹姆斯西蒙斯&lt;/h2&gt;
+&lt;p&gt;“我不是世上最机敏的人，要是参加数学奥林匹克竞赛，我的表现也不会特别好。可我喜欢琢磨，在心里琢磨事，也就是反反复复地思考某些事。事实证明，那是种很棒的方法。”&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>威联通使用ipv6 加ddns 进行远程访问</title>
+        <link>http://localhost:1313/post/qnap-ipv6-ddns-use/</link>
+        <pubDate>Tue, 07 May 2024 11:02:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/qnap-ipv6-ddns-use/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/8691e8be9d779eb4b7fb10aa262ebd1d.png" alt="Featured image of post 威联通使用ipv6 加ddns 进行远程访问" /&gt;&lt;h2 id=&#34;首先要开启-ipv6&#34;&gt;首先要开启 ipv6&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://post.smzdm.com/p/ar678qwz/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://post.smzdm.com/p/ar678qwz/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;我家的光猫是新的。需要网上百度一下对应光猫型号的用户和密码。&lt;/p&gt;
+&lt;p&gt;开起的过程也比较麻烦，算是了解一下 ipv6 的基本设置情况。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>使用 emacs 和 orgzly 来gtd</title>
+        <link>http://localhost:1313/post/use-orgmode-gtd/</link>
+        <pubDate>Mon, 06 May 2024 16:53:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/use-orgmode-gtd/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/9a83df14d8b03d6344c68386e59dbdf2.jpg" alt="Featured image of post 使用 emacs 和 orgzly 来gtd" /&gt;&lt;p&gt;写在前面，适合自己的就是最好的。我们大多数人往往陷入一种错误的状态当中，认为做什么事一定要做到一种最好的结果。或者自己能达到的最好的结果，殊不知这个世界“最好”只是数学上的极限，是一种过程，而不是一个结果。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>高数第一章练习题</title>
+        <link>http://localhost:1313/post/graduate-math-example-1/</link>
+        <pubDate>Sun, 28 Apr 2024 14:56:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-example-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 高数第一章练习题" /&gt;&lt;p&gt;例一：求函数 \(y=shx=\frac{e^{x}-e^{-x}}{2}\) 的反函数&lt;/p&gt;
+&lt;p&gt;此题难点，初中基础知识，韦达定理。 \(x_{1},x_{2}=\frac{-b\pm \sqrt{b^{2}-4ac}}{2a}\)&lt;/p&gt;
+&lt;p&gt;\(x_{1}+x_{2}=-\frac{b}{a}\)&lt;/p&gt;
+&lt;p&gt;\(x_{1}x_{2}=\frac{c}{a}\)&lt;/p&gt;
+&lt;p&gt;这种题对我来说都有难度，说明我离开数学的时间太久了。&lt;/p&gt;
+&lt;p&gt;例二：设函数&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>浪潮产线硬盘压测重启后io-error 问题</title>
+        <link>http://localhost:1313/post/io-error-problem-analysis/</link>
+        <pubDate>Sun, 28 Apr 2024 09:54:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/io-error-problem-analysis/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 浪潮产线硬盘压测重启后io-error 问题" /&gt;&lt;p&gt;又是一篇韬哥写的分析过程，os 部分的核心在于公共部分。因为内核不是硬件厂商。各个子系统公共部分的代码都非常多。而最提高分析问题能力的是在公共部分绐出详细准确的逻辑说明。各种超时，缓存，等待，后写。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>我的工作流增加mathjax extension 和一些新感悟</title>
+        <link>http://localhost:1313/post/emacs-hugo-mathjax-extension/</link>
+        <pubDate>Fri, 26 Apr 2024 16:35:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/emacs-hugo-mathjax-extension/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 我的工作流增加mathjax extension 和一些新感悟" /&gt;&lt;h2 id=&#34;orgmode-的-xelatex-没有渲染-xlongequal&#34;&gt;orgmode 的 xelatex 没有渲染 \xlongequal&lt;/h2&gt;
+&lt;p&gt;解决方法：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-lisp&#34; data-lang=&#34;lisp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;setq&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;org-latex-packages-alist&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      (&lt;span style=&#34;color:#ff79c6&#34;&gt;quote&lt;/span&gt; ((&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;color&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;minted&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;parskip&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;tikz&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;pgfplots&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;amsmath&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          (&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;extarrows&amp;#34;&lt;/span&gt; t)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          )))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>线性代数第六章——二次型</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-6/</link>
+        <pubDate>Wed, 24 Apr 2024 17:39:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-6/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线性代数第六章——二次型" /&gt;&lt;h2 id=&#34;二次型的定义-矩阵表示-合同矩阵&#34;&gt;二次型的定义、矩阵表示，合同矩阵&lt;/h2&gt;
+&lt;p&gt;一、二次型的概念&lt;/p&gt;
+&lt;p&gt;在 \(\mathbb{R}^{n}\) （每个元素是个实数 n 维向量）上的一个二次型是定义在 \(\mathbb{R}^{n}\) 上的函数，表达式为 \(Q(x)=x^{T}Ax\) ，其中 A 是一个 \(n \times n\) 对称矩阵（重点）。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>一个usb导致开机流程无限阻塞的问题</title>
+        <link>http://localhost:1313/post/start-system-stuck/</link>
+        <pubDate>Wed, 24 Apr 2024 16:18:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/start-system-stuck/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 一个usb导致开机流程无限阻塞的问题" /&gt;&lt;h2 id=&#34;问题背景&#34;&gt;问题背景&lt;/h2&gt;
+&lt;p&gt;文韬大佬做的分析，在这里做一下记录。&lt;/p&gt;
+&lt;p&gt;今年 3.20 的时候，前场报告了一个开机卡死问题：（严重程度 2,优先级 2）：&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线性代数第五章——特征值、特征向量、相似矩阵</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-5/</link>
+        <pubDate>Tue, 23 Apr 2024 09:36:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-5/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线性代数第五章——特征值、特征向量、相似矩阵" /&gt;&lt;h2 id=&#34;特征值-特征向量&#34;&gt;特征值、特征向量&lt;/h2&gt;
+&lt;p&gt;file:///home/uos/mydata/orgmode/gtd/2021李永乐复习全书【数学二】.pdf&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线性代数第四章——线性方程组</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-4/</link>
+        <pubDate>Mon, 22 Apr 2024 10:48:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-4/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线性代数第四章——线性方程组" /&gt;&lt;h2 id=&#34;克拉默法则&#34;&gt;克拉默法则&lt;/h2&gt;
+&lt;h3 id=&#34;方程的求解&#34;&gt;方程的求解&lt;/h3&gt;
+&lt;p&gt;线性方程组就是矩阵乘法。两者研究的问题完全等效。矩阵 A ，对应的行列式 D ，当 \(D\neq 0\) 时，A 可逆（说的是方阵）。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>简化的哲学</title>
+        <link>http://localhost:1313/post/simplify-philosophy/</link>
+        <pubDate>Thu, 18 Apr 2024 15:43:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/simplify-philosophy/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png" alt="Featured image of post 简化的哲学" /&gt;&lt;h2 id=&#34;简单的东西更好用&#34;&gt;简单的东西更好用&lt;/h2&gt;
+&lt;p&gt;emacs 是复杂的，关注了一下懒猫大佬。我发现他的技术栈很是深厚，且 python，lisp 做到了非常精通的地步。lsp-bridge 是个很好的包。大佬一定是个执行力很强且精力十分充沛的人。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>在终端下使用 emacs</title>
+        <link>http://localhost:1313/post/use-emacs-in-terminal/</link>
+        <pubDate>Mon, 08 Apr 2024 23:08:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/use-emacs-in-terminal/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 在终端下使用 emacs" /&gt;&lt;p&gt;emacs 的插件简直太多了。很多没用到但是写了一堆无用代码，定位一个新的 bug 就难了。GUI 的 emacs
+和 TUI 的 emacs 各有优劣。 GUI 下的 emacs 可以图文混排，latex ，orgmode ，公式，图片实时渲染。但是 GUI 的 emacs-vterm 终端模拟器用 tmux 有无法转义，体验的流畅性不足。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线性代数第三章——向量</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-3/</link>
+        <pubDate>Mon, 08 Apr 2024 00:26:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-3/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线性代数第三章——向量" /&gt;&lt;h2 id=&#34;n-维向量的概念与运算&#34;&gt;n 维向量的概念与运算&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;概念
+&lt;ul&gt;
+&lt;li&gt;n 维向量&lt;/li&gt;
+&lt;li&gt;零向量&lt;/li&gt;
+&lt;li&gt;运算
+&lt;ul&gt;
+&lt;li&gt;加法&lt;/li&gt;
+&lt;li&gt;数乘&lt;/li&gt;
+&lt;li&gt;内积（各个分量相乘并相加）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;向量的加法，数乘满足交换率，结合率，分配率。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>论心态对人生的重要性</title>
+        <link>http://localhost:1313/post/importance-of-mentality/</link>
+        <pubDate>Sun, 07 Apr 2024 00:16:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/importance-of-mentality/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png" alt="Featured image of post 论心态对人生的重要性" /&gt;&lt;h2 id=&#34;人生无常-大肠包小肠&#34;&gt;人生无常，大肠包小肠&lt;/h2&gt;
+&lt;p&gt;回想起年轻时的情感经历。有很多事情值得深思。&lt;/p&gt;
+&lt;p&gt;有拒绝我的，有我拒绝的。&lt;/p&gt;
+&lt;p&gt;曾经因为吾父一句话，让我感觉受到了侮辱。他说你要是追上了某某某，你就是为咱家争光了，做贡献了。听到这话，本来还有试一试的想法的。瞬间觉得好恶心，后来与那个小时候一起玩的小伙伴简单的聊了两句，什么也没说，后面就再也不联系了。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>开发环境的定时启动脚本</title>
+        <link>http://localhost:1313/post/ubuntu-scedule-and-start-script/</link>
+        <pubDate>Wed, 03 Apr 2024 11:21:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/ubuntu-scedule-and-start-script/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png" alt="Featured image of post 开发环境的定时启动脚本" /&gt;&lt;h2 id=&#34;开机启动并且定时运行&#34;&gt;开机启动并且定时运行&lt;/h2&gt;
+&lt;p&gt;shell 的 jq 脚本真的是太难用了，调了半天才能用，文档看不懂。&lt;/p&gt;
+&lt;p&gt;完成的这个重启脚本非常有用：&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>orgmode 使用drawio 画图</title>
+        <link>http://localhost:1313/post/org-drawio/</link>
+        <pubDate>Tue, 02 Apr 2024 22:09:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/org-drawio/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post orgmode 使用drawio 画图" /&gt;&lt;h2 id=&#34;画图测试&#34;&gt;画图测试&lt;/h2&gt;
+&lt;p&gt;下载的 drawio 的 deb 包，命令名字是 drawio ，而插件用的是 draw.io ，做一个软链接，可以解决
+org-drawio-open 的调用。插件自己的代码是在 win 上使用的，不太适合 gnu/linux 环境，显然没有进行过真正的适配和调试，有一些问题。做一些修改，现在适合在 linux 上面使用了。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>xorg 代码琉理</title>
+        <link>http://localhost:1313/post/xorg-source-code/</link>
+        <pubDate>Mon, 01 Apr 2024 14:26:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/xorg-source-code/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post xorg 代码琉理" /&gt;&lt;p&gt;遇到了一个 S3 后切 tty 或者关机或者重启会出现短暂的白屏的现象。但是只要不做 S3 就不会有问题。&lt;/p&gt;
+&lt;p&gt;现在通过 kill 掉所有的其它显示的组件，比如 dde 的应用 startdde ， dde-greeter ， kwin_x11 （窗口管理器）。这样的话，重启 lightdm 进程，也不会出现。可以用 startx 来手动打开 xorg 来接管进程。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>大多数成功人士的品质</title>
+        <link>http://localhost:1313/post/the-character-of-strong/</link>
+        <pubDate>Sat, 30 Mar 2024 23:00:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/the-character-of-strong/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png" alt="Featured image of post 大多数成功人士的品质" /&gt;&lt;h2 id=&#34;成熟的人是自我的&#34;&gt;成熟的人是自我的&lt;/h2&gt;
+&lt;p&gt;什么是自我呢？这个词好像不是形容好人的。但是说实话，现实生活中哪里有绝对的好人呢？人们都赞扬好人，因为所谓的好人被宣传做的好事是利他的。但是一个人不可能所有做的事情都是利他的。比如说，大家参加高考都想考一个好成绩，但是你有能力考好，考了一个好学校，有可能是因为你有一个良好的受教肓的环境。造成了某种阶级的流动性丧失。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线代第二章——矩阵</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-2/</link>
+        <pubDate>Thu, 28 Mar 2024 22:58:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-2/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线代第二章——矩阵" /&gt;&lt;h2 id=&#34;行列式与矩阵的区别与联系&#34;&gt;行列式与矩阵的区别与联系&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;区别
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;矩阵是一个表格，行数和列数可以不一样；而行列式是一个代数和，当元素是数时，它是数，且行数必须等于列数。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线代第一章——行列式</title>
+        <link>http://localhost:1313/post/graduate-linear-algebra-1/</link>
+        <pubDate>Thu, 28 Mar 2024 10:24:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-linear-algebra-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e0dd48553ae47b1f7a78c4e75f4f0763.jpg" alt="Featured image of post 线代第一章——行列式" /&gt;&lt;p&gt;线性代数是对运算规则的一种归纳和研究，实际上这方面的研究极大的提高了并行计算的速度。可以通过电路模拟电路来提高运算速度。&lt;/p&gt;
+&lt;h2 id=&#34;概念&#34;&gt;概念&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;n 阶行列式的概念（是所有取自不同行不同列的 n 个元素的乘积再乘以-1 的逆序数次方的代数和）行列式的结果是一个数。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>第五章——常微分方程</title>
+        <link>http://localhost:1313/post/graduate-math-study-5/</link>
+        <pubDate>Thu, 28 Mar 2024 09:39:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-study-5/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 第五章——常微分方程" /&gt;&lt;p&gt;未知函数是一元函数的微分方程称作常微分方程。此处的“常”是 Ordinary 表示平常。数学于人，是一些深刻的逻辑和概念，最先是概念。有了概念才有了基础，才能展开分析。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>放过自己，童心隐匿</title>
+        <link>http://localhost:1313/post/how-to-show-maturity/</link>
+        <pubDate>Wed, 27 Mar 2024 15:34:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/how-to-show-maturity/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png" alt="Featured image of post 放过自己，童心隐匿" /&gt;&lt;h2 id=&#34;celebrity-quote&#34;&gt;celebrity quote&lt;/h2&gt;
+&lt;p&gt;As human beings, we all mature physically from childhood to adolesscence and then info adulthood,
+but our emotions lag behind.&lt;/p&gt;
+&lt;p&gt;Bernard Sumner&lt;/p&gt;
+&lt;h2 id=&#34;放过自己&#34;&gt;放过自己&lt;/h2&gt;
+&lt;p&gt;每个成年人都会感到有时苦痛。这是因为成年人不能像小孩子一样，心情很不好的时候，找家长哭诉。家长教肓一顿，说：没事，这还不简单，你这么想&amp;hellip; ，这么做 &amp;hellip; ，就好了，下次记住了啊，以后遇到情况了就这么处理&amp;hellip; 。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>如何使用 ftrace 来调试系统问题</title>
+        <link>http://localhost:1313/post/how-to-use-ftrace/</link>
+        <pubDate>Wed, 27 Mar 2024 15:26:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/how-to-use-ftrace/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 如何使用 ftrace 来调试系统问题" /&gt;&lt;p&gt;在无法使用 bpftrace 的时候，我们用 ftrace 来分析内核当中函数的调用流程。&lt;/p&gt;
+&lt;h2 id=&#34;ftrace&#34;&gt;ftrace&lt;/h2&gt;
+&lt;h3 id=&#34;查看是否支持&#34;&gt;查看是否支持&lt;/h3&gt;
+&lt;p&gt;ftrace 可以用来跟踪 S3 过程，而 bpftrace 不能&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>cifs的ioctl notify特性backport （学习文韬大佬）</title>
+        <link>http://localhost:1313/post/cifs-notify-backport/</link>
+        <pubDate>Wed, 27 Mar 2024 15:07:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/cifs-notify-backport/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post cifs的ioctl notify特性backport （学习文韬大佬）" /&gt;&lt;h2 id=&#34;问题说明&#34;&gt;问题说明&lt;/h2&gt;
+&lt;p&gt;问题来源：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;BUG #215779 【AMD】【N79Z】【V6】【用户反馈】【文管】文件管理器中共享文件夹新增文件后不会自动刷新，需要手动刷新后才能显现 - 文件管理器 - 禅道&lt;/li&gt;
+&lt;li&gt;BUG #245957 UBXC004509 X86 利旧 1060 统信文管的共享文件夹访问群辉 SMB，有时会出现问题 - 桌面专业版 V20 - 禅道&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;大概就是当我们用 cifs 网络挂载时，如果文件在远端发生了更改，比如服务端上传了新的文件，客户端的文管不会自动刷新显示。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>考研数学第四章——多元函数微积分学</title>
+        <link>http://localhost:1313/post/graduate-math-study-4/</link>
+        <pubDate>Tue, 26 Mar 2024 11:18:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-study-4/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 考研数学第四章——多元函数微积分学" /&gt;&lt;p&gt;从 2021 年李永乐的 148 页开始，多元函数的微积分学比较复杂，之前上大学的时候就学的比较浅。要掌握的话要做更多的练习。&lt;/p&gt;
+&lt;h2 id=&#34;多元函数的极限-连续-偏导数与全微分&#34;&gt;多元函数的极限、连续、偏导数与全微分&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;多元函数&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>考研第三章学习——积分</title>
+        <link>http://localhost:1313/post/graduate-math-study-3/</link>
+        <pubDate>Tue, 26 Mar 2024 10:15:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-study-3/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 考研第三章学习——积分" /&gt;&lt;p&gt;第三章是一元函数积分学&lt;/p&gt;
+&lt;h2 id=&#34;不定积分与定积分的概念-性质-理论&#34;&gt;不定积分与定积分的概念、性质、理论&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;定义&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;原函数与不定积分&lt;/li&gt;
+&lt;li&gt;定积分&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;重要性质、定理、公式&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>考研数学二第二章</title>
+        <link>http://localhost:1313/post/graduate-math-study-2/</link>
+        <pubDate>Wed, 20 Mar 2024 22:26:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-study-2/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 考研数学二第二章" /&gt;&lt;h2 id=&#34;一元函数微分学&#34;&gt;一元函数微分学&lt;/h2&gt;
+&lt;h3 id=&#34;导数与微分-导数的计算&#34;&gt;导数与微分，导数的计算&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;定义&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;导数&lt;/li&gt;
+&lt;li&gt;左右导数&lt;/li&gt;
+&lt;li&gt;函数的微分（即 \(\Delta y\))&lt;/li&gt;
+&lt;li&gt;高阶导数（即斜率的斜率的斜率 &amp;hellip; ）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;重要性质、定理、公式&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>考研数学二复习开始</title>
+        <link>http://localhost:1313/post/graduate-math-study-1/</link>
+        <pubDate>Tue, 19 Mar 2024 17:08:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graduate-math-study-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/fd73d15b3d78f6756f87c0b048d163a2.jpg" alt="Featured image of post 考研数学二复习开始" /&gt;&lt;p&gt;摸鱼备考数学二，不会有人发现的。这是是全部第一章的知识点。&lt;/p&gt;
+&lt;p&gt;这篇文章不因为方便编辑而置顶了，我的笔记后面用 emacs + nas 的 webdav 同步 org-roam 笔记。后面只有重要的难点，才发布到博客里，这样比较好一点&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>kvm 中流览器白屏问题分析</title>
+        <link>http://localhost:1313/post/kvm-browser-white-screen/</link>
+        <pubDate>Tue, 19 Mar 2024 12:26:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kvm-browser-white-screen/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post kvm 中流览器白屏问题分析" /&gt;&lt;h2 id=&#34;一些零散的信息和结论&#34;&gt;一些零散的信息和结论&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;问题复现时的详细现象&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;某个浏览器进程下的某个线程会 cpu 100%。——不管是用 top 看，还是用 perf/crash 等工具确认，确实 100%了。&lt;/li&gt;
+&lt;li&gt;此时在该 cpu 上中断、内核线程、调度等均正常。——如果将它和另外一个死循环绑定到同一个 cpu，会各占 50%。&lt;/li&gt;
+&lt;li&gt;用 profile 事件查看该 cpu 上的执行流，会发现 cpu 一直停留在同一条指令上。&lt;/li&gt;
+&lt;li&gt;该指令为用户态空间的指令，在 browser 这个 elf 文件之内，且目前来看都是函数的第一行汇编指令。&lt;/li&gt;
+&lt;li&gt;不仅仅是 pc 没变，整个调用栈都完全没变。——就像 cpu 被冻结在这一条指令上了。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;关于指令与 cpu 如何“停止”
+cpu 是永不停止的，内核的 halt 也是一个 for 循环。那 cpu 如何能停止在一条指令上？&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>linux 中u 盘的同步问题</title>
+        <link>http://localhost:1313/post/sync-udisk/</link>
+        <pubDate>Mon, 18 Mar 2024 15:13:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/sync-udisk/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post linux 中u 盘的同步问题" /&gt;&lt;p&gt;linux 有很多不好用的地方&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;U 盘不能显示进度条&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;dd 命令制作的启动盘 meta data 不更新，导致无法继续写入&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;文韬大佬深耕内核多年，中断、文件系统、信号理解的都很深入。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>leetcode 第二天</title>
+        <link>http://localhost:1313/post/leetcode-day-2/</link>
+        <pubDate>Fri, 15 Mar 2024 11:23:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/leetcode-day-2/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png" alt="Featured image of post leetcode 第二天" /&gt;&lt;p&gt;做个简单的题压压惊。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;给你两个按 非递减顺序 排列的整数数组 nums1 和 nums2，另有两个整数 m 和 n ，分别表示 nums1 和 nums2 中的元素数目。
+
+请你 合并 nums2 到 nums1 中，使合并后的数组同样按 非递减顺序 排列。
+
+注意：最终，合并后数组不应由函数返回，而是存储在数组 nums1 中。为了应对这种情况，nums1 的初始长度为 m + n，其中前 m 个元素表示应合并的元素，后 n 个元素为 0 ，应忽略。nums2 的长度为 n 。
+
+
+示例 1：
+
+输入：nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3
+输出：[1,2,2,3,5,6]
+解释：需要合并 [1,2,3] 和 [2,5,6] 。
+合并结果是 [1,2,2,3,5,6] ，其中斜体加粗标注的为 nums1 中的元素。
+示例 2：
+
+输入：nums1 = [1], m = 1, nums2 = [], n = 0
+输出：[1]
+解释：需要合并 [1] 和 [] 。
+合并结果是 [1] 。
+示例 3：
+
+输入：nums1 = [0], m = 0, nums2 = [1], n = 1
+输出：[1]
+解释：需要合并的数组是 [] 和 [1] 。
+合并结果是 [1] 。
+注意，因为 m = 0 ，所以 nums1 中没有元素。nums1 中仅存的 0 仅仅是为了确保合并结果可以顺利存放到 nums1 中。
+
+
+提示：
+
+nums1.length == m + n
+nums2.length == n
+0 &amp;lt;= m, n &amp;lt;= 200
+1 &amp;lt;= m + n &amp;lt;= 200
+-109 &amp;lt;= nums1[i], nums2[j] &amp;lt;= 109
+
+进阶：你可以设计实现一个时间复杂度为 O(m + n) 的算法解决此问题吗？
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>task-freeze/suspend失败问题（文韬大佬）</title>
+        <link>http://localhost:1313/post/task-freeze-suspend-fail-problem/</link>
+        <pubDate>Fri, 08 Mar 2024 17:04:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/task-freeze-suspend-fail-problem/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post task-freeze/suspend失败问题（文韬大佬）" /&gt;&lt;p&gt;这是一个多次出现的 task-freeze 失败，进而导致 suspend 失败的问题，借这个问题介绍一下内核对于 task 的管理，比如 state 管理，wait/wakeup，freeze 过程等等。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>emacs 迁移记录</title>
+        <link>http://localhost:1313/post/emacs-migration-record/</link>
+        <pubDate>Fri, 08 Mar 2024 11:42:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/emacs-migration-record/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post emacs 迁移记录" /&gt;&lt;p&gt;在 ubuntu 22.04 当中安装 emacs ：&lt;/p&gt;
+&lt;h2 id=&#34;编译安装&#34;&gt;编译安装&lt;/h2&gt;
+&lt;p&gt;sudo apt install libcairo2-dev libharfbuzz-dev libgtk-3-dev librsvg-2-dev libmagickwand-dev make texinfo
+libxpm-dev libgif-dev libgnutls28-dev libncurses-dev libwebkit2gtk-4.1-dev&lt;/p&gt;
+&lt;p&gt;./autogen.sh&lt;/p&gt;
+&lt;p&gt;./configure &amp;ndash;with-x-toolkit=gtk3 &amp;ndash;with-mailutils &amp;ndash;with-rsvg &amp;ndash;with-imagemagick
+&amp;ndash;with-xwidgets &amp;ndash;with-gnutls 2&amp;gt;&amp;amp;1|tee configure.log&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;[Desktop Entry]
+Name=Emacs
+GenericName=Text Editor
+Comment=Edit text
+MimeType=text/english;text/plain;text/x-makefile;text/x-c++hdr;text/x-c++src;text/x-chdr;text/x-csrc;text/x-java;text/x-moc;text/x-pascal;text/x-tcl;text/x-tex;application/x-shellscript;text/x-c;text/x-c++;
+Exec=env GTK_IM_MODULE=emacs XMODIFIERS=@im=emacs emacs %F
+Icon=emacs
+Type=Application
+Terminal=false
+Categories=Development;TextEditor;
+StartupNotify=true
+StartupWMClass=Emacs
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>leetcode 第一天</title>
+        <link>http://localhost:1313/post/leetcode-day-1/</link>
+        <pubDate>Wed, 06 Mar 2024 16:49:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/leetcode-day-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/29b680d8e31cc4d62253600f5d1c427f.png" alt="Featured image of post leetcode 第一天" /&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。
+
+字母异位词 是由重新排列源单词的所有字母得到的一个新单词。
+
+示例 1:
+
+输入: strs = [&amp;#34;eat&amp;#34;, &amp;#34;tea&amp;#34;, &amp;#34;tan&amp;#34;, &amp;#34;ate&amp;#34;, &amp;#34;nat&amp;#34;, &amp;#34;bat&amp;#34;]
+
+输出: [[&amp;#34;bat&amp;#34;],[&amp;#34;nat&amp;#34;,&amp;#34;tan&amp;#34;],[&amp;#34;ate&amp;#34;,&amp;#34;eat&amp;#34;,&amp;#34;tea&amp;#34;]]
+
+示例 2:
+
+输入: strs = [&amp;#34;&amp;#34;]
+
+输出: [[&amp;#34;&amp;#34;]]
+
+示例 3:
+
+输入: strs = [&amp;#34;a&amp;#34;]
+
+输出: [[&amp;#34;a&amp;#34;]]
+
+提示：
+
+1 &amp;lt;= strs.length &amp;lt;= 104
+
+0 &amp;lt;= strs[i].length &amp;lt;= 100
+
+strs[i] 仅包含小写字母
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>如何在内核当中获取dmi 信息</title>
+        <link>http://localhost:1313/post/how-to-get-dmi/</link>
+        <pubDate>Wed, 06 Mar 2024 16:24:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/how-to-get-dmi/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 如何在内核当中获取dmi 信息" /&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-diff&#34; data-lang=&#34;diff&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;diff --git a/drivers/gpu/drm/amd/amdgpu/si.c b/drivers/gpu/drm/amd/amdgpu/si.c
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;index 4f902e1bcb6a..638df1739048 100644
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f55&#34;&gt;--- a/drivers/gpu/drm/amd/amdgpu/si.c
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f55&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+++ b/drivers/gpu/drm/amd/amdgpu/si.c
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;&lt;/span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;@@ -49,6 +49,7 @@
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;&lt;/span&gt; #include &amp;#34;uvd/uvd_4_0_d.h&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; #include &amp;#34;bif/bif_3_0_d.h&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; #include &amp;#34;uvd_v3_1.h&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+#include &amp;lt;linux/dmi.h&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; static const u32 tahiti_golden_registers[] =
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;@@ -2535,6 +2536,16 @@ int si_set_ip_blocks(struct amdgpu_device *adev)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;font-weight:bold&#34;&gt;&lt;/span&gt;                if (!pm_suspend_via_s2idle())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        amdgpu_device_ip_block_add(adev, &amp;amp;uvd_v3_1_ip_block);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                /* amdgpu_device_ip_block_add(adev, &amp;amp;vce_v1_0_ip_block); */
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+               char const *vendor, *version, *product;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                const struct bios_settings *bt = NULL;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                /* get BIOS data */
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                vendor  = dmi_get_system_info(DMI_SYS_VENDOR);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                version = dmi_get_system_info(DMI_BIOS_VERSION);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                product = dmi_get_system_info(DMI_PRODUCT_NAME);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+                printk(&amp;#34;vendor:%s version:%s product:%s\n&amp;#34;, vendor, version, product);
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#50fa7b;font-weight:bold&#34;&gt;&lt;/span&gt;                break;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        case CHIP_HAINAN:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                amdgpu_device_ip_block_add(adev, &amp;amp;si_common_ip_block);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>如何从内核的开源社区获取资讯</title>
+        <link>http://localhost:1313/post/draw-knowledge-from-community/</link>
+        <pubDate>Wed, 06 Mar 2024 15:59:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/draw-knowledge-from-community/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 如何从内核的开源社区获取资讯" /&gt;&lt;p&gt;如果想要深入内核的底层，并且了解内核前延的问题和发展方向，就上 &lt;a class=&#34;link&#34; href=&#34;https://lwn.net/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://lwn.net/&lt;/a&gt; 看一个方向的问题。再从
+&lt;a class=&#34;link&#34; href=&#34;https://lore.kernel.org/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://lore.kernel.org/&lt;/a&gt; 查找一下邮件列表，学习一下别人的代码和改动的内容。还有只有真的做了一些底层的工作之后才能真正的提升分析问题的能力和知识水平。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>一些好用的网站汇总</title>
+        <link>http://localhost:1313/post/some-useful-website/</link>
+        <pubDate>Wed, 06 Mar 2024 10:00:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/some-useful-website/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png" alt="Featured image of post 一些好用的网站汇总" /&gt;&lt;h2 id=&#34;去水印的人工智能网站&#34;&gt;去水印的人工智能网站&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://zh-cn.aiseesoft.com/watermark-remover-online/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://zh-cn.aiseesoft.com/watermark-remover-online/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这个世界人工智能可以干的事太多了。人工智能真的有一些用武之地了。越来越聪明，越来越精确，以后只会成为更强大的工具。是人类之光。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>使用串口调试</title>
+        <link>http://localhost:1313/post/serial-port/</link>
+        <pubDate>Mon, 05 Feb 2024 16:51:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/serial-port/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 使用串口调试" /&gt;&lt;h2 id=&#34;使用方法&#34;&gt;使用方法&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20240205_172946.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;串口乃是 rs232 放在主板上的接口。有的原型机背面的接口有 rs232 的九针串口。&lt;/p&gt;
+&lt;p&gt;一般白黄是 rx ，绿是 tx ；有时候会反过来。红是 vcc ，黑是 gnd 。一般是 9 针中的五口从角落开始黑白绿，或者黑绿白。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>如何命令行使用qemu 和为调试增加串口输出到终端</title>
+        <link>http://localhost:1313/post/how-to-use-qemu/</link>
+        <pubDate>Tue, 30 Jan 2024 16:33:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/how-to-use-qemu/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 如何命令行使用qemu 和为调试增加串口输出到终端" /&gt;&lt;h2 id=&#34;查找的一些资料&#34;&gt;查找的一些资料&lt;/h2&gt;
+&lt;p&gt;命令安装 qemu 虚拟机。&lt;/p&gt;
+&lt;p&gt;sudo apt -y install libvirt0 libvirt-daemon qemu virt-manager bridge-utils libvirt-clients
+python-libvirt qemu-efi uml-utilities virtinst qemu-system-mips&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://unix.stackexchange.com/questions/587045/convert-libvirt-xml-into-qemu-command-line&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://unix.stackexchange.com/questions/587045/convert-libvirt-xml-into-qemu-command-line&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://blog.csdn.net/YuZhiHui_No1/article/details/53909925&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://blog.csdn.net/YuZhiHui_No1/article/details/53909925&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>kdump 的总结和介绍</title>
+        <link>http://localhost:1313/post/kdump-introduction/</link>
+        <pubDate>Tue, 23 Jan 2024 17:29:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kdump-introduction/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post kdump 的总结和介绍" /&gt;&lt;p&gt;kdump 有一篇很好的分享：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://localhost:1313/ox-hugo/Kexec_Kdump_Impl_Appl_v2.pdf&#34; &gt;file:/Kexec_Kdump_Impl_Appl_v2.pdf&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>emacs 和内核关于邮件的配置</title>
+        <link>http://localhost:1313/post/how-to-config-emacs-email/</link>
+        <pubDate>Tue, 23 Jan 2024 13:31:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/how-to-config-emacs-email/</guid>
+        <description>&lt;img src="http://localhost:1313/ox-hugo/img_20240123_133500.jpg" alt="Featured image of post emacs 和内核关于邮件的配置" /&gt;&lt;h2 id=&#34;emacs-如何配置邮件客户端&#34;&gt;emacs 如何配置邮件客户端&lt;/h2&gt;
+&lt;p&gt;首先我要说的是 emacs 的邮件客户端并不是只有优点没有缺点。实际上 emacs 的邮件客户端更适合管理纯文本的邮件，而不适合管理 html 的邮件。emacs 主要有 mu/mu4e ， notmuch ，
+gnus 三个邮件客户端。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>我家里的网络设置</title>
+        <link>http://localhost:1313/post/home-network/</link>
+        <pubDate>Thu, 18 Jan 2024 11:06:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/home-network/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png" alt="Featured image of post 我家里的网络设置" /&gt;&lt;h2 id=&#34;一些基本概念&#34;&gt;一些基本概念&lt;/h2&gt;
+&lt;p&gt;什么是 NAT?&lt;/p&gt;
+&lt;p&gt;NAT（Network Address Translation，网络地址转换）是路由器功能之一。将一个 ip 进行复用。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>mesa 中的概念和代码介绍</title>
+        <link>http://localhost:1313/post/mesa-introduction/</link>
+        <pubDate>Thu, 11 Jan 2024 10:00:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/mesa-introduction/</guid>
+        <description>&lt;img src="http://localhost:1313/ox-hugo/img_20240119_171126.jpg" alt="Featured image of post mesa 中的概念和代码介绍" /&gt;&lt;h2 id=&#34;mesa-中的一些基本概念&#34;&gt;mesa 中的一些基本概念&lt;/h2&gt;
+&lt;p&gt;mesa 这个项目是图形系统中的重要的一层。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;mesa 的 3d 库有哪些？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Mesa 提供了多个 3D 图形库，用于实现不同的图形 API。以下是 Mesa 中一些常见的 3D 图形库：&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>如何用emacs mu4e 和 org-mime收发邮件</title>
+        <link>http://localhost:1313/post/mu4e-and-org-mime/</link>
+        <pubDate>Tue, 09 Jan 2024 15:36:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/mu4e-and-org-mime/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 如何用emacs mu4e 和 org-mime收发邮件" /&gt;&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;用 mu4e 有一段时间了，之前一直认为用 emacs 发 html 的工作邮件不好用。后来突然突破了一些小问题，现在用起来简直是真香了。&lt;/p&gt;
+&lt;h2 id=&#34;一些参考的博客&#34;&gt;一些参考的博客&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://www.cesarolea.com/posts/html-signatures-with-mu4e/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://www.cesarolea.com/posts/html-signatures-with-mu4e/&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>显卡测试的一些命令记录</title>
+        <link>http://localhost:1313/post/graphic-test/</link>
+        <pubDate>Wed, 03 Jan 2024 15:28:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/graphic-test/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3f0dd7abfd0dd8b6b893e6da737c3c52.jpg" alt="Featured image of post 显卡测试的一些命令记录" /&gt;&lt;h2 id=&#34;glmark2-的测试&#34;&gt;glmark2 的测试&lt;/h2&gt;
+&lt;p&gt;很多东西，每用一次都要查一遍，非常的麻烦。需要把常用的东西记录下来。&lt;/p&gt;
+&lt;p&gt;sudo apt install libegl1 libgl1 libgles2 libglvnd0 libglx0&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>AppArmor</title>
+        <link>http://localhost:1313/post/apparmor-introduction/</link>
+        <pubDate>Wed, 03 Jan 2024 14:03:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/apparmor-introduction/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png" alt="Featured image of post AppArmor" /&gt;&lt;h2 id=&#34;是什么&#34;&gt;是什么？&lt;/h2&gt;
+&lt;p&gt;管控应用对资源的访问。对文件，网络，linux Capability ，D-Bus ，signal ，rlimit&lt;/p&gt;
+&lt;p&gt;通过配置文件。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>使用 qemu 和 gdb 来学习内核流程</title>
+        <link>http://localhost:1313/post/qume-gdb-kernel/</link>
+        <pubDate>Tue, 02 Jan 2024 16:02:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/qume-gdb-kernel/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 使用 qemu 和 gdb 来学习内核流程" /&gt;&lt;h2 id=&#34;先把韬哥的分享帖出来&#34;&gt;先把韬哥的分享帖出来&lt;/h2&gt;
+&lt;p&gt;useradd -m glj -s /bin/bash -d /home/glj&lt;/p&gt;
+&lt;h3 id=&#34;前言&#34;&gt;前言&lt;/h3&gt;
+&lt;p&gt;这一篇作为开场，主要是介绍最基本的使用方式：基于一个已经完成编译的内核目录，用新生成的内核 image 启动内核，看看是否一切正常。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>UOS 安全启动</title>
+        <link>http://localhost:1313/post/security_boot/</link>
+        <pubDate>Tue, 02 Jan 2024 14:07:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/security_boot/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png" alt="Featured image of post UOS 安全启动" /&gt;&lt;h2 id=&#34;bios-启动&#34;&gt;bios 启动&lt;/h2&gt;
+&lt;figure class=&#34;fancy&#34;&gt;&lt;a href=&#34;t&#34; target=&#34;_blank&#34;&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20240102_140844.jpg&#34;
+    alt=&#34;Caption not used as alt text&#34; width=&#34;900&#34;&gt;&lt;/a&gt;&lt;figcaption&gt;
+      &lt;p&gt;&lt;span class=&#34;figure-number&#34;&gt;Figure 1: &lt;/span&gt;&lt;em&gt;&amp;ldquo;caption&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+    &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;uefi-启动&#34;&gt;uefi 启动&lt;/h2&gt;
+&lt;figure class=&#34;fancy&#34;&gt;&lt;a href=&#34;t&#34; target=&#34;_blank&#34;&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20240102_141054.jpg&#34;
+    alt=&#34;Caption not used as alt text&#34; width=&#34;900&#34;&gt;&lt;/a&gt;&lt;figcaption&gt;
+      &lt;p&gt;&lt;span class=&#34;figure-number&#34;&gt;Figure 2: &lt;/span&gt;&lt;em&gt;&amp;ldquo;caption&amp;rdquo;&lt;/em&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>在我的博客和emacs中使用tikz 画图</title>
+        <link>http://localhost:1313/post/tikz-config/</link>
+        <pubDate>Mon, 11 Dec 2023 15:43:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/tikz-config/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 在我的博客和emacs中使用tikz 画图" /&gt;&lt;p&gt;之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是对于发布博客和高亮代码方面对程序员不太友好。latex 的包虽然很多，但是 orgmode 用 emacs 打开直接是高亮的，这一点 latex-mode 不可以做的很好，因为 latex 的格式太复杂了。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>什么是张量？</title>
+        <link>http://localhost:1313/post/tensor/</link>
+        <pubDate>Wed, 22 Nov 2023 14:03:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/tensor/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 什么是张量？" /&gt;&lt;h2 id=&#34;什么是张量&#34;&gt;什么是张量？&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.bilibili.com/video/BV1tr4y117Ja/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.bilibili.com/video/BV1tr4y117Ja/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;常数 a 是 0 阶张量向量 \(\vec{a}\) 是 1 阶张量用 \(\widetilde{A}\) 表示 2 阶以上的张量&lt;/p&gt;
+&lt;p&gt;张量是一种不依赖于坐标系来反应物质的物理量。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（六）函数矩阵的导数</title>
+        <link>http://localhost:1313/post/matrix-analysis-6/</link>
+        <pubDate>Tue, 21 Nov 2023 14:29:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/matrix-analysis-6/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（六）函数矩阵的导数" /&gt;&lt;h2 id=&#34;矩阵的导数&#34;&gt;矩阵的导数&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231121_143153.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231121_143931.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;之前的目的是看明白反向传播算法的推导过程。现在怎么觉得这个不像呢？&lt;/p&gt;
+&lt;h2 id=&#34;矩阵的幂级数&#34;&gt;矩阵的幂级数&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231121_144226.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;上面的 2 当中的 \(\rho(A)\) 是谱半径，也就是所有的特征值当中最大的那个。3 当中的 \(\rho\) 是曲率半径。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（五）矩阵的分解</title>
+        <link>http://localhost:1313/post/matrix-analysis-5/</link>
+        <pubDate>Mon, 20 Nov 2023 16:23:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/matrix-analysis-5/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（五）矩阵的分解" /&gt;&lt;h2 id=&#34;矩阵的三角分解&#34;&gt;矩阵的三角分解&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231120_162858.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;单位下三角矩阵。普通上三角矩阵。矩阵的分解有什么用呢？L 是左， R 是右。&lt;/p&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231120_163241.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;上面黄色的部分是直接抄下来的。 \(a_{21}\) 是第二行乘以第一列这么算的。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（四）向量和矩阵的范数</title>
+        <link>http://localhost:1313/post/matrix-analysis-4/</link>
+        <pubDate>Mon, 20 Nov 2023 13:36:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/matrix-analysis-4/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（四）向量和矩阵的范数" /&gt;&lt;h2 id=&#34;证明向量的范数&#34;&gt;证明向量的范数&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231120_133924.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;注意这里是向量的范数。&lt;/p&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231120_134506.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;证明矩阵的范数&#34;&gt;证明矩阵的范数&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231120_134651.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;迹就是对角线元素之和。范数的“范”字的来源：&lt;a class=&#34;link&#34; href=&#34;https://zhuanlan.zhihu.com/p/107384905&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://zhuanlan.zhihu.com/p/107384905&lt;/a&gt; ，还有比率和等比级数的两个被译错的词。范的意思是某种长度的度量。这些词的来源搞明白比较好。有的词不达意，影响理解。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>emacs kitty ranger rime 等的一些优化</title>
+        <link>http://localhost:1313/post/emacs-optimize/</link>
+        <pubDate>Fri, 17 Nov 2023 11:43:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/emacs-optimize/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post emacs kitty ranger rime 等的一些优化" /&gt;&lt;h2 id=&#34;emacs-rime-的-探针-中英文切换方法&#34;&gt;emacs-rime 的“探针”中英文切换方法&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://emacs-china.org/t/emacs-rime/12048/838?page=42&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://emacs-china.org/t/emacs-rime/12048/838?page=42&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://emacs-china.org/t/emacs-rime/18305&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://emacs-china.org/t/emacs-rime/18305&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>线性代数的本质</title>
+        <link>http://localhost:1313/post/line-algebra-nature/</link>
+        <pubDate>Mon, 13 Nov 2023 09:37:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/line-algebra-nature/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 线性代数的本质" /&gt;&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.bilibili.com/video/av6731067&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.bilibili.com/video/av6731067&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;使用 katex 来规范公式的书写，比起 mathjax 和 latex 功能略少，要求公式的语法更为严格，但是渲染速度更快：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://katex.org/docs/supported.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://katex.org/docs/supported.html&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>软考考前突击</title>
+        <link>http://localhost:1313/post/software-architect-example/</link>
+        <pubDate>Wed, 01 Nov 2023 19:04:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/software-architect-example/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/8aae9667673de26e7cd6dabc7ef677de.jpg" alt="Featured image of post 软考考前突击" /&gt;&lt;h2 id=&#34;准备&#34;&gt;准备&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git pull
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;./install-eaf.py -i mindmap
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;./install-eaf.py --install-core-deps
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;sudo vim ~/.pip/pip.conf&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-nil&#34; data-lang=&#34;nil&#34;&gt;[global]
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+[install]
+trusted-host = https://pypi.tuna.tsinghua.edu.cn  # trusted-host 此参数是为了避免麻烦，否则使用的时候可能会提示不受信任
+&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>使用perf和flamegraph来分析bug</title>
+        <link>http://localhost:1313/post/use-perf-and-flame-graph/</link>
+        <pubDate>Tue, 24 Oct 2023 15:32:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/use-perf-and-flame-graph/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 使用perf和flamegraph来分析bug" /&gt;&lt;p&gt;感谢晓哥原创，此处记录，并做一个 bug 的分析记录。&lt;/p&gt;
+&lt;h2 id=&#34;什么是-perf&#34;&gt;什么是 perf？&lt;/h2&gt;
+&lt;p&gt;perf 工具可以用于分析内核和用户态进程的性能，它提供了一种强大的性能分析工具，可以帮助开发人员诊断和优化系统性能问题。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>王勇绐我的一些启示</title>
+        <link>http://localhost:1313/post/wangyong-prose/</link>
+        <pubDate>Thu, 19 Oct 2023 16:07:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/wangyong-prose/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png" alt="Featured image of post 王勇绐我的一些启示" /&gt;&lt;p&gt;王勇的经历绐我的一点启示：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.jianshu.com/p/58e5af6149f6&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.jianshu.com/p/58e5af6149f6&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;王勇只比我大四岁，早年父母离婚，高中毕业参加工作。一年多的时间通过 emacs 学习到了很多的开源技术。在 emacs 的 IRC  freenode 和 Libera Chat 频道学习到了很多的开源技术。一起写了 auto complete 这种插件。早期从各类杂志和 emacs 中学习到开源技术。这个能力大部分人都是不具备的。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（三）</title>
+        <link>http://localhost:1313/post/matrix-analysis-3/</link>
+        <pubDate>Tue, 17 Oct 2023 15:38:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/matrix-analysis-3/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（三）" /&gt;&lt;p&gt;第三章是矩阵的标准形&lt;/p&gt;
+&lt;h2 id=&#34;哈密顿-卡莱定理&#34;&gt;哈密顿-卡莱定理&lt;/h2&gt;
+&lt;p&gt;数学的本质就是逻辑与设定，如果你觉得反常识那是对设定理解的不深刻。如果推导的速度慢，那是逻辑能力差。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（二）</title>
+        <link>http://localhost:1313/post/martrix-analysis-2/</link>
+        <pubDate>Tue, 17 Oct 2023 09:12:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/martrix-analysis-2/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（二）" /&gt;&lt;p&gt;数学往往只讲理论，不讲应用。这就很让人摸不着头脑。&lt;/p&gt;
+&lt;h2 id=&#34;内积空间&#34;&gt;内积空间&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231017_092612.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;什么是内积空间（也叫准希尔伯特空间）？什么是酉空间？wiki 上的解释也太抽象了。什么是完备化？&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>矩阵分析（一）</title>
+        <link>http://localhost:1313/post/martrix-analysis-1/</link>
+        <pubDate>Mon, 16 Oct 2023 15:40:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/martrix-analysis-1/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post 矩阵分析（一）" /&gt;&lt;p&gt;学习一点数学基础，没学过的话也不可能真正理解 ai。
+&lt;a class=&#34;link&#34; href=&#34;https://www.bilibili.com/video/BV1A24y1p76q/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.bilibili.com/video/BV1A24y1p76q/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;线性空间的基于维数&#34;&gt;线性空间的基于维数&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154351.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154408.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154422.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154441.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;线性空间中的线性变换&#34;&gt;线性空间中的线性变换&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154528.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_154824.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;h2 id=&#34;线性变换的像-核&#34;&gt;线性变换的像、核&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231016_155628.jpg&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;这个稍微有一点抽像，但是花一点点的时间就理解了，也不是特别地抽象。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>取消置顶：博客计划与完成</title>
+        <link>http://localhost:1313/post/next_todo/</link>
+        <pubDate>Thu, 12 Oct 2023 11:04:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/next_todo/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/plan.jpg" alt="Featured image of post 取消置顶：博客计划与完成" /&gt;&lt;p&gt;20240716 ，计划也不再置顶，需要的时候自己找就可以了。&lt;/p&gt;
+&lt;h2 id=&#34;计划的任务&#34;&gt;计划的任务&lt;/h2&gt;
+&lt;h3 id=&#34;emacs-在服务器上的最小化配置&#34;&gt;emacs 在服务器上的最小化配置&lt;/h3&gt;
+&lt;p&gt;目前想在 emacs 上面只加上 gnu global 相关的配置，只为了看代码。其实这就解决了
+99% 的问题了。后面有时间的话可以用 lazy-load.el 优化 emacs 的起动时间，但这个优先级很低，
+emacs 是可以用一辈子的。要把他配置的足够好，写插件，一辈子也用不完资源和知识。所以不用急，一直维持足够好用即可。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>丁至宣小伙伴教我diy键盘</title>
+        <link>http://localhost:1313/post/diy-keyboard/</link>
+        <pubDate>Wed, 11 Oct 2023 11:18:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/diy-keyboard/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/d35ab6283245f69bcfdf80eaf6c89c18.jpg" alt="Featured image of post 丁至宣小伙伴教我diy键盘" /&gt;&lt;h2 id=&#34;材料准备&#34;&gt;材料准备&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;3D 打印的壳子：&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure class=&#34;fancy&#34;&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231012_095601.jpg&#34;
+    alt=&#34;Caption not used as alt text&#34; width=&#34;800&#34;&gt;&lt;figcaption&gt;
+      &lt;p&gt;&lt;span class=&#34;figure-number&#34;&gt;Figure 1: &lt;/span&gt;&lt;em&gt;&amp;ldquo;壳子&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+    &lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;ul&gt;
+&lt;li&gt;一大堆的芯片、线还有电池&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure class=&#34;fancy&#34;&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20231012_095307.jpg&#34;
+    alt=&#34;Caption not used as alt text&#34; width=&#34;800&#34;&gt;&lt;figcaption&gt;
+      &lt;p&gt;&lt;span class=&#34;figure-number&#34;&gt;Figure 2: &lt;/span&gt;&lt;em&gt;&amp;ldquo;芯片和线&amp;rdquo;&lt;/em&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>tty和x的切换流程</title>
+        <link>http://localhost:1313/post/tty-x-switch/</link>
+        <pubDate>Mon, 25 Sep 2023 10:31:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/tty-x-switch/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post tty和x的切换流程" /&gt;&lt;p&gt;这篇文档可以在：&lt;a class=&#34;link&#34; href=&#34;https://guolongji.xyz/post/tty-x-switch/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://guolongji.xyz/post/tty-x-switch/&lt;/a&gt; 这里看到更新。&lt;/p&gt;
+&lt;h2 id=&#34;概念&#34;&gt;概念&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Console&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Console 意即控制台。Console 出现在操作系统诞生之前，那个时候的老式计算机还只能通过按钮开关等方式控制计算机的运转，而 Console 就是将控制计算机器件集中起来的面板。由于现代计算机不再使用控制台来控制电脑，所以现代操作系统中的 Console 一般指控制台终端。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>深度学习必备核心算法</title>
+        <link>http://localhost:1313/post/core-algorithms-for-mathine-learning/</link>
+        <pubDate>Thu, 21 Sep 2023 16:55:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/core-algorithms-for-mathine-learning/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg" alt="Featured image of post 深度学习必备核心算法" /&gt;&lt;h2 id=&#34;机器学习流程&#34;&gt;机器学习流程:&lt;/h2&gt;
+&lt;p&gt;特征工程建立模型评估与应用数据获取&lt;/p&gt;
+&lt;h2 id=&#34;特征工程的作用&#34;&gt;特征工程的作用:&lt;/h2&gt;
+&lt;p&gt;数据特征决定了模型的上限预处理和特征提取是最核心的算法与参数选择决定了如何逼近这个上限&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>AI roadmap</title>
+        <link>http://localhost:1313/post/ai-leaning-plan/</link>
+        <pubDate>Thu, 21 Sep 2023 09:56:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/ai-leaning-plan/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3bd4bc0b766ce3d644039524b8963a45.jpg" alt="Featured image of post AI roadmap" /&gt;&lt;p&gt;目录渲染不要设置为 pandoc，gitlab ci 可以不用 pandoc 了吧。否则目录不显示 3 级以上的标题。还有，也不知道是 ox-hugo 的问题还是 hugo 本身的问题，orgmode 转 md，orgmode 的不要使用二级的标题，否则生成的 md 标题层次不对。2，3级同层。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>2023年软考报名</title>
+        <link>http://localhost:1313/post/ruankao-sign-up/</link>
+        <pubDate>Wed, 20 Sep 2023 15:56:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/ruankao-sign-up/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/8aae9667673de26e7cd6dabc7ef677de.jpg" alt="Featured image of post 2023年软考报名" /&gt;&lt;h2 id=&#34;软考报名&#34;&gt;软考报名&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;http://rsj.beijing.gov.cn/ywsite/bjpta/zcwj/2023zc/202309/P020230919491905692213.pdf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://rsj.beijing.gov.cn/ywsite/bjpta/zcwj/2023zc/202309/P020230919491905692213.pdf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;9 月 21 日到 27 日报名缴费。报名费 57 元。&lt;/p&gt;
+&lt;p&gt;10 月 24 日到 27 日打印准考证。&lt;/p&gt;
+&lt;p&gt;11 月 4 日到 5 日考试。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>linux上用docker搭建opengrok</title>
+        <link>http://localhost:1313/post/linux-opengrok-read-kernel/</link>
+        <pubDate>Wed, 20 Sep 2023 14:05:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/linux-opengrok-read-kernel/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post linux上用docker搭建opengrok" /&gt;&lt;p&gt;之前在 21 年底用 latex 写了这篇文章，导出了 pdf，后觉得有用，移到博客当中，方便以后查看。
+23 年了 opengrok 可能有新的版本了，但是 21 年的版本也不算旧。折腾一次花的时间也挺长的。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>内核一次日志问题的分析</title>
+        <link>http://localhost:1313/post/kernel-debug-method/</link>
+        <pubDate>Mon, 18 Sep 2023 21:01:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/kernel-debug-method/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 内核一次日志问题的分析" /&gt;&lt;h2 id=&#34;文韬分享-一次日志分析问题-20230810&#34;&gt;文韬分享，一次日志分析问题，20230810&lt;/h2&gt;
+&lt;figure&gt;&lt;img src=&#34;http://localhost:1313/ox-hugo/img_20230918_210808.png&#34;&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;这次分享呢我认为可能有一点收获。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>在cloudfare中搭建hugo博客</title>
+        <link>http://localhost:1313/post/hugo-on-cloudflare/</link>
+        <pubDate>Mon, 18 Sep 2023 16:35:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/hugo-on-cloudflare/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e1f639758ccc2e0aaa2d805109ecafa0.png" alt="Featured image of post 在cloudfare中搭建hugo博客" /&gt;&lt;h2 id=&#34;hugo-on-cloudflare&#34;&gt;hugo on cloudflare&lt;/h2&gt;
+&lt;p&gt;我的博客就要开通了，codeberg pages + orgmode + hugo + stack theme，&lt;/p&gt;
+&lt;p&gt;Codeberg 是一个快速开源 GitHub 替代品，是一个面向开源社区的非营利性代码托管平台。它提供了与 GitHub 相似的功能，包括版本控制、问题跟踪和 Pull Request。不同的是，Codeberg 专注于保护用户的隐私和数据安全，并提供了更加开放和透明的运营方式。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Chinese Test</title>
+        <link>http://localhost:1313/post/index.zh-cn/</link>
+        <pubDate>Wed, 09 Sep 2020 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/post/index.zh-cn/</guid>
+        <description>&lt;img src="http://localhost:1313/helena-hertz-wWZzXlDpMog-unsplash.jpg" alt="Featured image of post Chinese Test" /&gt;&lt;h2 id=&#34;正文测试&#34;&gt;正文测试&lt;/h2&gt;
+&lt;p&gt;而这些并不是完全重要，更加重要的问题是， 带着这些问题，我们来审视一下学生会退会。 既然如何， 对我个人而言，学生会退会不仅仅是一个重大的事件，还可能会改变我的人生。 我们不得不面对一个非常尴尬的事实，那就是， 可是，即使是这样，学生会退会的出现仍然代表了一定的意义。 学生会退会，发生了会如何，不发生又会如何。 经过上述讨论， 生活中，若学生会退会出现了，我们就不得不考虑它出现了的事实。 学生会退会，到底应该如何实现。 这样看来， 在这种困难的抉择下，本人思来想去，寝食难安。 对我个人而言，学生会退会不仅仅是一个重大的事件，还可能会改变我的人生。 就我个人来说，学生会退会对我的意义，不能不说非常重大。 莎士比亚曾经提到过，人的一生是短的，但如果卑劣地过这一生，就太长了。这似乎解答了我的疑惑。 莫扎特说过一句富有哲理的话，谁和我一样用功，谁就会和我一样成功。这启发了我， 对我个人而言，学生会退会不仅仅是一个重大的事件，还可能会改变我的人生。 学生会退会，到底应该如何实现。 一般来说， 从这个角度来看， 这种事实对本人来说意义重大，相信对这个世界也是有一定意义的。 在这种困难的抉择下，本人思来想去，寝食难安。 了解清楚学生会退会到底是一种怎么样的存在，是解决一切问题的关键。 一般来说， 生活中，若学生会退会出现了，我们就不得不考虑它出现了的事实。 问题的关键究竟为何？ 而这些并不是完全重要，更加重要的问题是。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Archives</title>
+        <link>http://localhost:1313/archives/</link>
+        <pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/archives/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Markdown Syntax Guide</title>
+        <link>http://localhost:1313/post/markdown-syntax/</link>
+        <pubDate>Mon, 11 Mar 2019 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/post/markdown-syntax/</guid>
+        <description>&lt;img src="http://localhost:1313/post/markdown-syntax/pawel-czerwinski-8uZPynIu-rQ-unsplash.jpg" alt="Featured image of post Markdown Syntax Guide" /&gt;&lt;p&gt;This article offers a sample of basic Markdown syntax that can be used in Hugo content files, also it shows whether basic HTML elements are decorated with CSS in a Hugo theme.&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Math Typesetting</title>
+        <link>http://localhost:1313/post/math-typesetting/</link>
+        <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/post/math-typesetting/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg" alt="Featured image of post Math Typesetting" /&gt;&lt;p&gt;Mathematical notation in a Hugo project can be enabled by using third party JavaScript libraries.&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Emoji Support</title>
+        <link>http://localhost:1313/post/emoji-support/</link>
+        <pubDate>Tue, 05 Mar 2019 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/post/emoji-support/</guid>
+        <description>&lt;img src="http://localhost:1313/post/emoji-support/the-creative-exchange-d2zvqp3fpro-unsplash.jpg" alt="Featured image of post Emoji Support" /&gt;&lt;p&gt;Emoji can be enabled in a Hugo project in a number of ways.&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>About</title>
+        <link>http://localhost:1313/about/</link>
+        <pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/about/</guid>
+        <description>&lt;p&gt;Written in Go, Hugo is an open source static site generator available under the &lt;a class=&#34;link&#34; href=&#34;https://github.com/gohugoio/hugo/blob/master/LICENSE&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Apache Licence 2.0.&lt;/a&gt; Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.&lt;/p&gt;
+&lt;p&gt;Hugo makes use of a variety of open source projects including:&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Links</title>
+        <link>http://localhost:1313/links/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/links/</guid>
+        <description>&lt;p&gt;To use this feature, add &lt;code&gt;links&lt;/code&gt; section to frontmatter.&lt;/p&gt;
+&lt;p&gt;This page&amp;rsquo;s frontmatter:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;links&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  - &lt;span style=&#34;color:#ff79c6&#34;&gt;title&lt;/span&gt;: GitHub
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;description&lt;/span&gt;: GitHub is the world&amp;#39;s largest software development platform.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;website&lt;/span&gt;: https://github.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;image&lt;/span&gt;: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  - &lt;span style=&#34;color:#ff79c6&#34;&gt;title&lt;/span&gt;: TypeScript
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;description&lt;/span&gt;: TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;website&lt;/span&gt;: https://www.typescriptlang.org
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;image&lt;/span&gt;: ts-logo-128.jpg
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pr</description>
+        </item>
+        <item>
+        <title>Search</title>
+        <link>http://localhost:1313/search/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>http://localhost:1313/search/</guid>
+        <description></description>
+        </item>
+        
+    </channel>
+</rss>

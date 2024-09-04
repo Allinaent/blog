@@ -1,0 +1,41 @@
+[profile]
+other = "Profile"
+
+[experience]
+other = "Experience"
+
+[thesis]
+other = "PhD Thesis"
+
+[courses]
+other = "Courses"
+
+[projects]
+other = "Projects"
+
+[development]
+other = "Software Development"
+
+[researches]
+other = "Research (Linear Solver)"
+
+[publications]
+other = "Publications"
+
+[education]
+other = "Education"
+
+[references]
+other = "References"
+
+[skills]
+other = "Skills"
+
+[languages]
+other = "Languages"
+
+[diplomas]
+other = "Diplomas"
+
+[interests]
+other = "Interests"

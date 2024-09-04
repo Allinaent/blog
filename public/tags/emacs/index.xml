@@ -1,1 +1,41 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>emacs on Allinaent</title><link>https://guolongji.xyz/tags/emacs/</link><description>Recent content in emacs on Allinaent</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Mon, 11 Dec 2023 15:43:00 +0800</lastBuildDate><atom:link href="https://guolongji.xyz/tags/emacs/index.xml" rel="self" type="application/rss+xml"/><item><title>在我的博客和emacs中使用tikz 画图</title><link>https://guolongji.xyz/post/tikz-config/</link><pubDate>Mon, 11 Dec 2023 15:43:00 +0800</pubDate><guid>https://guolongji.xyz/post/tikz-config/</guid><description>之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是对于发布博客和高亮代码方面对程序员不太友好。latex 的包</description></item><item><title>emacs kitty ranger rime 等的一些优化</title><link>https://guolongji.xyz/post/emacs-optimize/</link><pubDate>Fri, 17 Nov 2023 11:43:00 +0800</pubDate><guid>https://guolongji.xyz/post/emacs-optimize/</guid><description>emacs-rime 的“探针”中英文切换方法 https://emacs-china.org/t/emacs-rime/12048/838?page=42 https://emacs-china.org/t/emacs-rime/18305 设置了一下能用了，但是不是很好用。 但是我想输入 \(a^{2}+b^{2}=c^{2}\) 这样的式子。不能频繁的切换输入法了。但是输入这种：测试 input test 还是</description></item><item><title>在cloudfare中搭建hugo博客</title><link>https://guolongji.xyz/post/hugo-on-cloudflare/</link><pubDate>Mon, 18 Sep 2023 16:35:00 +0800</pubDate><guid>https://guolongji.xyz/post/hugo-on-cloudflare/</guid><description>hugo on cloudflare 我的博客就要开通了，codeberg pages + orgmode + hugo + stack theme， Codeberg 是一个快速开源 GitHub 替代品，是一个面向开源社区的非营利性代码托管平台。它提</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Emacs on Allinaent</title>
+        <link>http://localhost:1313/tags/emacs/</link>
+        <description>Recent content in Emacs on Allinaent</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-cn</language>
+        <lastBuildDate>Mon, 11 Dec 2023 15:43:00 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/emacs/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>在我的博客和emacs中使用tikz 画图</title>
+        <link>http://localhost:1313/post/tikz-config/</link>
+        <pubDate>Mon, 11 Dec 2023 15:43:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/tikz-config/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post 在我的博客和emacs中使用tikz 画图" /&gt;&lt;p&gt;之前有一段时间一直使用 latex 记笔记。latex 有很多的优点，写理科内容必会的东西。但是对于发布博客和高亮代码方面对程序员不太友好。latex 的包虽然很多，但是 orgmode 用 emacs 打开直接是高亮的，这一点 latex-mode 不可以做的很好，因为 latex 的格式太复杂了。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>emacs kitty ranger rime 等的一些优化</title>
+        <link>http://localhost:1313/post/emacs-optimize/</link>
+        <pubDate>Fri, 17 Nov 2023 11:43:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/emacs-optimize/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/af960550dc8dbdc44674aa00e830fc90.png" alt="Featured image of post emacs kitty ranger rime 等的一些优化" /&gt;&lt;h2 id=&#34;emacs-rime-的-探针-中英文切换方法&#34;&gt;emacs-rime 的“探针”中英文切换方法&lt;/h2&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://emacs-china.org/t/emacs-rime/12048/838?page=42&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://emacs-china.org/t/emacs-rime/12048/838?page=42&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://emacs-china.org/t/emacs-rime/18305&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://emacs-china.org/t/emacs-rime/18305&lt;/a&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>在cloudfare中搭建hugo博客</title>
+        <link>http://localhost:1313/post/hugo-on-cloudflare/</link>
+        <pubDate>Mon, 18 Sep 2023 16:35:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/hugo-on-cloudflare/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/e1f639758ccc2e0aaa2d805109ecafa0.png" alt="Featured image of post 在cloudfare中搭建hugo博客" /&gt;&lt;h2 id=&#34;hugo-on-cloudflare&#34;&gt;hugo on cloudflare&lt;/h2&gt;
+&lt;p&gt;我的博客就要开通了，codeberg pages + orgmode + hugo + stack theme，&lt;/p&gt;
+&lt;p&gt;Codeberg 是一个快速开源 GitHub 替代品，是一个面向开源社区的非营利性代码托管平台。它提供了与 GitHub 相似的功能，包括版本控制、问题跟踪和 Pull Request。不同的是，Codeberg 专注于保护用户的隐私和数据安全，并提供了更加开放和透明的运营方式。&lt;/p&gt;</description>
+        </item>
+        
+    </channel>
+</rss>

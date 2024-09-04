@@ -1,6 +1,8 @@
 baseurl: https://guolongji.xyz/ 
 languageCode: zh-cn
-theme: hugo-theme-stack
+theme: 
+    - hugo-theme-stack
+    - almeida-cv
 paginate: 5 # 每页显示多少文章
 title: Allinaent
 
@@ -11,6 +13,27 @@ hasCJKLanguage: true
 permalinks:
     post: /post/:filename/
     page: /:filename/
+
+# 下面是almeida-cv 主题的配置
+enableRobotsTXT: true
+enableEmoji: true
+
+params:
+    enableMetaTags: true
+    colorLight: '#fff'
+    colorDark: '#666'
+    colorPageBackground: '#ddd'
+    colorPrimary: '#e3bfb8'
+    colorSecondary: '#aaa'
+    colorIconPrimary: '#fff'
+    colorIconBackground: '#e3bfb8'
+    colorRightColumnBackground: '#f5f5f5'
+    colorRightColumnHeadingText: '#666'
+    colorRightColumnBodyText: '#666'
+    colorRightColumnIconPrimary: '#fff'
+    colorRightColumnIconBackground: '#e3bfb8'
+    pages: 1
+    swapColumns: true
 
 # 下面是 Stack 主题的参数
 
@@ -153,3 +176,5 @@ security:
 service:
     rss:
         limit: 10
+
+
