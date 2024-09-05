@@ -1,0 +1,460 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/08
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-08-30 五 16:19]
+#+TITLE: sw 服务器版本补丁合并
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image
+
+* 要求
+
+原则：不合修改编译报错的补丁，只合修改BUG的补丁
+
+内核：4.19E
+
+分支：uos_dev
+
+* 分析一下补丁
+
+总共不到30 个补丁。
+
+1 sw64: add hmcode wrap_asid ，是
+
+2 fix zx200 usb irq only xuelang ，是
+
+3 sw64: fix build error on sunway iommu ，否
+
+4 sw64: add some acpi struct for sw64 ，是
+
+5 update junzhang server defconfig for beta3 ，是
+
+6 sw64: fix bugs in decreasing frequency ，是
+
+7 sw_64: modifiy Makefile support for build with BUILD_SALT change to KERNELVERSION ，是
+
+8 net: add wangxun ngbe common.mk ，是
+
+9 sw64: v4.19.180-sw1.1.0 ，是
+
+10 euler: DRM: Phytium display DRM driver ，是
+
+11 DRM: Phytium display DRM driver to support SW8A ，是
+
+12 drm: add hdmi_codec_plugged_cb type for Phytium display DRM ，是
+
+13 sw64: fix build error on gcc1030 ，否
+
+14 sw64: update junzhang desktop defconfig ，是
+
+15 sw64: fix trinity build ，这个算是修 BUG 的还是编译报错的？有点奇怪
+
+16 sw64: fix perf tools ，是
+
+17 sw64: use a new wrap_asid hmcall when asid wraps ，是
+
+18 sw64: change machine kexec from wxiat ，是
+
+19 sw64: fix pci dma map ops funtion ，是
+
+20 sw64: iommu: support acpi init ，是
+
+21 sw64: remove gpio int enable ，是
+
+22 sw64: change linux version ，是
+
+23 sw64: update junzhang server defconfig ，是
+
+24 sw64: update gitlab-ci ，是
+
+25 sw64: fix write_piu_ior funtion error ，是
+
+26 sw64: fix C4 INTx configuration ，是
+
+* 开始合并
+
+1 sw64: add hmcode wrap_asid ，是
+
+这个补丁是干什么的？
+
+arch/sw_64/include/asm/hmcall.h 是一个头文件，通常用于定义与硬件管理调用（HMCalls）相关的接口和宏。
+在64位架构的操作系统或内核中，HMCalls 用于与底层硬件或虚拟化层进行交互，执行特定的管理操作，如虚拟
+化支持、资源管理或系统状态查询。这个文件定义了调用硬件管理功能所需的接口，帮助操作系统或虚拟机管理
+程序与硬件层进行有效的通信。
+
+wrap_asid 通常用于处理地址空间标识符（ASID）的相关操作。ASID 是一个用来区分不同进程或任务的标识符，
+在虚拟化和多任务环境中，ASID 帮助管理和区分各个进程的虚拟地址映射。wrap_asid 可能是一个宏或函数，用
+于处理 ASID 的包装、转换或管理，以确保在上下文切换时正确处理 ASID，从而维护进程的地址空间隔离。具体
+功能依赖于代码上下文和实现细节。
+
+第一个补丁之前已经合入了。
+
+
+#+begin_src diff
+commit 4647d265e0025f6e1c95c759a98bf270787f6873
+Author: Mao Minkai <maominkai@wxiat.com>
+Date:   Fri Feb 2 17:12:13 2024 +0800
+
+    sw_64: sw64: use a new wrap_asid hmcall when asid wraps [T354655]
+
+    Use a new wrap_asid hmcall which loads the new asid and ptbr before
+    tbivp().
+
+    Signed-off-by: Mao Minkai <maominkai@wxiat.com>
+    Signed-off-by: wenlunpeng <wenlunpeng@uniontech.com>
+    Change-Id: I2fbd7b58c28b7cca401aec4f0446f7e31c0e2043
+#+end_src
+
+
+2 fix zx200 usb irq only xuelang ，是
+
+#+begin_src diff
+From 2afeece33f6e126697802a97649fb1da01df4e5b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E6=9D=8E=E5=B0=8F=E6=9D=BE?= <lixiaosong@uniontech.com>
+Date: Thu, 23 May 2024 10:01:24 +0800
+Subject: [PATCH 02/26] sw64: fix zx200 usb irq only xuelang
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+fix zx200 usb irq only xuelang
+
+Signed-off-by: 李小松 <lixiaosong@uniontech.com>
+---
+ drivers/usb/core/hcd-pci.c  | 3 ++-
+ drivers/usb/host/uhci-pci.c | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+index 2737aead4895..b96c52b034a6 100644
+--- a/drivers/usb/core/hcd-pci.c
++++ b/drivers/usb/core/hcd-pci.c
+@@ -366,12 +366,13 @@ void usb_hcd_pci_shutdown(struct pci_dev *dev)
+ 			free_irq(hcd->irq, hcd);
+ 		pci_disable_device(dev);
+ 	}
+-
++#if defined(CONFIG_UNCORE_XUELANG)
+ 	// ZX200 USB2.0
+ 	if(dev->device == 0x3104 || dev->device == 0x9203)
+ 	{
+ 		write_piu_ior0(0, 1, INTACONFIG, 0x00);
+ 	}
++#endif
+ }
+ EXPORT_SYMBOL_GPL(usb_hcd_pci_shutdown);
+
+diff --git a/drivers/usb/host/uhci-pci.c b/drivers/usb/host/uhci-pci.c
+index 102652df786e..6a043e7c5b0a 100644
+--- a/drivers/usb/host/uhci-pci.c
++++ b/drivers/usb/host/uhci-pci.c
+@@ -167,11 +167,13 @@ static void uhci_shutdown(struct pci_dev *pdev)
+
+ 	uhci_hc_died(hcd_to_uhci(hcd));
+
++#if defined(CONFIG_UNCORE_XUELANG)
+ 	// ZX200 USB1.1
+ 	if(pdev->device == 0x3038)
+ 	{
+ 		write_piu_ior0(0, 1, INTACONFIG, 0x00);
+ 	}
++#endif
+ }
+
+ #ifdef CONFIG_PM
+--
+2.20.1
+#+end_src
+
+drivers/usb/core/hcd-pci.c
+#+begin_src c
+void usb_hcd_pci_shutdown(struct pci_dev *dev)
+{
+        struct usb_hcd          *hcd;
+
+        hcd = pci_get_drvdata(dev);
+        if (!hcd)
+                return;
+
+        if (test_bit(HCD_FLAG_HW_ACCESSIBLE, &hcd->flags) &&
+                        hcd->driver->shutdown) {
+                hcd->driver->shutdown(hcd);
+                if (usb_hcd_is_primary_hcd(hcd) && hcd->irq > 0)
+                        free_irq(hcd->irq, hcd);
+                pci_disable_device(dev);
+        }
+}
+EXPORT_SYMBOL_GPL(usb_hcd_pci_shutdown);
+
+#+end_src
+
+这个补丁不能打上，上面的两个 #if #endif 之间的处理没有，我手动加上，看起来是没有问题的。
+
+第一次提交：
+
+#+begin_src
+****************************************************************************************
+ *                                                                                      *
+ *  您提交的commit信息不符合规范，请参考以下规范进行修改                                *
+ *                                                                                      *
+ * 【规范格式】                                                                         *
+ * 类型+:(英文格式)+ (一个英文格式空格)+描述;例如:                                      *
+ * fix: solve samba service start error(bugid:114002)                                   *
+ * cve: CVE-2021-3520                                                                   *
+ *                                                                                      *
+ * 类型可选值有以下几种:                                                                *
+ * fix: 类型 为 fix 的提交表示 bug 修复,(fix类型需要标明对应的bugid)                    *
+ * feat: 类型 为 feat 的提交表示新特性或者添加了一个功能                                *
+ * perf: 类型为 perf 的提交表示性能的修改                                               *
+ * test: 类型为 test 的提交表示添加测试代码                                             *
+ * docs: 类型为 docs 的提交表示变更文档                                                 *
+ * chore: 类型为 chore 的提交表示非代码内容的修改                                       *
+ * refactor: 类型为 refactor 的提交表示重构代码                                         *
+ * style: 类型为 style 的提交表示不影响代码含义的修改，比如修改代码格式、删除空行等     *
+ * cve: 类型为 cve 的提交表示漏洞的修改,(cve类型需要标明对应的cve编号)                  *
+ * rebrand: 类型为 产品化 的提交表示产品化相关内容的修改                                *
+ * debrand: 类型为 去除不需要的相关产品化信息                                           *
+ * spec: 类型为specfile 的修改，这类修改通常不具有功能性，比如定义编译开关宏等          *
+ * build: 类型为 使编译通过的相关修改                                                   *
+ * arch: 类型为 架构 相关                                                               *
+ * init: 类型为 仓库 初始化                                                             *
+ * update: 类型为 软件包 升级                                                           *
+ * rebuild: 类型为 rebuild 相关                                                         *
+ *                                                                                      *
+ * Gerrit提交规范参考链接:                                                              *
+ * https://doc.uniontech.com/docs/m4kMLgaer1fjo2qD                                      *
+ *                                                                                      *
+ ****************************************************************************************
+#+end_src
+
+开始提交格式有问题，改成下面的格式之后成功了：
+
+#+begin_src
+    arch: sw64: fix zx200 usb irq only xuelang
+
+    fix zx200 usb irq only xuelang
+
+    Signed-off-by: 李小松 <lixiaosong@uniontech.com>
+    Signed-off-by: Longji Guo <guolongji@uniontech.com>
+#+end_src
+
+3 sw64: fix build error on sunway iommu ，否
+
+说是解决编译报错的补丁不用提交，那这个补丁也不需要提交了。
+
+4 sw64: add some acpi struct for sw64
+
+这个补丁的内容已经在主线上面合入了。在下面的这个补丁中合入的：
+#+begin_src
+commit 2644919dee9ae0f6e82f3a79b1222d44fc4f2ace
+Author: Xu Yiwei <xuyiwei@wxiat.com>
+Date:   Thu Apr 11 17:41:03 2024 +0000
+
+    sw_64: sw64: iommu: support acpi init [T354655]
+
+    Introduces ACPI DMAR table for sunway IOMMU description and add
+    support for sunway IOMMU ACPI initialization.
+
+    The old iommu command line parameter is also changed according to
+    the new initialization strategy. Software should use sunway_iommu=on/off
+    to turn on/off all IOMMUs on device now.
+
+    Signed-off-by: Xu Yiwei <xuyiwei@wxiat.com>
+    Signed-off-by: wenlunpeng <wenlunpeng@uniontech.com>
+    Change-Id: I7d2eb0f41b1f79bda2d1a7ca6ad88cb7ea06adff
+#+end_src
+
+5 update junzhang server defconfig for beta3 ，是
+
+？？？
+
+更新军长服务器的配置文件。问了文伦鹏，uos419_defconfig 这个配置文件处了 SALT 的配置之外，剩下的配置都有了。
+uos419_defconfig 是从 uos_junzhang_defconfig 复制而来的。后面可以跟浩哥确认一下。
+
+6 sw64: fix bugs in decreasing frequency
+
+The issue arose because the downshift_freq() was attempting to scale down
+the frequency of a physicial core when only one of its logical core was
+offline. The correct behavior should be to scale down the frequency only
+when both logical cores of a pyhsicial core are offline.
+
+出现此问题是因为 downshift_freq（） 尝试缩小当一个物理核心只有一个逻辑核心离线。正确的行为应该是仅缩小频率
+当 Pyhsicial Core 的两个 Logical Core 都处于脱机状态时。
+
+这个补丁也已经合入了。
+
+7 sw_64: modifiy Makefile support for build with BUILD_SALT change to KERNELVERSION
+
+modifiy Makefile support for build with BUILD_SALT change to KERNELVERSION
+for spec build rpm
+
+修改 Makefile 对构建的支持，BUILD_SALT更改为 KERNELVERSION 对于 spec 构建 RPM
+
+这个补丁也已经合入了。
+
+8 net: add wangxun ngbe common.mk
+
+？？？
+
+没有网讯网卡的驱动，这个补丁怎么合？这个是重命名成了 netswift ，这个已经合入了。
+
+9 sw64: v4.19.180-sw1.1.0
+
+这个补丁也已经合入了。
+
+10 euler: DRM: Phytium display DRM driver
+
+这个补丁也已经合入了。
+
+11 DRM: Phytium display DRM driver to support SW8A
+
+这个补丁做了合入，没有什么问题。
+
+12 drm: add hdmi_codec_plugged_cb type for Phytium display DRM
+
+这个补丁已经合入了，不用看
+
+13 sw64: fix build error on gcc1030
+
+这个是解决编译报错的，按照原则来看是不用合入的。
+
+14 sw64: update junzhang desktop defconfig
+
+？？？
+
+这个补丁是可以合入的，但是这些补丁合入的目的是什么？增加一个配置文件让国防的人用还是我们自己用？
+
+这个补丁是新增一个配置。
+
+15 sw64: fix trinity build 已合入
+
+？？？
+
+merging the kvm.h file, solving the trinity compilation issue.
+
+合并 kvm.h 文件，解决 trinity 编译问题。
+
+这个补丁是没有合入的。合一下。
+
+这个要合入吗？不清楚，这个算是解决 bug 的吧？这个补丁可以直接用 git am 打上。
+
+16  sw64: fix perf tools
+
+#+begin_src
+Author: Ben Hutchings <ben@decadent.org.uk>
+Date:   Sat Jul 25 02:06:23 2020 +0100
+
+    uos: fix the tools compilation failture in sw_64
+
+    1.libtraceevent: Fix build with binutils 2.35
+    2.gcc: error: unrecognized command-line option '-fno-sw-unalign-byte'
+    3.multiple definition
+    4.Modules are unsigned
+
+    Signed-off-by: caina <caina@uniontech.com>
+    Change-Id: I7125fe58cd0a21e99458b5af8fc97b5c44ee9941
+
+ .../configs/{uos_junzhang_defconfig => uos419_debug_defconfig}      |   5 +-
+ arch/sw_64/configs/uos419_defconfig                                 | 707 ++++++++++++++++++++++++++++++
+ tools/include/uapi/asm/bitsperlong.h                                |   2 +
+ tools/lib/traceevent/Makefile                                       |   2 +-
+ tools/perf/bench/futex-hash.c                                       |   2 +-
+ tools/perf/bench/futex-lock-pi.c                                    |   2 +-
+ tools/perf/tests/bp_account.c                                       |   2 +-
+ tools/power/cpupower/utils/idle_monitor/cpupower-monitor.h          |   2 +-
+ 8 files changed, 717 insertions(+), 7 deletions(-)
+#+end_src
+
+这个补丁已经合入了，上面的这个补丁修改的。上面可以看出来 uos419_debug_defconfig ，这个配置文件是谁用的。
+可以看提交者的名字问一问。
+
+17 sw64: use a new wrap_asid hmcall when asid wraps
+
+这个补丁也已经合入了，合入的补丁是：
+
+#+begin_src
+Author: Mao Minkai <maominkai@wxiat.com>
+Date:   Fri Feb 2 17:12:13 2024 +0800
+
+    sw_64: sw64: use a new wrap_asid hmcall when asid wraps [T354655]
+
+    Use a new wrap_asid hmcall which loads the new asid and ptbr before
+    tbivp().
+
+    Signed-off-by: Mao Minkai <maominkai@wxiat.com>
+    Signed-off-by: wenlunpeng <wenlunpeng@uniontech.com>
+    Change-Id: I2fbd7b58c28b7cca401aec4f0446f7e31c0e2043
+
+ arch/sw_64/include/asm/hmcall.h      | 10 ++++++++++
+ arch/sw_64/include/asm/mmu_context.h |  7 +++++--
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+#+end_src
+
+18 sw64: change machine kexec from wxiat
+
+kexec 是一个用于 Linux 系统的内核功能，它允许在不经过完整的 BIOS 启动过程的情况下，快速重新加载和启动新的内核。
+
+这个补丁没看懂是要干什么。
+
+19 sw64: fix pci dma map ops funtion
+
+这个补丁也已经修改了。
+
+20 sw64: iommu: support acpi init
+
+这个补丁也已经修改了。
+
+21 sw64: remove gpio int enable
+
+这个补丁也改了。
+
+22 sw64: change linux version
+
+这个也改了。
+
+23 sw64: update junzhang server defconfig
+
+？？？
+
+这个配置比较奇怪，问一问提交者李晓松好了
+
+24 sw64: update gitlab-ci
+
+这个补丁没法打，完全不一样，这个算是构建相关的，应该不用合。
+
+25 sw64: fix write_piu_ior funtion error
+
+这个是在补丁 2 的基础上改的，这个修改合入了。
+
+26 sw64: fix C4 INTx configuration ，是
+
+更正C4的INTxCONFIG的汇编逻辑，以确保INTx中断被传递到预期目标。
+
+这个补丁直接 git am 就打上了。
+
+* 总结一下
+
+补丁 5 ，14 ，23 都是配置相关的。
+
+5 和 14 这两个补丁感觉顺序不太对，补丁 14 是增加 arch/sw_64/configs/junzhang_uos_desktop_defconfig 这个文件，
+而5 是修改这个补丁的。
+
+23 这个补丁当中有  CONFIG_BUILD_SALT="4.19.0-sw64-server-b3" 这个配置的，而 14 的这个配置显示的是空。
+
+5 是在 14 的基础上删除了两个配置。同样23 中也没有5 的修改。
+
+最终合入的补丁：
+
+#+begin_src
+da7c96fd3991 (HEAD -> uos_dev) update: net: add wangxun ngbe common.mk
+04799fad8646 sw64: fix C4 INTx configuration
+8519279996cd arch: sw64: fix write_piu_ior funtion error
+05eb15f6dfb6 sw64: fix trinity build
+50b4eaa5519e arch: sw64: DRM: Phytium display DRM driver to support SW8A
+42b5acf33f40 arch: sw64: fix zx200 usb irq only xuelang
+#+end_src
+
+对应的是 2 ， 11 ， 15 ，25 ，26 ，8 这 6 个补丁。

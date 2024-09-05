@@ -15,7 +15,7 @@
                     <h3 class="experience__company">
                         {{ .Employer | safeHTML }}
                     </h3>
-                    <h3 class="experience__place">{{ .Place | safeHTML }}</h3>
+                    <h3 class="experience__place" style="display: none">{{ .Place | safeHTML }}</h3>
                 </div>
                 {{ range .Positions }}
                 <div class="experience__job">

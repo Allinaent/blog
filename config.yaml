@@ -1,5 +1,6 @@
 baseurl: https://guolongji.xyz/ 
 languageCode: zh-cn
+DefaultContentLanguage: zh
 theme: 
     - hugo-theme-stack
     - almeida-cv
@@ -18,7 +19,9 @@ permalinks:
 enableRobotsTXT: true
 enableEmoji: true
 
-params:
+
+params:    
+# 下面是almeida-cv 主题的配置
     enableMetaTags: true
     colorLight: '#fff'
     colorDark: '#666'
@@ -36,8 +39,6 @@ params:
     swapColumns: true
 
 # 下面是 Stack 主题的参数
-
-params:
     math: false
     sidebar:
         subtitle: "No steps, no miles"

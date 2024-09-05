@@ -1,0 +1,212 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/08
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-08-21 三 14:33]
+#+TITLE: 使用 gdb 的 python 扩展来调试
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image
+
+* AI 问答
+
+gdb的调试可以用python来扩展吗？
+
+是的，GDB（GNU Debugger）可以使用 Python 来扩展其功能。GDB 提供了一个强大的 Python API，允许用户编写自定义的调试
+脚本和插件，从而增强调试体验。通过 Python，用户可以：
+
+创建自定义命令：使用 Python 编写自定义 GDB 命令，以实现特定的调试功能或简化调试过程。
+
+自动化调试流程：编写脚本来自动化调试任务，如设置断点、检查变量值、执行测试等。
+
+实现复杂的数据分析：通过 Python 的强大库（如 NumPy、pandas）来分析和处理调试数据。
+
+扩展 GDB 的功能：添加新的功能或改进现有功能，使调试过程更高效。
+
+如何使用 Python 扩展 GDB
+
+启用 Python 支持：
+
+确保你的 GDB 版本编译时启用了 Python 支持。你可以通过运行 gdb --version 来检查是否包含 Python 支持。
+
+bash
+gdb --version
+如果 GDB 是正确编译的，你会看到类似 Python 的输出。
+
+编写 Python 脚本：
+
+你可以在 GDB 中直接使用 Python 脚本，也可以将其保存在 .py 文件中。以下是一个简单的示例脚本，定义了一个自
+定义命令：
+
+
+#+begin_src python
+import gdb
+
+class HelloCommand(gdb.Command):
+    """This is a custom GDB command example"""
+
+    def __init__(self):
+        super(HelloCommand, self).__init__("hello", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        print("Hello from Python!")
+
+HelloCommand()
+#+end_src
+
+保存上述脚本为 hello.py。
+
+在 GDB 中加载 Python 脚本：
+
+启动 GDB 并使用以下命令加载 Python 脚本：
+
+(gdb) source /path/to/hello.py
+
+使用自定义命令：
+
+加载脚本后，你可以使用自定义命令：
+
+(gdb) hello
+Hello from Python!
+
+示例：自定义命令和自动化任务
+
+下面是一个更复杂的示例，展示如何创建一个自定义命令，该命令输出所有当前函数中的局部变量：
+
+list_locals.py
+#+begin_src python
+import gdb
+
+class ListLocalsCommand(gdb.Command):
+    """List all local variables in the current stack frame"""
+
+    def __init__(self):
+        super(ListLocalsCommand, self).__init__("list-locals", gdb.COMMAND_USER)
+
+    def invoke(self, arg, from_tty):
+        frame = gdb.selected_frame()
+        if not frame:
+            print("No frame selected.")
+            return
+
+        for symbol in frame.block().symbol_table:
+            if symbol.is_variable:
+                print(f"{symbol.name} = {frame.read_var(symbol.name)}")
+
+ListLocalsCommand()
+#+end_src
+
+加载并使用该脚本：
+
+(gdb) source /path/to/list_locals.py
+
+(gdb) list-locals
+
+这将列出当前函数中所有局部变量及其值。
+
+更多资源：
+
+[[https://sourceware.org/gdb/onlinedocs/gdb/Python-API.html][GDB Python API 文档]]
+[[https://sourceware.org/gdb/current/onlinedocs/gdb/Python-API.html][
+GDB Python 编程指南]]
+
+这些资源将帮助你深入了解如何利用 Python 扩展 GDB 的功能。
+
+* python 脚本？还是什么别的？
+
+gdb 直接可以调试，为什么要使用 python 脚本呢？这有什么好处呢？
+
+记得之前使用 gdb 循环打印数组，当时模仿写了一个 gdb 的脚本，但是通用性差。感觉像是每次都要
+重新写一个。还未系统总结过括展脚本。占老板之前说过：
+
+https://github.com/osandov/drgn
+
+这个项目就是 python 扩展开发的，meta 开发的项目。
+
+他的文档在这里：
+
+https://drgn.readthedocs.io/en/latest/
+
+drgn 这个软件是 crash 的替代品，crash 我也没怎么用过。crash 的基本用法需要先了解一下。
+
+crash 就是 gdb 套上了一个皮，专门分析内核 coredump 。trace32 是什么？
+
+trace32 是 Lauterbach 公司开发，专注于高性能嵌入式系统的调试，支持多种处理器架构和操作系统。也
+是嵌入式工程师用的比较多的调式工具。
+
+crash 就是内核分析卡死的 gdb ，这么说还是蛮帖切的。drgn 这个工具也是专门分析内核的。
+
+* 什么是 dwarf
+
+https://dwarfstd.org/ ，dwarf 是一个编译器标准，西方矮人即工匠，工匠即标准，形而上的东西。不
+是搞专门工作的没必要学。
+
+* 一个是用，一个是原理
+
+人不可能所有的东西都了解原理。很多工具就连用也是很难掌握的，这个就像是造宇宙飞船和驾使宇宙飞
+船是一样的。聪明人不浪费时间。所以不要求搞什么东西一下子就搞的多深，而是搞什么东西搞的最对。
+
+有利于节约生命。
+
+* drgn 安装
+
+#+begin_src bash
+python3 -m venv drgnenv
+source drgnenv/bin/activate
+pip3 install drgn
+pip3 install readline
+drgn --help
+#+end_src
+
+venv 感觉是最简单的。
+
+* 用户指导
+
+调试内核，直接： sudo drgn
+
+调试内核的转储文件：sudo drgn -c $PATH
+
+调试其它应用程序： sudo drgn -p $PID
+
+这就是开始。
+
+比如我之前分析 x11 perf 执行过程中卡死，直接使用这里面有的工具就不需要写一个 gdb 的脚本加载
+进来了。
+
+上面的内容有一点比较的费解，crash  是可以指定调试符号的，即：
+
+crash /lib/debug/lib/modules/3.10.0-957.el7.x86_64/vmlinux /var/crash/127.0.0.1-2020-04-04-14\:10\:45/vmcore
+
+而 drgn 不能指定 vmlinux 只能安装调试符号吗？不！
+
+[[https://docs.oracle.com/en/operating-systems/oracle-linux/9/monitoring/working_with_the_drgn_kernel_debugging_utility.html#topic_xfp_31t_fwb][drgn 使用方法]]
+
+sudo drgn -c path/to/dumpfile -s path/to/vmlinux
+
+上面的文章详细的讲解了 drgn 这个调试工具的使用。看起来这完意比 gdb 强，安装也没有很麻烦。
+
+
+* gdb 的python 扩展
+
+我还是要稍微涉及一点原理的，但是要小心不要陷的太深了。梳理一下上面提到的 api 文档和编程指南。这一点可以
+明天再做。
+
+
+* 当然有些情况下 kdump 是不完整的
+
+没法用，之前大强哥说过用 gdb vmlinux 也可以跳转函数和堆栈的位置。那个 faddr2line 的脚本和 gdb 是一样
+的。
+
+
+
+
+
+
+
+
+
+
+
+

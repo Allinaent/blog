@@ -4,60 +4,71 @@ BasicInfo:
   Photo: /img/avatar_hu14761167551225775829.png
   Contacts:
     - Icon: fas fa-phone
-      Info: +44 123 456 789
+      Info: +86 17736182683
     - Icon: fas fa-envelope
-      Info: contact@ines-almeida.com
+      Info: 19099432353@qq.com
     - Icon: fas fa-globe
-      Info: <a class="contact__link" href="https://ines-almeida.com" target="_blank">ines-almeida.com</a>
+      Info: <a class="contact__link" href="https://guolongji.xyz" target="_blank">https://guolongji.xyz</a>
     - Icon: fas fa-map-marker-alt
-      Info: Portugal
+      Info: 北京-大兴
 
-Profile: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Profile: 92 年生，男，2015 年 7 月计算机科学与技术专业毕业。擅长操作系统内核开发和前后端应用编程，对 AI 、机器学习感兴趣。
+
+Diplomas:
+  - ISTQB Tester Certification (2019)
+  - English Cambridge CAE (2009)
 
 Experience:
-  - Employer: Super Cool Company
+  - Employer: 统信软件科技有限公司
     Place: Oxford, UK
     Positions:
-      - Title: Software Engineer
-        Date: Jan 2020 - Present
+      - Title: 高级内核研发工程师
+        Date: 2021.1 - 今
         Details:
-          - Arcu vitae elementum curabitur vitae nunc sed velit
-          - Viverra aliquet eget sit amet tellus cras adipiscing
-          - Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat
-          - Nisl tincidunt eget nullam non nisi est
-          - Sed viverra tellus in hac.
-          - Lorem ipsum dolor sit amet, consectetur adipiscing elit
-        Badges: ['Python', 'Django', 'OOP', 'Javascript', 'HTML', 'CSS', 'Agile']
-      - Title: Software Tester
-        Date: Mar 2019 - Jan 2020
-        Details:
-          - Nisl tincidunt eget nullam non nisi est
-          - Sed viverra tellus in hac.
-          - Lorem ipsum dolor sit amet, consectetur adipiscing elit
-        Badges: ['Python', 'BDD', 'Selenium', 'OOP', 'Agile']
-  - Employer: Another super cool company
+          - 21 年到22 年中参与mips ，loongarch 架构uos 系统内核的维护和开发工作。
+          - 22 年中到24 年初中负责网卡、国产显卡的适配工作，中台和商业项目问题解决。
+          - 24 年至今增加虚拟化，申威架构维护工作。
+          - 另外还做了一些 CI 、国防科大专项的工作。
+        Badges: ['C', 'Python', 'Shell', 'Crash', 'Kdump']      
+  - Employer: 易泊时代科技有限公司
     Place: Lisbon, PT
     Positions:
-      - Title: Flow Cytometry Resource Specialist
-        Date: Jan 2018 - Mar 2019
+      - Title: C++ 开发工程师
+        Date: 2019.5 - 2021.1
         Details:
-          - Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat
-          - Nisl tincidunt eget nullam non nisi est
-          - Sed viverra tellus in hac.
-          - Lorem ipsum dolor sit amet, consectetur adipiscing elit
-        Badges: ['Python', 'HTML', 'CSS', 'C#/Unity']
-  - Employer: Institute of Neural Engineering
+          - 负责车牌识别一体机的批量老化测试软件的开发和维护（基于MFC）
+          - 车牌识别一体机SDK 库的维护、测试和开发
+          - 负责批量远程控制相机的服务端（基于 Java ）和客户端（基于 golang 在 arm 嵌入式平台开发）的开发维护。
+          - 负责像机管理后台新版本UI 的开发（html ，js ，vue ）
+        Badges: ['C++', 'Java', 'Golang', 'Python', 'html']
+  - Employer: 北京同方鼎欣技术有限公司
     Place: Graz, AT
-    Class: "experience__extra_padding"
     Positions:
-      - Title: Master's Thesis Research Intern
-        Date: Oct 2016 - Jun 2017
+      - Title: C++ 开发工程师
+        Date: 2018.5 - 2019.5
         Details:
-          - Arcu vitae elementum curabitur vitae nunc sed velit
-          - Viverra aliquet eget sit amet tellus cras adipiscing
-          - Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat
-          - Nisl tincidunt eget nullam non nisi est
-        Badges: ['Python', 'MATLAB', 'Data Processing', 'Paradigm Design']
+          - 负责移动研究院视频云平台项目的迭代开发和项目维护（基于 nginx rtmp 扩展和easydarwin 的rtsp 功能），涉及 C++ 核心服务，Java 业务接口服务，php 的负载均衡接口服务。
+          - 负责 python 接口调用AI 模型。
+        Badges: ['C++', 'Java', 'python', 'php', 'docker','sql', 'mysql']
+  - Employer: 北京中卓信科技有限公司
+    Place: Graz, AT
+    Positions:
+      - Title: Java 开发工程师
+        Date: 2017.6 - 2018.5
+        Details:
+          - 负责公司模板短信部分业务的迭代和开发（工作涉及 CMPP ，SGIP ，SMPP ，http 协议的用户接入；SP 通道切换和对接；高性能、高可用平台下的Java 编程） 
+          - 负责公司业务告警系统的维护和开发。
+          - 负责提取业务数据绐运营对账和计费统计页面、统计 api 的开发。
+        Badges: ['Java', 'sql', 'shell', 'python', 'redis', 'oracle']
+  - Employer: 北京优债科技有限公司
+    Place: Graz, AT
+    Positions:
+      - Title: iOS 开发工程师
+        Date: 2015.7 - 2017.5
+        Details:
+          - 负责公司资产处置 app 的开发和中行个贷催收平台（SAAS ）app 的开发（独立开发）。app 使用了大量的第三方服务（如支付，IM ，三方登陆）
+          - 与产品经理、 UI 设计师，后端开发人员沟通独立开发符合要求的 app 。正值苹果手机走向大屏，做了很多页面适配和系统适配的工作。
+        Badges: ['OC', 'swift']
 
 Education:
   - Course: BSc & MSc in Biomedical Engineering and Biophysics
@@ -65,74 +76,55 @@ Education:
     Date: Sep 2012 - Nov 2017
     Details: Specialised in data analysis
 
-References:
-  - Name: Person One
-    Relation: Co-worker at Super Cool Company
-    Contacts:
-    - Icon: fas fa-phone
-      Info: +44 123 456 790
-    - Icon: fas fa-envelope
-      Info: contact@person-one.com
-    - Icon: fas fa-map-marker-alt
-      Info: Melbourne, Australia
-  - Name: Person Two
-    Relation: Boss at Super Cool Company
-    Contacts:
-    - Icon: fas fa-phone
-      Info: +44 123 456 791
-    - Icon: fas fa-envelope
-      Info: contact@person-two.com
-    - Icon: fas fa-map-marker-alt
-      Info: Sydney, Australia
-
+Projects:
+  - Employer: UOS V20 ，UOS V25 内核项目
+  - Employer: UOS 芯动vGPU 适配项目
+  - Employer: 国防科技大学GPU 专项
 
 Skills:
-  - Family: Programming
+  - Family: 编程
     Items:
+      - C
+      - kernel debugging
+      - Java
+      - C++
       - Python
-      - HTML (including Jinja)
+      - Golang
+      - HTML
       - Javascript
       - CSS
       - SASS
       - SQL
-      - C#
       - Bash
-      - MATLAB
-  - Family: Frameworks
+      - lisp
+  - Family: 开发框架
     Items:
-      - Django
-      - Flask
+      - Java 流行框架
       - Hugo
       - React
-  - Family: Developer Tools
+      - UIKit
+  - Family: 开发工具
     Items:
       - Git
       - Docker
-      - Jenkins
-      - AWS
+      - Emacs
+
   - Family: Misc
     Items:
-      - Adobe Tools
+      - Redis
+      - Mysql
+      - Oracle
       - LaTeX
 
 Languages:
-  - Name: Portuguese
-    Level: Native
+  - Name: 汉语
+    Level: 母语
   - Name: English
-    Level: C2
-  - Name: Spanish
-    Level: B1
-  - Name: German
-    Level: B1
-
-Diplomas:
-  - ISTQB Tester Certification (2019)
-  - English Cambridge CAE (2009)
+    Level: 四级475 分
 
 Interests:
-  - Bouldering
-  - Cooking
-  - Windsurfing
-  - Bossa Nova
-  - Design
-  - Languages
+  - 跑步
+  - 看名人传记
+  - 网站开发
+
+

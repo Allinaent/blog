@@ -1,0 +1,41 @@
+[profile]
+other = "个人概述"
+
+[experience]
+other = "工作经历"
+
+[thesis]
+other = "PhD Thesis"
+
+[courses]
+other = "Courses"
+
+[projects]
+other = "项目"
+
+[development]
+other = "Software Development"
+
+[researches]
+other = "Research (Linear Solver)"
+
+[publications]
+other = "Publications"
+
+[education]
+other = "教肓经历"
+
+[references]
+other = "References"
+
+[skills]
+other = "专业技能"
+
+[languages]
+other = "语言能力"
+
+[diplomas]
+other = "学历"
+
+[interests]
+other = "兴趣爱好"
