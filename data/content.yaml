@@ -12,7 +12,7 @@ BasicInfo:
     - Icon: fas fa-map-marker-alt
       Info: 北京-大兴
 
-Profile: 92 年生，男，2015 年 7 月计算机科学与技术专业毕业。擅长操作系统内核开发和前后端应用编程，对 AI 、机器学习感兴趣。
+Profile: 1992 年生，男，2015 年 7 月燕山大学计算机科学与技术专业毕业。擅长linux 操作系统内核开发和前后端应用编程，对 AI 、机器学习感兴趣。
 
 Diplomas:
   - ISTQB Tester Certification (2019)
@@ -25,21 +25,22 @@ Experience:
       - Title: 高级内核研发工程师
         Date: 2021.1 - 今
         Details:
-          - 21 年到22 年中参与mips ，loongarch 架构uos 系统内核的维护和开发工作。
-          - 22 年中到24 年初中负责网卡、国产显卡的适配工作，中台和商业项目问题解决。
-          - 24 年至今增加虚拟化，申威架构维护工作。
-          - 另外还做了一些 CI 、国防科大专项的工作。
-        Badges: ['C', 'Python', 'Shell', 'Crash', 'Kdump']      
+          - 主要工作是统信UOS V20和V25内核的开发和维护工作。
+          - 21 年到22 年中参与mips ，loongarch 架构bugfix，5.10到4.19内核的backport。
+          - 22 年中到24 年初中负责网卡、国产显卡的适配工作，中台和商业项目问题解决，其中涉及驱动，fs，mm，性能等多个子系统的问题。
+          - 24 年增加虚拟化项目，申威架构维护工作。
+          - 另外还做了一些 CI自动化测试、性能测试 、国防科技大学GPU专项的工作。
+        Badges: ['C', 'Python', 'Shell', 'Crash', 'bpftrace', 'kgdb']      
   - Employer: 易泊时代科技有限公司
     Place: Lisbon, PT
     Positions:
       - Title: C++ 开发工程师
         Date: 2019.5 - 2021.1
         Details:
-          - 负责车牌识别一体机的批量老化测试软件的开发和维护（基于MFC）
-          - 车牌识别一体机SDK 库的维护、测试和开发
-          - 负责批量远程控制相机的服务端（基于 Java ）和客户端（基于 golang 在 arm 嵌入式平台开发）的开发维护。
-          - 负责像机管理后台新版本UI 的开发（html ，js ，vue ）
+          - 负责车牌识别一体机的批量老化测试软件的开发和维护（基于MFC）。
+          - 车牌识别一体机SDK 库的维护、测试和开发。
+          - 负责批量远程控制相机的服务端（基于 Java ）和客户端（基于 Golang 在 Arm 嵌入式平台开发）的开发维护。
+          - 负责像机管理后台新版本UI 的开发（html ，js ，vue ）。
         Badges: ['C++', 'Java', 'Golang', 'Python', 'html']
   - Employer: 北京同方鼎欣技术有限公司
     Place: Graz, AT
@@ -48,7 +49,7 @@ Experience:
         Date: 2018.5 - 2019.5
         Details:
           - 负责移动研究院视频云平台项目的迭代开发和项目维护（基于 nginx rtmp 扩展和easydarwin 的rtsp 功能），涉及 C++ 核心服务，Java 业务接口服务，php 的负载均衡接口服务。
-          - 负责 python 接口调用AI 模型。
+          - 负责 python 接口调用AI 模型，协助调试Gan 超分辨率的开源项目。自此对AI算法有了一些关注并自我进行了一些学习。
         Badges: ['C++', 'Java', 'python', 'php', 'docker','sql', 'mysql']
   - Employer: 北京中卓信科技有限公司
     Place: Graz, AT
@@ -56,7 +57,7 @@ Experience:
       - Title: Java 开发工程师
         Date: 2017.6 - 2018.5
         Details:
-          - 负责公司模板短信部分业务的迭代和开发（工作涉及 CMPP ，SGIP ，SMPP ，http 协议的用户接入；SP 通道切换和对接；高性能、高可用平台下的Java 编程） 
+          - 负责公司模板短信部分业务的迭代和开发（工作涉及 CMPP ，SGIP ，SMPP ，HTTP 协议的用户接入；SP （各级电信运营商）通道切换和对接；高性能、高可用平台下的Java 编程） 
           - 负责公司业务告警系统的维护和开发。
           - 负责提取业务数据绐运营对账和计费统计页面、统计 api 的开发。
         Badges: ['Java', 'sql', 'shell', 'python', 'redis', 'oracle']
@@ -66,7 +67,7 @@ Experience:
       - Title: iOS 开发工程师
         Date: 2015.7 - 2017.5
         Details:
-          - 负责公司资产处置 app 的开发和中行个贷催收平台（SAAS ）app 的开发（独立开发）。app 使用了大量的第三方服务（如支付，IM ，三方登陆）
+          - 负责公司资产处置 app 的开发和中行个贷催收平台（SAAS ）App 的开发（独立开发）。App 使用了大量的第三方服务（如支付，IM ，三方登陆）
           - 与产品经理、 UI 设计师，后端开发人员沟通独立开发符合要求的 app 。正值苹果手机走向大屏，做了很多页面适配和系统适配的工作。
         Badges: ['OC', 'swift']
 
@@ -77,9 +78,19 @@ Education:
     Details: Specialised in data analysis
 
 Projects:
-  - Employer: UOS V20 ，UOS V25 内核项目
-  - Employer: UOS 芯动vGPU 适配项目
-  - Employer: 国防科技大学GPU 专项
+  - Employer: onlyconfig
+    Project:
+      - Details: 
+        - https://gitee.com/allinaent/onlyconfig，linux 下emacs，tmux，fcitx，kitty等常用软件配置。
+  - Employer: blog     
+    Project: 
+      - Details:
+        - https://gitlab.com/Allinaent/blog，个人博客。
+  - Employer: lj-opengrok
+    Project:
+      - Details:
+        - https://hub.docker.com/repository/docker/allinaent/lj-opengrok/general，快速搭建opengrok环境用于看超大项目源码。
+
 
 Skills:
   - Family: 编程
@@ -88,6 +99,8 @@ Skills:
       - kernel debugging
       - Java
       - C++
+      - OC
+      - Bash
       - Python
       - Golang
       - HTML
@@ -95,7 +108,6 @@ Skills:
       - CSS
       - SASS
       - SQL
-      - Bash
       - lisp
   - Family: 开发框架
     Items:
@@ -111,6 +123,9 @@ Skills:
 
   - Family: Misc
     Items:
+      - ebpf
+      - trace（bpftrace，perf，etc）
+      - kdump
       - Redis
       - Mysql
       - Oracle
@@ -120,11 +135,12 @@ Languages:
   - Name: 汉语
     Level: 母语
   - Name: English
-    Level: 四级475 分
+    Level: CET-4 472
 
 Interests:
-  - 跑步
+  - 爬山
   - 看名人传记
-  - 网站开发
+  - 看科普视频
+  - b 站上学习
 
 
