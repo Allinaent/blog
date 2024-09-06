@@ -1,0 +1,10 @@
+{{ if .Intention }}
+<div class="sideSection">
+    <div class="sideSection__heading">
+        <h2 class="sideSection__title">{{ i18n "intention" }}</h2>
+    </div>
+    <div class="sideSection__content">
+        <p>{{ .Intention | safeHTML | emojify }}</p>
+    </div>
+</div>
+{{ end }}

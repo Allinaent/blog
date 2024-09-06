@@ -12,7 +12,7 @@
             <div class="projects__item">
             {{ end }}
                 <div class="projects__header">
-                    <h3 class="projects__company">
+                    <h3 style="text-tranform: none color: #666">
                         {{ .Employer | safeHTML }}
                     </h3>
                     <h3 class="experience__date">{{ .Date | safeHTML }}</h3>
@@ -28,7 +28,7 @@
                         <li class="projects__bullet">{{ . | safeHTML }}</li>
                         {{ end }}
                     </ul>
-                    <div class="projects__badges">
+                    <div class="projects__badges" style="margin-bottom: -2rem">
                         <ul>
                             {{ range .Badges }}
                             <li class="projects__badge">{{ . }}</li>

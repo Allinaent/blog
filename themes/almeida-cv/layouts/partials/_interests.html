@@ -3,10 +3,10 @@
     <div class="sideSection__heading">
         <h2 class="sideSection__title">{{ i18n "interests" }}</h2>
     </div>
-    <div class="sideSection__content">
+    <div class="sideSection__content" style=".interests li:nth-child(odd) {text-align: right; }; .li:nth-child(even) {text-align: left; }">
         <ul class="interests">
             {{ range .Interests }}
-            <li class="interests__item">{{ . | safeHTML }}</li>
+	    <li>{{ . | safeHTML }}</li>
             {{ end }}
         </ul>
     </div>

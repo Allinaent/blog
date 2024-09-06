@@ -11,7 +11,7 @@ other = "PhD Thesis"
 other = "Courses"
 
 [projects]
-other = "项目"
+other = "个人项目"
 
 [development]
 other = "Software Development"
@@ -35,7 +35,10 @@ other = "专业技能"
 other = "语言能力"
 
 [diplomas]
-other = "学历"
+other = "毕业院校"
 
 [interests]
 other = "兴趣爱好"
+
+[intention]
+other = "求职意向"
