@@ -1,0 +1,172 @@
+% Created 2024-09-11 三 13:45
+% Intended LaTeX compiler: xelatex
+\documentclass[cn,10pt]{elegantbook}
+
+
+
+\extrainfo{Victory won\rq t come to us unless we go to it. --- M. Moore}
+\setcounter{tocdepth}{3}
+\logo{logo.png}
+\cover{theme.jpg}
+
+
+\usepackage{fontspec}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{minted}
+\newminted{cpp}{frame=single,linenos,breaklines}
+\newminted{java}{frame=single,linenos,,breaklines}
+\newminted{shell}{frame=single,linenos,breaklines}
+\newminted{ruby}{frame=single,linenos,breaklines}
+\newminted{typescript}{frame=single,linenos,breaklines}
+\newminted{js}{frame=single,linenos,breaklines}
+\newminted{sql}{frame=single,linenos,breaklines}
+\newminted{common-lisp}{frame=single,linenos,breaklines}
+\newminted{lisp}{frame=single,linenos,breaklines}
+\newminted{yaml}{frame=single,linenos,breaklines}
+\newminted{xml}{frame=single,linenos,breaklines}
+\newminted{tex}{frame=single,linenos,breaklines}
+\newminted{rust}{frame=single,linenos,breaklines}
+\newminted{python}{frame=single,linenos,breaklines}
+\newminted{html}{frame=single,linenos,breaklines}
+\newminted{groovy}{frame=single,linenos,breaklines}
+\newminted{go}{frame=single,linenos,breaklines}
+\newminted{c++}{frame=single,linenos,breaklines}
+\newminted{cmake}{frame=single,linenos,breaklines}
+\newminted{make}{frame=single,linenos,breaklines}
+\newminted{abap}{frame=single,linenos,breaklines}
+\author{郭隆基}
+\date{\today}
+\title{服务器内核编译}
+\hypersetup{
+ pdfauthor={郭隆基},
+ pdftitle={服务器内核编译},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.3.50 (Org mode 9.6.15)}, 
+ pdflang={Zh}}
+\begin{document}
+
+\maketitle
+\frontmatter
+\tableofcontents
+\mainmatter
+
+
+\chapter{5.10 rpm 内核包编译步骤}
+\label{sec:org74e23b6}
+
+（1 clone \url{https://gerrit-dev.uniontech.com/admin/repos/Kernel-rpmbuild} 这个项目。将其拷贝到99 编译服务器。
+
+（2 clone \url{https://gerrit-dev.uniontech.com/admin/repos/kernel-5.10-server} 项目代码。使用
+
+\begin{verbatim}
+git archive --prefix=linux-5.10.0-74.4.1/ -o linux-5.10.0-74.4.1.tar --format=tar branch_name
+xz -z linux-5.10.0-74.4.1.tar
+\end{verbatim}
+
+做好源码包，注意一定要把版本号写对，一定要代码包上一层prefix目录。5.10 使用 tar.xz 包。
+
+（3 将包上传到服务器的 Kernel-rpmbuild 中的 rpmbuild-5.10/SOURCES 目录。
+
+（4 修改 rpmbuild-5.10/SPECS/kernel.spec
+
+\begin{verbatim}
+diff --git a/rpmbuild-5.10/SPECS/kernel.spec b/rpmbuild-5.10/SPECS/kernel.spec
+index af53c46c5..8721e8491 100644
+--- a/rpmbuild-5.10/SPECS/kernel.spec
++++ b/rpmbuild-5.10/SPECS/kernel.spec
+@@ -28,8 +28,8 @@
+ # define buildid .local
+
+ %define rpmversion 5.10.0
+-%define pkgrelease 74
+-%define gittagid 5.10.0-74
++%define pkgrelease 74.4.1
++%define gittagid 5.10.0-74.4.1
+
+ # allow pkg_release to have configurable %%{?dist} tag
+ %define specrelease %{pkgrelease}%{?dist}
+@@ -1029,20 +1029,20 @@ BuildKernel() {
+       cp arch/$Arch/boot/zImage.stub $RPM_BUILD_ROOT/lib/modules/$KernelVer/zImage.stub-$KernelVer || :
+     fi
+
+-    %if %{signkernel}
+-    KernelExtension=${KernelImage##*.}
+-    if [ "$KernelExtension" == "gz" ]; then
+-        SignImage=${KernelImage%.*}
+-    else
+-        SignImage=$KernelImage
+-    fi
+-    sbsign --hwkey 2 --cert %{SOURCE14} --output vmlinuz.signed $SignImage
+-    if [ ! -s vmlinuz.signed ]; then
+-        echo "sbsign failed"
+-        exit 1
+-    fi
+-    mv vmlinuz.signed $KernelImage
+-    %endif
++    #%if %{signkernel}
++    #KernelExtension=${KernelImage##*.}
++    #if [ "$KernelExtension" == "gz" ]; then
++    #    SignImage=${KernelImage%.*}
++    #else
++    #    SignImage=$KernelImage
++    #fi
++    #sbsign --hwkey 2 --cert %{SOURCE14} --output vmlinuz.signed $SignImage
++    #if [ ! -s vmlinuz.signed ]; then
++    #    echo "sbsign failed"
++    #    exit 1
++    #fi
++    #mv vmlinuz.signed $KernelImage
++    #%endif
+
+     $CopyKernel $KernelImage \
+                 $RPM_BUILD_ROOT/%{image_install_path}/$InstallName-$KernelVer
+@@ -2065,6 +2065,9 @@ fi
+ #
+ #
+ %changelog
++* Tue Sep 10 2024 Longji Guo <guolongji@uniontech.com> - 5.10.0-74.4.1
++- uos: Revert "anolis: Revert "ext4: fix bad checksum after online resize" [T286689]" [G006383]
++
+ * Mon Apr 22 2024 Li Hongbin <lihongbin@uniontech.com> - 5.10.0-74
+
+ * Wed Apr 10 2024 caina <caina@uniontech.com> - 5.10.0-73
+\end{verbatim}
+
+（5 将源码的配置文件拷贝至内核打包仓对应目录的SOURCES文件下，并命名为 \textbf{kernel-\$aarch.config} 、
+*kernel-\$aarch-debug.config*。419E内核该步骤可省略。
+
+我将源码中的 uos510\_defconfig 拷贝到服务器的 rpmbuild-5.10/SOURCES/kernel-5.10.0-x86\_64.config 和
+rpmbuild-5.10/SOURCES/kernel-5.10.0-x86\_64-debug.config
+
+修改abi 文件版本，如下：
+\begin{verbatim}
+尚未暂存以备提交的变更：
+  （使用 "git add/rm <文件>..." 更新要提交的内容）
+  （使用 "git restore <文件>..." 丢弃工作区的改动）
+        删除：     kernel-abi-whitelists-5.10.0-46.tar.bz2
+        删除：     kernel-kabi-dw-5.10.0-46.tar.bz2
+
+未跟踪的文件:
+  （使用 "git add <文件>..." 以包含要提交的内容）
+        kernel-abi-whitelists-5.10.0-74.4.1.tar.bz2
+        kernel-kabi-dw-5.10.0-74.4.1.tar.bz2
+\end{verbatim}
+
+（6 在 rpmbuild-5.10/SPECS/ 目录下执行编译命令
+
+编译 e 版（uel 后缀）：time rpmbuild --define "\_topdir /home/glj/Kernel-rpmbuild/rpmbuild-5.10" --define "dist uel20" -ba kernel.spec
+
+编译 a 版 (uelc 后缀）：time rpmbuild --define "\_topdir /home/glj/Kernel-rpmbuild/rpmbuild-5.10" --define  -ba kernel.spec
+
+最终编译好的包在 rpmbuild-5.10/RPMS/x86\_64/ 当中。
+
+\chapter{签名}
+\label{sec:org21876bb}
+
+将上面生成的 rpm 包上传到签名服务器，后执行：
+
+find . -name '*.rpm' | xargs -i rpmsign --addsign \{\}
+
+现在就完成了。
+\end{document}

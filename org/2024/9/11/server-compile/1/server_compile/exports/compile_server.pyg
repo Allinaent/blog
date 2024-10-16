@@ -1,0 +1,2 @@
+git archive --prefix=linux-5.10.0-74.4.1/ -o linux-5.10.0-74.4.1.tar --format=tar branch_name
+xz -z linux-5.10.0-74.4.1.tar
