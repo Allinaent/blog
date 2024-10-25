@@ -3642,33 +3642,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 
 
 
-* 画一下流程图
-
-#+OPTIONS: html-postamble:nil
-#+HEADER: :fit yes :imagemagick yes :iminoptions -density 120
-#+HEADER: :packages '("\\usepackage{tikz} \\usepackage{pgfplots} \\usepackage{fontspec} \\pgfplotsset{compat=newest}")
-#+begin_src latex :file ltximg/process1.png :results raw file :exports results
-  \begin{tikzpicture}[
-    rec/.style={rectangle, thick,minimum width=1.5cm,minimum height=0.5cm,text centered,draw=#1,fill=#1!15,UTF8},
-    arrow/.style={ ->,>=stealth,very thick,red!80!black},
-    ]
-    \usetikzlibrary{fit, calc}
-    \setmainfont{FandolSong-Regular.otf}
-    \node[draw, rectangle] (func1) at (0, -1) {函数名};
-    \node[draw, rectangle] (func2) at (0, -2) {另一个函数};
-    \node[draw, rectangle] (func3) at (0, -3) {另一个函数};
-    %\draw[->] (func1) -- (func2);
-    %\draw[->] (func2) -- (func3);
-    \coordinate (center) at ($(func1)!0.5!(func2)!0.5!(func3) + (0, 0.25)$);
-
-    \node[fit=(func1) (func2) (fun3), draw, inner sep=3pt, minimum width=4cm, minimum height=4cm, label={[below] xf86VTRequest}] (bigbox) at (center){};
-    % \node[above] at (bigbox.north) {大框函数名};
-
-  \end{tikzpicture}
-#+end_src
-
-#+RESULTS:
-[[file:ltximg/process1.png]]
+* 分析一下大概流程
 
 
 那么 setcrtc 这个系统调用是谁调用的呢？我分析的有，但是为啥有的时候就不闪呢？
