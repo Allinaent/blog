@@ -1,7 +1,7 @@
 +++
 title = "在 linux 下使用 picgo 的最佳实践"
 date = 2024-10-25T10:21:00+08:00
-lastmod = 2024-10-25T11:25:54+08:00
+lastmod = 2024-10-25T22:20:24+08:00
 categories = ["technology"]
 draft = false
 toc = true
@@ -101,6 +101,6 @@ zotero 的工作流看 pdf 做笔记完美，但是现在的 linux 7.0.8 版本�
 
 另外，linux 环境复杂，如果环境问题解不掉。试试 nix ，snap 。如果不能用，再想其它办法。
 
-比如有时候网不好， `nix-channel update --` 失败了，换个时间试试就成功了。（遇到 orgmode 当中两个连续的 hyphen 连字符，可以用两个等号标注并转义）
+比如有时候网不好， `nix-channel --updateh` 失败了，换个时间试试就成功了。（遇到 orgmode 当中两个连续的 hyphen 连字符，可以用两个等号标注并转义）
 
 然后 nix-env -iA nixpkgs.nekoray 居然很快也安装成功了。这就很完美！
