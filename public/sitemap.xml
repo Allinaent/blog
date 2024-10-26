@@ -3,18 +3,27 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>http://localhost:1313/</loc>
-    <lastmod>2024-08-19T15:53:05+08:00</lastmod>
+    <lastmod>2024-10-26T18:05:41+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/categories/</loc>
-    <lastmod>2024-08-19T15:53:05+08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/post/debug-kvm-start-error/</loc>
-    <lastmod>2024-08-19T15:53:05+08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/categories/kernel/</loc>
-    <lastmod>2024-08-19T15:53:05+08:00</lastmod>
+    <lastmod>2024-10-26T18:05:41+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/</loc>
+    <lastmod>2024-10-26T18:05:41+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/categories/technology/</loc>
+    <lastmod>2024-10-26T18:05:41+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/post/picgo-best-practice/</loc>
+    <lastmod>2024-10-25T22:20:24+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/categories/kernel/</loc>
+    <lastmod>2024-09-11T11:35:59+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/post/server-compile/</loc>
+    <lastmod>2024-09-11T11:35:59+08:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/post/debug-kvm-start-error/</loc>
     <lastmod>2024-08-19T15:53:05+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/rpm-server-kernel-package/</loc>
@@ -63,10 +72,10 @@
     <lastmod>2024-06-19T10:04:37+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/categories/prose/</loc>
-    <lastmod>2024-06-17T11:24:32+08:00</lastmod>
+    <lastmod>2024-10-25T16:39:17+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/jiangping/</loc>
-    <lastmod>2024-06-17T10:57:19+08:00</lastmod>
+    <lastmod>2024-10-25T16:39:17+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/categories/emacs/</loc>
     <lastmod>2024-06-17T11:26:40+08:00</lastmod>
@@ -91,9 +100,6 @@
   </url><url>
     <loc>http://localhost:1313/post/english-word-1/</loc>
     <lastmod>2024-06-04T09:56:05+08:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/categories/technology/</loc>
-    <lastmod>2024-06-17T11:27:57+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/qnap-ipv6-ddns-use/</loc>
     <lastmod>2024-06-04T09:36:57+08:00</lastmod>
@@ -138,13 +144,13 @@
     <lastmod>2024-06-06T12:46:53+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/ubuntu-scedule-and-start-script/</loc>
-    <lastmod>2024-06-06T14:44:52+08:00</lastmod>
+    <lastmod>2024-10-26T18:05:41+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/org-drawio/</loc>
     <lastmod>2024-06-17T11:25:38+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/categories/graphic/</loc>
-    <lastmod>2024-06-24T11:24:49+08:00</lastmod>
+    <lastmod>2024-10-25T17:24:39+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/xorg-source-code/</loc>
     <lastmod>2024-06-06T12:25:16+08:00</lastmod>
@@ -252,7 +258,7 @@
     <lastmod>2024-06-17T11:27:57+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2024-06-17T11:27:57+08:00</lastmod>
+    <lastmod>2024-10-25T17:24:39+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/tikz-config/</loc>
     <lastmod>2023-12-14T17:47:04+08:00</lastmod>
@@ -318,10 +324,10 @@
     <lastmod>2024-06-06T16:14:54+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/tags/gpu/</loc>
-    <lastmod>2024-06-06T15:37:33+08:00</lastmod>
+    <lastmod>2024-10-25T17:24:39+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/post/tty-x-switch/</loc>
-    <lastmod>2024-06-06T15:37:33+08:00</lastmod>
+    <lastmod>2024-10-25T17:24:39+08:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/categories/learn/</loc>
     <lastmod>2024-06-06T16:10:42+08:00</lastmod>

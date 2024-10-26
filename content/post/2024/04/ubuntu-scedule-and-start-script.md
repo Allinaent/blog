@@ -1,7 +1,7 @@
 +++
 title = "开发环境的定时启动脚本"
 date = 2024-04-03T11:21:00+08:00
-lastmod = 2024-06-06T14:44:52+08:00
+lastmod = 2024-10-26T18:39:28+08:00
 categories = ["technology"]
 draft = false
 toc = true
@@ -245,3 +245,74 @@ TUN Mode 是通过创建虚拟网卡的方式来代理所有流量，而 System 
 root 权限运行 nekoray ，选用 sing-box 内核，开启 tun 模式。设置分流模式。勾选程序——记住最后的配置。测试了一段时间，现在看是稳如一条老狗。
 
 最后，其实好用的工具不是最终目的。人最关键是在什么年龄能学到什么知识，创造什么价值。有不少人年少成名，甚至都成名后死掉了。而普通人，就算现在还普通，也要抗争，争取一个大器晚成也算是亡羊补牢。成熟的晚的人也比一辈子不成熟好。共勉。
+
+
+## 好用的工具优化 {#好用的工具优化}
+
+
+### obsidian {#obsidian}
+
+这个以后有时间是可以试试的。
+
+
+### infini-cloud {#infini-cloud}
+
+这个是个25 G 的免费 webdav 服务。我的 emacs org-roam 笔记是用这个同步的。而zotero 当中的资料则是用的家中 qnap 的nas 。
+
+<https://jiajunhuang.com/articles/2023_11_29-alist_webdav.md.html>
+
+不过网上的 automount 教程会导致系统的网络服务和automount 服务有概率起动失败，用下面的两个网页的方案解决。
+
+<https://forums.linuxmint.com/viewtopic.php?t=282437>
+
+sudo systemctl disable NetworkManager-wait-online.service
+
+sudo systemctl mask NetworkManager-wait-online.service
+
+<https://github.com/rclone/rclone/issues/6459>
+
+<a id="figure--picture"></a>
+
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/10/66bbdcaff83d1521eb4f5198231ef901.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 1: </span>解决起动加载失败" link="t" class="fancy" width="900" target="_blank" >}}
+
+
+### gpt 插件 {#gpt-插件}
+
+<https://github.com/chatanywhere/GPT_API_free>
+
+ChatGPT Sidebar ，使用这个网页版的插件，可以翻译 youtube 视频的英文字幕，天哪，我还需要学英语吗？科大讯飞的翻译眼镜其它的一些翻译耳机，可以直接翻译视频，没有什么东西是不能快速学会的，无敌！
+
+全是免费的东西。
+
+
+### nekoray 或说 nekobox {#nekoray-或说-nekobox}
+
+这个可以菜单项中是可以记住设置的。还有就是代理服务器的规则改了，简单修改一下脚本就可以了。
+
+
+### 小米对数学输入的两个优化 {#小米对数学输入的两个优化}
+
+一是符号部分地变成unicode ，减少长度，看起来也更加直观。
+
+另一个是对 texmf 当中增加 sty ，使得可以于减化符号输入的宏。这两点太棒了。还是就是用$ 符号输入成对的公式环境。也减少了输入的麻烦。
+
+snippet 已经让输入变成流畅，上面的东西如果也使用上了的话，输入甚至会变成是一种享受。最重要的还是对知识本身的理解。比如里面的一些数学原理不懂，还有不能掌握常用的英文单词。实际上老外也不能理解英文词汇，英文单词本身就有不像汉语短语一样的有相关性。外国个所谓的有文化，本身就是记忆的单词多一些。就是如此！
+
+
+### 回过头来还得是 emacs {#回过头来还得是-emacs}
+
+pdf-tools 注释，下划线，高亮功能有了，C-c C-a C-l 可以搜所有的这些标记。
+
+zotero 用于生成文献的数据库，填加pdf 进去能自动更新数据库。
+
+org-roam 的node 多了，很乱，用法是把node 名称分类，比较 a-xxxx 这种node 是用于总结，b-xxx 这种node
+是用于记录等等，而像 citar-org-roam ，consult-org-roam 可以搜所有的反向链接。
+
+虽然分类肯定不如 obsidian 之类的文件夹看起来直观，但是，我可以手动增加文件夹吧！！！恩，emacs 画思维导图之类的之前有过集成 drawio 的方案。这个暂时不是痛点。
+
+总的来说，emacs 真的能把这些事都做好。
+
+
+### 反转 {#反转}
+
+看 pdf 的流畅度还是 zotero 更胜一筹。使用自己的 nas 同步图片始终不成功，不知道问题出在哪里！！！

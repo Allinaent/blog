@@ -76,17 +76,17 @@ uos@guolongji:~/INSTALL/picgo$ tree
 └── run.sh
 #+end_src
 
-run.sh
+~/.script/run_picgo.sh ，注意这里用绝对路径比较好。
 
 #+begin_src bash
-./PicGo-2.4.0-beta.8.AppImage --no-sandbox
+~/INSTALL/picgo/PicGo-2.4.0-beta.8.AppImage --no-sandbox
 #+end_src
 
 .bashrc 中增加：
 
 #+begin_src bash
 # picgo
-alias picgo='pm2 start ~/INSTALL/picgo/run.sh'
+alias picgo='pm2 start ~/.script/run_picgo.sh'
 nvm alias default v16.20.2 > /dev/null 2>&1
 #+end_src
 

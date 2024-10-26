@@ -1,7 +1,7 @@
 +++
 title = "在 linux 下使用 picgo 的最佳实践"
 date = 2024-10-25T10:21:00+08:00
-lastmod = 2024-10-25T22:20:24+08:00
+lastmod = 2024-10-26T19:04:45+08:00
 categories = ["technology"]
 draft = false
 toc = true
@@ -73,17 +73,17 @@ uos@guolongji:~/INSTALL/picgo$ tree
 └── run.sh
 ```
 
-run.sh
+~/.script/run_picgo.sh ，注意这里用绝对路径比较好。
 
 ```bash
-./PicGo-2.4.0-beta.8.AppImage --no-sandbox
+~/INSTALL/picgo/PicGo-2.4.0-beta.8.AppImage --no-sandbox
 ```
 
 .bashrc 中增加：
 
 ```bash
 # picgo
-alias picgo='pm2 start ~/INSTALL/picgo/run.sh'
+alias picgo='pm2 start ~/.script/run_picgo.sh'
 nvm alias default v16.20.2 > /dev/null 2>&1
 ```
 

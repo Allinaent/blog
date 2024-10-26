@@ -6,7 +6,26 @@
         <description>Recent content in Posts on Allinaent</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <lastBuildDate>Mon, 19 Aug 2024 09:34:00 +0800</lastBuildDate><atom:link href="http://localhost:1313/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Fri, 25 Oct 2024 10:21:00 +0800</lastBuildDate><atom:link href="http://localhost:1313/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>在 linux 下使用 picgo 的最佳实践</title>
+        <link>http://localhost:1313/post/picgo-best-practice/</link>
+        <pubDate>Fri, 25 Oct 2024 10:21:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/picgo-best-practice/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/10/db1a780dae2885902e61196efd536955.png" alt="Featured image of post 在 linux 下使用 picgo 的最佳实践" /&gt;&lt;h2 id=&#34;picgo-是什么&#34;&gt;picgo 是什么？&lt;/h2&gt;
+&lt;p&gt;picgo 是一个可以上传图床的工具，用 nodejs electron 开发的。在 macos 和 window 上很好使用。但是在linux 当中我之前一直是直接用 appimage 运行。但这有一个缺点，就是不能后台运行。nohup ，disown 这些都没用。&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>服务器版本内核本地编译流程</title>
+        <link>http://localhost:1313/post/server-compile/</link>
+        <pubDate>Wed, 11 Sep 2024 10:54:00 +0800</pubDate>
+        
+        <guid>http://localhost:1313/post/server-compile/</guid>
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg" alt="Featured image of post 服务器版本内核本地编译流程" /&gt;&lt;h2 id=&#34;5-dot-10-rpm-内核包编译步骤&#34;&gt;5.10 rpm 内核包编译步骤&lt;/h2&gt;
+&lt;p&gt;（1 clone &lt;a class=&#34;link&#34; href=&#34;https://gerrit-dev.uniontech.com/admin/repos/Kernel-rpmbuild&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://gerrit-dev.uniontech.com/admin/repos/Kernel-rpmbuild&lt;/a&gt; 这个项目。将其拷贝到99 编译服务器。&lt;/p&gt;</description>
+        </item>
+        <item>
         <title>Intel机器510内核环境虚拟机安装完成后无法启动根因——另附庖丁解牛13式</title>
         <link>http://localhost:1313/post/debug-kvm-start-error/</link>
         <pubDate>Mon, 19 Aug 2024 09:34:00 +0800</pubDate>
@@ -295,12 +314,12 @@ ioctl实现命令：UOS_IOC_SETINFO:设置一些信息，UOS_IOC_GETINFO：读�
 bug 。关键是这个问题是如何分析出来的呢？这种问题需要用专用的硬件设备看寄存器的状态吗？我觉得是不需要的。因为有很多上游的问题分析并不是龙芯官方绐出的，而其它人怎么会单独为了龙芯买昂贵的 ejtag 呢？&lt;/p&gt;</description>
         </item>
         <item>
-        <title>人生的主旋律是受苦——姜萍数学竞赛有感</title>
+        <title>人生的主旋律是受苦——姜萍数学竞赛有感（反转）</title>
         <link>http://localhost:1313/post/jiangping/</link>
         <pubDate>Mon, 17 Jun 2024 09:34:00 +0800</pubDate>
         
         <guid>http://localhost:1313/post/jiangping/</guid>
-        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/532be4feeb59744b31b5f41e05fe62da.png" alt="Featured image of post 人生的主旋律是受苦——姜萍数学竞赛有感" /&gt;&lt;h2 id=&#34;姜萍最近的事迹在网上爆火&#34;&gt;姜萍最近的事迹在网上爆火&lt;/h2&gt;
+        <description>&lt;img src="https://r2.guolongji.xyz/allinaent/2024/06/532be4feeb59744b31b5f41e05fe62da.png" alt="Featured image of post 人生的主旋律是受苦——姜萍数学竞赛有感（反转）" /&gt;&lt;h2 id=&#34;姜萍最近的事迹在网上爆火&#34;&gt;姜萍最近的事迹在网上爆火&lt;/h2&gt;
 &lt;p&gt;网上关于姜萍的报道太多了。很多的自媒体和甚至数学界学者都点评了姜萍。她无疑是一个天才。各路自媒体大神讲的都太好了。网友都说自己是人间凑数的每一天。为什么，普通人就一定要在人间凑数呢？&lt;/p&gt;</description>
         </item>
         <item>
