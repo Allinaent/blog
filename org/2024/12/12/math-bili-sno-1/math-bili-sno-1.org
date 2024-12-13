@@ -1,0 +1,30 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2024/12
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2024-12-12 四 19:35]
+#+TITLE: b 站上的数学好课
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: math
+#+HUGO_CUSTOM_FRONT_MATTER: :image
+
+* 集成低分辨率的视频
+
+
+https://www.bilibili.com/video/BV164411o7Qo
+
+将视频用 shortcode 集成一下。清晰度只有 360p ，不过没关系，可以跳转，这个的目的只是为了强
+调一下视频。
+
+@@hugo:{{< bilibili "BV164411o7Qo" "92" >}}@@
+
+* 还是做笔记
+
+重点是多元函数求导法则。
+
+中值定理。
+
+目标就是过线而已。
+

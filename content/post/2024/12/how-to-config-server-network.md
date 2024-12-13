@@ -1,0 +1,45 @@
++++
+title = "如何配置多网卡服务器的网络"
+date = 2024-12-11T19:55:00+08:00
+lastmod = 2024-12-12T11:46:08+08:00
+categories = ["kernel"]
+draft = false
+toc = false
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+## NetworkManager 配置文件 {#networkmanager-配置文件}
+
+```nil
+TYPE=Ethernet
+PROXY_METHOD=none
+BROWSER_ONLY=no
+BOOTPROTO=none
+IPADDR=10.10.xx.xx
+PREFIX=24
+GATEWAY=10.10.xx.1
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME="有线连接 1"
+UUID=88b5a874-9d58-4da6-9923-248e1470ad39
+DEVICE=enp5s0f2
+ONBOOT=yes
+DNS1=10.10.0.xx
+DNS2=10.10.0.xx
+PEERDNS=no
+```
+
+保证重启网络正常，比较重要的两点是：DEVICE 这个是绑定设备的，另一个是 ONBOOT=yes ，这两个配对了，网络就没有问题了。
+
+
+## BMC 配置 {#bmc-配置}
+
+{{< slideshow "https://r2.guolongji.xyz/bmc%20%E4%BD%BF%E7%94%A8%E5%8F%8A%E5%85%B6%E9%85%8D%E7%BD%AE%E6%96%B9%E6%B3%95%E5%88%86%E4%BA%AB.pdf">}}
+
+ipmitool ，什么是 ipmi ？这个是智慧管理平台，需要内核打开对这个驱动的支持，ipim 才能使用。才能够通过
+ipimtool 来设置 bmc 的 ip 。
