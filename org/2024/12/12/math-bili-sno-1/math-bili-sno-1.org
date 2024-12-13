@@ -8,7 +8,7 @@
 #+TITLE: b 站上的数学好课
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: math
-#+HUGO_CUSTOM_FRONT_MATTER: :image
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg
 
 * 集成低分辨率的视频
 

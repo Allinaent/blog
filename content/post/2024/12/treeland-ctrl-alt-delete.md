@@ -1,0 +1,1007 @@
++++
+title = "treeland环境下ctrl-alt-del重启问题（韬哥）"
+date = 2024-12-13T16:33:00+08:00
+lastmod = 2024-12-13T16:59:35+08:00
+categories = ["kernel"]
+draft = false
+toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+我之前在resourced的调试时就发现了这个问题：ctrl+atl+del，预期唤出dde-lock的关机界面（这是我们重点保护路径之一），但是treeland环境下系统直接重启了。之后和竹子确认了这是个已知问题，怀疑是某个DDE上层包没有正确处理。
+
+但实际上不是，这是一个可能比看起来要复杂一点点的问题……
+
+ok，开始。
+
+
+## 一、系统为何重启？ {#一-系统为何重启}
+
+系统重启问题的第一个难点就是：
+
+-   没法提供可以交互的调试环境。——系统直接重启了，根本不给机会看系统里发生了什么，所以难以入手分析排查。
+
+但是对于精（吹）通（b）各种内核调试手段的我们来说，当然不成问题：我们可以直接基于虚拟机调试，直接将断点打在内核的重启路径里，看看现场到底发生了什么。——转换到虚拟机调试的一个隐含的前提是：我们可以判断这个问题不太可能和硬件相关，虚拟机和物理机是一致的。
+
+内核断点 kernel_restart()：
+
+```nil
+Thread 4 hit Breakpoint 1, kernel_restart (cmd=0x0 <fixed_percpu_data>) at kernel/reboot.c:267
+267     {
+(gdb) bt
+#0  kernel_restart (cmd=0x0 <fixed_percpu_data>) at kernel/reboot.c:267
+#1  0xffffffff811644b2 in __do_sys_reboot (magic1=-18751827, magic2=672274793, cmd=19088743, arg=0x0 <fixed_percpu_data>) at kernel/reboot.c:738
+#2  0xffffffff8210246a in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000013f58) at arch/x86/entry/common.c:51
+#3  do_syscall_64 (regs=0xffffc90000013f58, nr=<optimized out>) at arch/x86/entry/common.c:81
+#4  0xffffffff82200134 in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:121
+#5  0x0000000000000000 in ?? ()
+
+(gdb) p $lx_current()->comm
+$1 = "systemd-shutdow"
+
+(gdb) p $lx_current()->pid
+$2 = 1
+```
+
+可以看到，此时是通过正常的reboot syscall走重启流程的，而且发起者是systemd-shutdown，pid为1。——这是正常的systemd reboot流程。
+
+查看lx-dmesg，可以确认是正常流程：
+
+```nil
+[  151.537142] systemd[1]: Reached target reboot.target - System Reboot.
+[  151.537402] systemd[1]: Shutting down.
+[  151.595059] systemd[1]: Using hardware watchdog 'iTCO_wdt', version 2, device /dev/watchdog0
+[  151.595129] systemd[1]: Watchdog running with a timeout of 10min.
+[  151.595150] watchdog: watchdog0: watchdog did not stop!
+[  151.624666] systemd-shutdown[1]: Using hardware watchdog 'iTCO_wdt', version 2, device /dev/watchdog0
+[  151.624777] systemd-shutdown[1]: Watchdog running with a timeout of 10min.
+[  151.693069] systemd-shutdown[1]: Syncing filesystems and block devices.
+[  151.861601] systemd-shutdown[1]: Sending SIGTERM to remaining processes...
+[  151.907134] systemd-shutdown[1]: Sending SIGKILL to remaining processes...
+[  151.919800] systemd-shutdown[1]: Unmounting file systems.
+[  151.923045] (sd-remount)[4143]: Remounting '/' read-only with options 'seclabel'.
+[  152.200373] EXT4-fs (sda1): re-mounted d60871a1-761a-4acf-a7f8-ec51b9b7a025 ro. Quota mode: none.
+[  152.271794] systemd-shutdown[1]: All filesystems unmounted.
+[  152.271800] systemd-shutdown[1]: Deactivating swaps.
+[  152.271862] systemd-shutdown[1]: All swaps deactivated.
+[  152.271865] systemd-shutdown[1]: Detaching loop devices.
+[  152.273272] systemd-shutdown[1]: All loop devices detached.
+[  152.273276] systemd-shutdown[1]: Stopping MD devices.
+[  152.273355] systemd-shutdown[1]: All MD devices stopped.
+[  152.273358] systemd-shutdown[1]: Detaching DM devices.
+[  152.273427] systemd-shutdown[1]: All DM devices detached.
+[  152.273431] systemd-shutdown[1]: All filesystems, swaps, loop devices, MD devices and DM devices detached.
+[  152.274589] systemd-shutdown[1]: Syncing filesystems and block devices.
+[  152.275270] systemd-shutdown[1]: Rebooting.
+```
+
+
+## 二、systemd的重启路径 {#二-systemd的重启路径}
+
+粗略过一下systemd的main loop相关代码（删掉了大部分代码，只保留了reboot路径），可以大概看清楚它的路径：
+
+```c
+int main(int argc, char *argv[]) {
+        ……
+
+        r = invoke_main_loop(m,……)
+        ……
+
+        /* Try to invoke the shutdown binary unless we already failed.
+         * If we failed above, we want to freeze after finishing cleanup. */
+        if (arg_runtime_scope == RUNTIME_SCOPE_SYSTEM &&
+            IN_SET(r, MANAGER_EXIT, MANAGER_REBOOT, MANAGER_POWEROFF, MANAGER_HALT, MANAGER_KEXEC)) {
+                r = become_shutdown(r, retval);
+                log_error_errno(r, "Failed to execute shutdown binary, %s: %m", getpid_cached() == 1 ? "freezing" : "quitting");
+                error_message = "Failed to execute shutdown binary";
+        }
+
+        ……
+
+        if (getpid_cached() == 1) {
+                if (error_message)
+                        manager_status_printf(NULL, STATUS_TYPE_EMERGENCY,
+                                              ANSI_HIGHLIGHT_RED "!!!!!!" ANSI_NORMAL,
+                                              "%s.", error_message);
+                freeze_or_exit_or_reboot();
+        }
+        ……
+}
+
+
+static int become_shutdown(int objective, int retval) {
+        static const char* const table[_MANAGER_OBJECTIVE_MAX] = {
+                [MANAGER_EXIT]     = "exit",
+                [MANAGER_REBOOT]   = "reboot",
+                [MANAGER_POWEROFF] = "poweroff",
+                [MANAGER_HALT]     = "halt",
+                [MANAGER_KEXEC]    = "kexec",
+        };
+
+        ...
+        execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, env_block);
+        return -errno;
+}
+```
+
+reboot路径：
+
+-   如果main loop退出，检查其ret，如果是REBOOT/POWEROFF等相关的，则会走到become_shutdown()
+-   这个函数里，会直接execve，systemd变身为systemd-shutdown，pid仍然为1。
+
+——这符合我们在内核过程里的trace，在结束时pid 1，会从systemd切换到systemd-shutdown，专门做shutdown相关工作。
+
+那问题是：为什么systemd会退出main loop，走到reboot/shutdown路径里来？
+
+
+## 三、systemd为何进入重启路径？ {#三-systemd为何进入重启路径}
+
+systemd的main loop相关代码：
+
+```c
+static int invoke_main_loop(Manager *m, ...)
+{
+        ……
+        for (;;) {
+                int objective = manager_loop(m);
+                switch (objective) {
+                ……
+                case MANAGER_REBOOT:
+                case MANAGER_POWEROFF:
+                case MANAGER_HALT:
+                case MANAGER_KEXEC: {
+                        log_notice("Shutting down.");
+
+                        *ret_retval = m->return_value;
+                        *ret_fds = NULL;
+                        *ret_switch_root_dir = *ret_switch_root_init = NULL;
+
+                        return objective;
+                    }
+                }
+        }
+}
+```
+
+可以看到，还是在manager_loop里，通过各种event进来的。
+
+进一步，我们可以找到下面两条event路径。
+
+第一条是dbus路径，systemd通过dbus提供了reboot接口。——大概就是我们通常使用的systemctl reboot。
+
+```c
+static int method_reboot(sd_bus_message *message, void *userdata, sd_bus_error *error) {
+        Manager *m = ASSERT_PTR(userdata);
+        int r;
+
+        assert(message);
+
+        r = mac_selinux_access_check(message, "reboot", error);
+        if (r < 0)
+                return r;
+
+        if (!MANAGER_IS_SYSTEM(m))
+                return sd_bus_error_setf(error, SD_BUS_ERROR_NOT_SUPPORTED,
+                                         "Reboot is only supported for system managers.");
+
+        m->objective = MANAGER_REBOOT;
+
+        return sd_bus_reply_method_return(message, NULL);
+}
+```
+
+第二条是signal路径，要更复杂一点，可以认为并非常规路径：
+
+```c
+static int manager_dispatch_signal_fd() {
+
+        n = read(m->signal_fd, &sfsi, sizeof(sfsi));
+        ...
+
+        case SIGINT:
+                if (MANAGER_IS_SYSTEM(m))
+                        manager_handle_ctrl_alt_del(m);
+                else
+                        manager_start_special(m, SPECIAL_EXIT_TARGET, JOB_REPLACE_IRREVERSIBLY);
+                break;
+        ……
+}
+```
+
+可以看到：
+
+-   systemd是通过signal-fd来处理其signal的。——所以单纯的gdb并断不到。
+-   对于SIGINT，会进入manager_handle_ctrl_alt_del()，也就是CAD处理里。
+
+其代码为：
+
+```c
+static void manager_handle_ctrl_alt_del(Manager *m) {
+        /* If the user presses C-A-D more than
+         * 7 times within 2s, we reboot/shutdown immediately,
+         * unless it was disabled in system.conf */
+
+        if (ratelimit_below(&m->ctrl_alt_del_ratelimit) || m->cad_burst_action == EMERGENCY_ACTION_NONE)
+                manager_start_special(m, SPECIAL_CTRL_ALT_DEL_TARGET, JOB_REPLACE_IRREVERSIBLY);
+        else
+                emergency_action(m, m->cad_burst_action, EMERGENCY_ACTION_WARN, NULL, -1,
+                                "Ctrl-Alt-Del was pressed more than 7 times within 2s");
+}
+```
+
+这符合我们的场景：有Ctrl-Alt-Del按键时，systemd会进入reboot流程。
+
+我们可以简单的通过gdb attach systemd来确认。
+
+因为systemd会有大量信号（尤其是SIGCHLD，子线程相关信号），所以我们调整一下断点位置：
+
+-   因为signo是通过signal_fd读入的，并非函数入参，所以我们需要将断点打在manager_dispatch_signal_fd()内部，同时基于signo来过滤，设置条件断点。
+-   如果有源码，则推荐基于源码文件:行数来打断点，类似：b src/core/manager.c:2882 if sfsi-&gt;signo != 17，在下面这一行之后就可以：
+
+<!--listend-->
+
+```c
+n = read(m->signal_fd, &sfsi, sizeof(sfsi));
+```
+
+我没有apt source源码+编译，所以就取巧一下：
+
+-   先断在manager_dispatch_signal_fd()开头，然后一边n，一边info locals，等到sfsi读出来了，就知道这个汇编代码位置是我们要的断点。
+-   然后：
+
+<!--listend-->
+
+```nil
+b *$rip if sfsi->ssi_signo != 17
+```
+
+接下来触发key事件，对于虚拟机，如果不想来回切屏幕的话，也可以用virsh：
+
+```nil
+virsh send-key uos-v25-mutable KEY_LEFTCTRL KEY_LEFTALT KEY_DELETE
+```
+
+然后我们就可以看到systemd通过signal-fd收到的sig：
+
+```nil
+sfsi = {
+ssi_signo = 2,
+ssi_errno = 0,
+ssi_code = 128,
+ssi_pid = 0,
+ssi_uid = 0,
+ssi_fd = 0,
+ssi_tid = 0,
+ssi_band = 0,
+ssi_overrun = 0,
+ssi_trapno = 0,
+ssi_status = 0,
+ssi_int = 0,
+ssi_ptr = 0,
+ssi_utime = 0,
+ssi_stime = 0,
+ssi_addr = 0,
+ssi_addr_lsb = 0,
+__pad2 = 0,
+ssi_syscall = 0,
+ssi_call_addr = 0,
+ssi_arch = 0,
+__pad = '\000' <repeats 27 times>
+}
+```
+
+这里值得关注的有两个信息：
+
+-   signo为2，也就是SIGINT。
+-   ssi_pid为0，这是send pid，而pid 0是内核的idle线程（也就是swap/0）。——它的含义是：这是内核发起的信号。
+
+另外我们还有一种偷懒的方式，来确定是不是这个SIGINT所引发的重启：
+
+-   在gdb里断下来之后，直接return返回，不处理该信号。
+
+——确认如我们所料，就是它的原因。
+
+ok，到这里，我们确认了：
+
+-   因为systemd收到了SIGINT，然后进入了重启流程。
+-   信号来自于内核。
+
+那接下来的问题是：
+
+-   systemd为什么会在C-A-D按键时收到SIGINT？为什么只有treeland会？
+
+（接下来，就要复杂一点点了）
+
+
+## 四、内核的SIGINT产生路径 {#四-内核的sigint产生路径}
+
+首先，我们想办法拿到内核的signal发送路径。
+
+既然我们已经搭建了虚拟机的内核调试环境，我们就直接用断点来抓取：
+
+在内核gdb里：
+
+```nil
+(gdb) b send_signal_locked if t->pid == 1 && (sig==2 || siginfo->si_signo == 2)
+Breakpoint 6 at 0xffffffff8113d840: file kernel/signal.c, line 1227.
+(gdb) c
+Continuing.
+```
+
+其中send_signal_locked()是内核信号发送的底层核心函数，都会经过它：
+
+```c
+int send_signal_locked(int sig, struct kernel_siginfo *info,
+            struct task_struct *t, enum pid_type type)
+{
+    /* Should SIGKILL or SIGSTOP be received by a pid namespace init? */
+    bool force = false;
+
+    if (info == SEND_SIG_NOINFO) {
+        /* Force if sent from an ancestor pid namespace */
+        force = !task_pid_nr_ns(current, task_active_pid_ns(t));
+    } else if (info == SEND_SIG_PRIV) {
+        /* Don't ignore kernel generated signals */
+        force = true;
+    } else if (has_si_pid_and_uid(info)) {
+        /* SIGKILL and SIGSTOP is special or has ids */
+        struct user_namespace *t_user_ns;
+
+        rcu_read_lock();
+        t_user_ns = task_cred_xxx(t, user_ns);
+        if (current_user_ns() != t_user_ns) {
+            kuid_t uid = make_kuid(current_user_ns(), info->si_uid);
+            info->si_uid = from_kuid_munged(t_user_ns, uid);
+        }
+        rcu_read_unlock();
+
+        /* A kernel generated signal? */
+        force = (info->si_code == SI_KERNEL);
+
+        /* From an ancestor pid namespace? */
+        if (!task_pid_nr_ns(current, task_active_pid_ns(t))) {
+            info->si_pid = 0;
+            force = true;
+        }
+    }
+    return __send_signal_locked(sig, info, t, type, force);
+}
+```
+
+其中可以看到明确区分了是否为kernel generated signal，如果info-&gt;si_code为SI_KERNEL时，会设置为force，且其info-&gt;si_pid会设置为0，之后会在signal_fd的read()里被拷贝回用户空间。
+
+触发C-A-D，我们抓到以下的bt：
+
+```nil
+(gdb) bt
+#0  send_signal_locked (sig=2, info=0x1 <fixed_percpu_data+1>, t=0xffff8881003bd280, type=PIDTYPE_TGID) at kernel/signal.c:1227
+#1  0xffffffff8113d9dd in do_send_sig_info (sig=sig@entry=2, info=info@entry=0x1 <fixed_percpu_data+1>, p=p@entry=0xffff8881003bd280, type=type@entry=PIDTYPE_TGID) at kernel/signal.c:1311
+#2  0xffffffff8113e33f in group_send_sig_info (type=PIDTYPE_TGID, p=0xffff8881003bd280, info=0x1 <fixed_percpu_data+1>, sig=2) at kernel/signal.c:1461
+#3  kill_pid_info (pid=0xffff8881002b1800, info=0x1 <fixed_percpu_data+1>, sig=2) at kernel/signal.c:1495
+#4  kill_pid (pid=0xffff8881002b1800, sig=2, priv=<optimized out>) at kernel/signal.c:1935
+#5  0xffffffff81ac111c in kbd_keycode (hw_raw=<optimized out>, down=1, keycode=<optimized out>) at drivers/tty/vt/keyboard.c:1524
+#6  kbd_event (handle=<optimized out>, event_type=<optimized out>, event_code=<optimized out>, value=1) at drivers/tty/vt/keyboard.c:1543
+#7  0xffffffff81cf5fea in input_to_handler (handle=handle@entry=0xffff888101018720, vals=vals@entry=0xffff888100f940c0, count=count@entry=3) at drivers/input/input.c:132
+#8  0xffffffff81cf743f in input_pass_values (dev=dev@entry=0xffff88810107e000, vals=0xffff888100f940c0, count=3) at drivers/input/input.c:161
+#9  0xffffffff81cf7535 in input_pass_values (count=<optimized out>, vals=<optimized out>, dev=0xffff88810107e000) at drivers/input/input.c:150
+#10 input_event_dispose (dev=0xffff88810107e000, disposition=<optimized out>, type=0, code=0, value=0) at drivers/input/input.c:378
+#11 0xffffffff81cfa1b3 in input_event (value=0, code=0, type=0, dev=0xffff88810107e000) at drivers/input/input.c:435
+#12 input_event (dev=dev@entry=0xffff88810107e000, type=type@entry=0, code=code@entry=0, value=value@entry=0) at drivers/input/input.c:427
+#13 0xffffffff81d01cfb in input_sync (dev=0xffff88810107e000) at ./include/linux/input.h:450
+#14 atkbd_receive_byte (ps2dev=0xffff8881203f5800, data=<optimized out>) at drivers/input/keyboard/atkbd.c:562
+#15 0xffffffff81cf5afe in ps2_interrupt (serio=<optimized out>, data=83 'S', flags=<optimized out>) at drivers/input/serio/libps2.c:613
+#16 0xffffffff81cf0d27 in serio_interrupt (serio=serio@entry=0xffff8881010d2000, data=data@entry=83 'S', dfl=dfl@entry=0) at drivers/input/serio/serio.c:998
+#17 0xffffffff81cf223f in i8042_interrupt (irq=1, dev_id=<optimized out>) at drivers/input/serio/i8042.c:610
+#18 0xffffffff811d06a7 in __handle_irq_event_percpu (desc=desc@entry=0xffff888100269200) at kernel/irq/handle.c:158
+#19 0xffffffff811d0898 in handle_irq_event_percpu (desc=0xffff888100269200) at kernel/irq/handle.c:193
+#20 handle_irq_event (desc=desc@entry=0xffff888100269200) at kernel/irq/handle.c:210
+#21 0xffffffff811d5f4b in handle_edge_irq (desc=0xffff888100269200) at kernel/irq/chip.c:831
+#22 0xffffffff81041d5b in generic_handle_irq_desc (desc=0x2 <fixed_percpu_data+2>) at ./include/linux/irqdesc.h:161
+#23 handle_irq (regs=<optimized out>, desc=0x2 <fixed_percpu_data+2>) at arch/x86/kernel/irq.c:238
+#24 __common_interrupt (regs=<optimized out>, vector=38) at arch/x86/kernel/irq.c:257
+#25 0xffffffff821054f1 in common_interrupt (regs=0xffffffff83403da8, error_code=<optimized out>) at arch/x86/kernel/irq.c:247
+Backtrace stopped: Cannot access memory at address 0xffffc90000004010
+(gdb)
+```
+
+可以看到这就是一个典型的键盘事件栈：
+
+-   从硬中断进入，i8042/serio/ps2的硬件层，到input子系统，再分发到tty/vt所注册的kbd handler。
+-   在kbd handler里，触发了kill_pid，给systemd发送了SIGINT。
+
+所以，这确实是内核发出的信号，而且直接来自于tty的kbd驱动。
+
+接下来的问题是：
+
+-   tty/vt-kbd，为何会发送SIGINT？
+
+
+## 五、内核的input/vt/kbd过程 {#五-内核的input-vt-kbd过程}
+
+在这里，我们需要看一点点代码，粗略地了解一点点内核的input/tty/vt/kbd相关的框架……
+
+略去大量大量大量的细节，我们可以如此粗略地理解：
+
+-   vt(virtual tty)很重要，因为我们现在的session都是跑在vt里。——我们常说的切tty，切的就是vt。
+-   vt有不同的模式，最典型的是：tty模式和图形模式下，vt的工作原理是截然不同的。
+
+这里要稍微提一下input子系统：
+
+-   所有的硬件事件，都会通过input_event()进入input子系统，转换为三元的input事件：type/code/value。——典型的按键事件，type为1，code为键值，value 1/0表示up/down。
+-   上面是event的生产者，input子系统注册多个消费者：也就是不同的handler。
+-   典型的，kbd就是一个handler：它主要是为tty模式服务的。
+-   典型的，有另外一个handler：evdev，也就是我们在用户空间看到的/dev/input/eventX，它会将input event通过设备节点传递到用户空间。
+-   对于图形程序，比如xkb/libinput，就是通过evdev来读取事件并处理的，并不走kbd那一套。
+-   evdev也支持并发读取而互不影响（其实现很有意思），所以我们还可以手动起evtest抓取事件。——evdev甚至还支持事件写入模拟，比如我现在测试resourced的鼠标模拟就是这个路径。
+
+ok，到这里，最重要的一点就是：
+
+-   kbd作为vt的默认keyboard handler，它是为tty服务的，在图形模式下它基本不工作。
+
+有一个类似于C-A-D的典型例子，当我们尝试切换tty，也就是Ctrl-Alt-F6时：
+
+-   如果当前是在tty里，则会由vt kbd在底层捕获这种组合按键，并且直接在内核调用set_console()相关函数，完成chvt。
+-   如果是在图形环境里（以wayland为例），vt-kbd不处理，必须经由xorg，通过libinput，在xkb里组合为一个chvt事件，然后通过dbus请求systemd-logind来完成处理。——wayland环境下，session和vt管理，以及drm master权限等等，全部是由systemd-logind接管的，比xorg要规范。
+
+那vt kbd如何完成这种切换？
+
+它提供了相关的ioctl，可以设置其kbdmode：
+
+-   在tty模式下时，其会被初始化为VC_UNICODE
+-   到图形时，则会被切换为VC_OFF，关闭其处理路径。（当然实际实现要复杂得多得多）
+
+<!--listend-->
+
+```c
+unsigned char kbdmode:3;	/* one 3-bit value */
+
+#define VC_XLATE	0	/* translate keycodes using keymap */
+#define VC_MEDIUMRAW	1	/* medium raw (keycode) mode */
+#define VC_RAW		2	/* raw (scancode) mode */
+#define VC_UNICODE	3	/* Unicode mode */
+#define VC_OFF		4	/* disabled mode */
+```
+
+ok，接下来，让我们来看一看它们的代码实现。
+
+
+## 六、内核的vt-kbd实现 {#六-内核的vt-kbd实现}
+
+kbd的入口处理函数是：
+
+```c
+static void kbd_event(struct input_handle *handle, unsigned int event_type,
+                      unsigned int event_code, int value)
+{
+        /* We are called with interrupts disabled, just take the lock */
+        spin_lock(&kbd_event_lock);
+
+        if (event_type == EV_MSC && event_code == MSC_RAW &&
+                        kbd_is_hw_raw(handle->dev))
+                kbd_rawcode(value);
+        if (event_type == EV_KEY && event_code <= KEY_MAX)
+                kbd_keycode(event_code, value, kbd_is_hw_raw(handle->dev));
+
+        spin_unlock(&kbd_event_lock);
+
+        tasklet_schedule(&keyboard_tasklet);
+        do_poke_blanked_console = 1;
+        schedule_console_callback();
+}
+```
+
+kbd_keycode是核心处理函数，处理所有的key事件。
+
+我们略过普通的按键处理，而是关注组合事件，也就是fn相关的处理：
+
+```c
+static void kbd_keycode(unsigned int keycode, int down, bool hw_raw)
+{
+        struct vc_data *vc = vc_cons[fg_console].d;
+        kbd = &kbd_table[vc->vc_num];
+
+    ...
+
+        param.value = keysym;
+        rc = atomic_notifier_call_chain(&keyboard_notifier_list,
+                                        KBD_KEYSYM, &param);
+
+    ...
+
+        if ((raw_mode || kbd->kbdmode == VC_OFF) && type != KT_SPEC && type != KT_SHIFT)
+                return;
+
+        (*k_handler[type])(vc, keysym & 0xff, !down);
+
+}
+```
+
+上面的函数有很多个关键点：
+
+-   有一个全局的kbd_table，vc-&gt;vc_num代表了其索引，可以拿到vt相关联的kbd。——最多有64个。
+-   在处理流程里，有两次notify。——现在的ste powerkey事件，就是注册的一个notifier。
+-   如果是运行在VC_OFF模式（也就是图形桌面）下，则只处理KT_SPEC/KT_SHIFT事件，其他直接跳过。——所以普通的abcd不会进入tty。
+-   最终是通过一个table来完成handler调用的。
+
+kbd的k_handler是一张表，用type来索引：
+
+```c
+#define K_HANDLERS\
+        k_self,		k_fn,		k_spec,		k_pad,\
+        k_dead,		k_cons,		k_cur,		k_shift,\
+        k_meta,		k_ascii,	k_lock,		k_lowercase,\
+        k_slock,	k_dead2,	k_brl,		k_ignore
+
+typedef void (k_handler_fn)(struct vc_data *vc, unsigned char value,
+                            char up_flag);
+static k_handler_fn K_HANDLERS;
+static k_handler_fn *k_handler[16] = { K_HANDLERS };
+```
+
+可以看到：
+
+-   我们所关注的k_spec就在其中，序号为2。
+-   还有一个k_cons()：没错，它就是kbd里的tty切换入口。
+
+<!--listend-->
+
+```c
+static void k_cons(struct vc_data *vc, unsigned char value, char up_flag)
+{
+        if (up_flag)
+                return;
+
+        set_console(value);
+}
+```
+
+而k_spec可以策略认为就是各种vt里的fn按键：各种特定事件的小功能，比如enter、show、send-intr、hold、SAK……
+
+所以它内部也是一张表，根据事件id来找到对应的处理函数：
+
+```c
+#define FN_HANDLERS\
+        fn_null,	fn_enter,	fn_show_ptregs,	fn_show_mem,\
+        fn_show_state,	fn_send_intr,	fn_lastcons,	fn_caps_toggle,\
+        fn_num,		fn_hold,	fn_scroll_forw,	fn_scroll_back,\
+        fn_boot_it,	fn_caps_on,	fn_compose,	fn_SAK,\
+        fn_dec_console, fn_inc_console, fn_spawn_con,	fn_bare_num
+
+typedef void (fn_handler_fn)(struct vc_data *vc);
+static fn_handler_fn FN_HANDLERS;
+static fn_handler_fn *fn_handler[] = { FN_HANDLERS };
+
+static void k_spec(struct vc_data *vc, unsigned char value, char up_flag)
+{
+        if (up_flag)
+                return;
+        if (value >= ARRAY_SIZE(fn_handler))
+                return;
+        if ((kbd->kbdmode == VC_RAW ||
+             kbd->kbdmode == VC_MEDIUMRAW ||
+             kbd->kbdmode == VC_OFF) &&
+             value != KVAL(K_SAK))
+                return;		/* SAK is allowed even in raw mode */
+        fn_handler[value](vc);
+}
+```
+
+其中有几个点需要特别关注：
+
+-   当kbd-&gt;kbdmode为VC_OFF时，除了SAK事件之外，全部会被忽略掉。——也就是说，VC_OFF时，spec事件并不会触发。
+-   事件12：fn_boot_it
+
+看一下fn_boot_it的实现：
+
+```c
+static void fn_boot_it(struct vc_data *vc)
+{
+        ctrl_alt_del();
+}
+```
+
+熟悉的名字：
+
+```c
+/*
+ * This function gets called by ctrl-alt-del - ie the keyboard interrupt.
+ * As it's called within an interrupt, it may NOT sync: the only choice
+ * is whether to reboot at once, or just ignore the ctrl-alt-del.
+ */
+void ctrl_alt_del(void)
+{
+        static DECLARE_WORK(cad_work, deferred_cad);
+
+        if (C_A_D)
+                schedule_work(&cad_work);
+        else
+                kill_cad_pid(SIGINT, 1);
+}
+```
+
+可以看到：
+
+-   如果没有C-A-D事件，默认就是给1号进程（也就是systemd）发送一个SIGINT。
+
+ok，到这里，我们知道了：
+
+-   kbd有多种kbdmode。
+-   kbd工作在tty模式下时，需要处理各种事件，比如tty切换、tty-enter、C-A-D等等。
+-   在图形模式下时，则需要切换为VC_OFF，关闭掉这些处理。——会由图形daemon通过evdev处理。
+
+
+## 七、确认kbdmode {#七-确认kbdmode}
+
+虚拟机gdb，断在内核ctrl_alt_del()：
+
+```nil
+(gdb) bt
+#0  ctrl_alt_del () at kernel/reboot.c:800
+#1  0xffffffff81ac111c in kbd_keycode (hw_raw=<optimized out>, down=1, keycode=<optimized out>) at drivers/tty/vt/keyboard.c:1524
+#2  kbd_event (handle=<optimized out>, event_type=<optimized out>, event_code=<optimized out>, value=1) at drivers/tty/vt/keyboard.c:1543
+#3  0xffffffff81cf5fea in input_to_handler (handle=handle@entry=0xffff8881011bcd20, vals=vals@entry=0xffff888120198a20, count=count@entry=3) at drivers/input/input.c:132
+#4  0xffffffff81cf743f in input_pass_values (dev=dev@entry=0xffff8881203b7800, vals=0xffff888120198a20, count=3) at drivers/input/input.c:161
+#5  0xffffffff81cf7535 in input_pass_values (count=<optimized out>, vals=<optimized out>, dev=0xffff8881203b7800) at drivers/input/input.c:150
+#6  input_event_dispose (dev=0xffff8881203b7800, disposition=<optimized out>, type=0, code=0, value=0) at drivers/input/input.c:378
+#7  0xffffffff81cfa1b3 in input_event (value=0, code=0, type=0, dev=0xffff8881203b7800) at drivers/input/input.c:435
+#8  input_event (dev=dev@entry=0xffff8881203b7800, type=type@entry=0, code=code@entry=0, value=value@entry=0) at drivers/input/input.c:427
+#9  0xffffffff81d01cfb in input_sync (dev=0xffff8881203b7800) at ./include/linux/input.h:450
+#10 atkbd_receive_byte (ps2dev=0xffff8881203ad800, data=<optimized out>) at drivers/input/keyboard/atkbd.c:562
+#11 0xffffffff81cf5afe in ps2_interrupt (serio=<optimized out>, data=83 'S', flags=<optimized out>) at drivers/input/serio/libps2.c:613
+#12 0xffffffff81cf0d27 in serio_interrupt (serio=serio@entry=0xffff88810119e800, data=data@entry=83 'S', dfl=dfl@entry=0) at drivers/input/serio/serio.c:998
+#13 0xffffffff81cf223f in i8042_interrupt (irq=1, dev_id=<optimized out>) at drivers/input/serio/i8042.c:610
+#14 0xffffffff811d06a7 in __handle_irq_event_percpu (desc=desc@entry=0xffff8881000a4a00) at kernel/irq/handle.c:158
+#15 0xffffffff811d0898 in handle_irq_event_percpu (desc=0xffff8881000a4a00) at kernel/irq/handle.c:193
+#16 handle_irq_event (desc=desc@entry=0xffff8881000a4a00) at kernel/irq/handle.c:210
+#17 0xffffffff811d5f4b in handle_edge_irq (desc=0xffff8881000a4a00) at kernel/irq/chip.c:831
+#18 0xffffffff81041d5b in generic_handle_irq_desc (desc=0xffff88810027b800) at ./include/linux/irqdesc.h:161
+#19 handle_irq (regs=0x26 <fixed_percpu_data+38>, desc=0xffff88810027b800) at arch/x86/kernel/irq.c:238
+#20 __common_interrupt (regs=regs@entry=0xffffc90003bb3f58, vector=vector@entry=38) at arch/x86/kernel/irq.c:257
+#21 0xffffffff821054b3 in common_interrupt (regs=0xffffc90003bb3f58, error_code=38) at arch/x86/kernel/irq.c:247
+#22 0xffffffff822015e6 in asm_common_interrupt () at ./arch/x86/include/asm/idtentry.h:678
+```
+
+查看kbdmode：
+
+```nil
+(gdb) p vc
+$3 = (struct vc_data *) 0xffff888100279000
+
+(gdb) p vc->vc_num
+$4 = 0
+
+(gdb) p kbd_table[0]
+$5 = {
+lockstate = 0 '\000',
+slockstate = 0 '\000',
+ledmode = 0 '\000',
+ledflagstate = 0 '\000',
+default_ledflagstate = 0 '\000',
+kbdmode = 3 '\003',
+modeflags = 20 '\024'
+}
+```
+
+可以看到：
+
+-   在treeland环境里，其关联的kbd-&gt;kbdmode为3，也就是VC_UNICODE，而非VC_OFF/4。
+
+
+## 八、x11环境下kbdmode {#八-x11环境下kbdmode}
+
+在x11环境下：
+
+```nil
+$12 = (struct kbd_struct *) 0xffffffff844aaf00 <kbd_table>
+(gdb) p *kbd
+$13 = {
+lockstate = 0 '\000',
+slockstate = 0 '\000',
+ledmode = 0 '\000',
+ledflagstate = 0 '\000',
+default_ledflagstate = 0 '\000',
+kbdmode = 4 '\004',
+modeflags = 20 '\024'
+}
+```
+
+可以看到，其kbdmode为4。——这才是合理的。
+
+我们进一步追踪vt_do_kdskbmode，这是内核里的kbdmode设置函数，从ioctl进入：
+
+```c
+static int vt_k_ioctl(struct tty_struct *tty, unsigned int cmd,
+                unsigned long arg, bool perm)
+{
+    ...
+
+        switch (cmd) {
+    ...
+
+        case KDSKBMODE:
+                if (!perm)
+                        return -EPERM;
+                ret = vt_do_kdskbmode(console, arg);
+                if (ret)
+                        return ret;
+                tty_ldisc_flush(tty);
+                break;
+
+    ...
+    }
+}
+
+/**
+ *	vt_do_kdskbmode		-	set keyboard mode ioctl
+ *	@console: the console to use
+ *	@arg: the requested mode
+ *
+ *	Update the keyboard mode bits while holding the correct locks.
+ *	Return 0 for success or an error code.
+ */
+int vt_do_kdskbmode(unsigned int console, unsigned int arg)
+{
+        struct kbd_struct *kb = &kbd_table[console];
+        int ret = 0;
+        unsigned long flags;
+
+        spin_lock_irqsave(&kbd_event_lock, flags);
+        switch(arg) {
+        case K_RAW:
+                kb->kbdmode = VC_RAW;
+                break;
+        case K_MEDIUMRAW:
+                kb->kbdmode = VC_MEDIUMRAW;
+                break;
+        case K_XLATE:
+                kb->kbdmode = VC_XLATE;
+                do_compute_shiftstate();
+                break;
+        case K_UNICODE:
+                kb->kbdmode = VC_UNICODE;
+                do_compute_shiftstate();
+                break;
+        case K_OFF:
+                kb->kbdmode = VC_OFF;
+                break;
+        default:
+                ret = -EINVAL;
+        }
+        spin_unlock_irqrestore(&kbd_event_lock, flags);
+        return ret;
+}
+```
+
+在启动过程中，可以抓到：
+
+```nil
+Thread 4 hit Breakpoint 16, vt_do_kdskbmode (console=0, arg=arg@entry=4) at drivers/tty/vt/keyboard.c:1841
+1841    {
+1: kbd_table = {{
+    lockstate = 0 '\000',
+    slockstate = 0 '\000',
+    ledmode = 0 '\000',
+    ledflagstate = 0 '\000',
+    default_ledflagstate = 0 '\000',
+    kbdmode = 3 '\003',
+    modeflags = 20 '\024'
+} <repeats 63 times>}
+
+2: $lx_current()->comm = "Xorg", '\000' <repeats 11 times>
+
+(gdb) bt
+#0  vt_do_kdskbmode (console=0, arg=arg@entry=4) at drivers/tty/vt/keyboard.c:1841
+#1  0xffffffff81abc0d1 in vt_k_ioctl (perm=<optimized out>, arg=4, cmd=19269, tty=0xffff8881039b0800) at drivers/tty/vt/vt_ioctl.c:399
+#2  vt_ioctl (tty=0xffff8881039b0800, cmd=19269, arg=4) at drivers/tty/vt/vt_ioctl.c:752
+#3  0xffffffff81aabeea in tty_ioctl (file=0xffff888110f1e100, cmd=19269, arg=4) at drivers/tty/tty_io.c:2779
+#4  0xffffffff814d5eb4 in vfs_ioctl (arg=4, cmd=<optimized out>, filp=0xffff888110f1e100) at fs/ioctl.c:51
+#5  __do_sys_ioctl (arg=4, cmd=<optimized out>, fd=<optimized out>) at fs/ioctl.c:871
+#6  __se_sys_ioctl (arg=4, cmd=<optimized out>, fd=<optimized out>) at fs/ioctl.c:857
+#7  __x64_sys_ioctl (regs=<optimized out>) at fs/ioctl.c:857
+#8  0xffffffff8210246a in do_syscall_x64 (nr=<optimized out>, regs=0xffffc90000de3f58) at arch/x86/entry/common.c:51
+#9  do_syscall_64 (regs=0xffffc90000de3f58, nr=<optimized out>) at arch/x86/entry/common.c:81
+#10 0xffffffff82200134 in entry_SYSCALL_64 () at arch/x86/entry/entry_64.S:121
+#11 0x00005560ca1427b0 in ?? ()
+#12 0x0000000000000003 in fixed_percpu_data ()
+#13 0x00005560ca131c20 in ?? ()
+#14 0x00005560ca142c20 in ?? ()
+#15 0x00005560ca142bc4 in ?? ()
+#16 0x00005560ca107ba0 in ?? ()
+#17 0x0000000000000246 in ?? ()
+#18 0x00007f543970b6c8 in ?? ()
+#19 0x0000000000000000 in ?? ()
+(gdb)
+```
+
+可以看到：
+
+-   x11环境下，是由Xorg完成设置的，会将其设置为4。
+
+看一下xorg代码，可以看到它在初始化过程里会主动去设置：
+
+```c
+void
+xf86OpenConsole(void)
+{
+    int i, ret;
+    struct vt_stat vts;
+    struct vt_mode VT;
+    const char *vcs[] = { "/dev/vc/%d", "/dev/tty%d", NULL };
+
+    if (serverGeneration == 1) {
+        linux_parse_vt_settings(FALSE);
+        SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETSTATE, &vts));
+
+            /*
+             * now get the VT.  This _must_ succeed, or else fail completely.
+             */
+            if (!switch_to(xf86Info.vtno, "xf86OpenConsole"))
+                FatalError("xf86OpenConsole: Switching VT failed\n");
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETMODE, &VT));
+
+            OsSignal(SIGUSR1, xf86VTRequest);
+
+            VT.mode = VT_PROCESS;
+            VT.relsig = SIGUSR1;
+            VT.acqsig = SIGUSR1;
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_SETMODE, &VT));
+
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS));
+
+            tcgetattr(xf86Info.consoleFd, &tty_attr);
+            SYSCALL(ioctl(xf86Info.consoleFd, KDGKBMODE, &tty_mode));
+
+            /* disable kernel special keys and buffering */
+            SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_OFF));
+
+
+            nTty = tty_attr;
+            nTty.c_iflag = (IGNPAR | IGNBRK) & (~PARMRK) & (~ISTRIP);
+            nTty.c_oflag = 0;
+            nTty.c_cflag = CREAD | CS8;
+            nTty.c_lflag = 0;
+            nTty.c_cc[VTIME] = 0;
+            nTty.c_cc[VMIN] = 1;
+            cfsetispeed(&nTty, 9600);
+            cfsetospeed(&nTty, 9600);
+            tcsetattr(xf86Info.consoleFd, TCSANOW, &nTty);
+        }
+    }
+    else {                      /* serverGeneration != 1 */
+        if (!xf86Info.ShareVTs && xf86Info.autoVTSwitch) {
+            /* now get the VT */
+            if (!switch_to(xf86Info.vtno, "xf86OpenConsole"))
+                FatalError("xf86OpenConsole: Switching VT failed\n");
+        }
+    }
+}
+```
+
+可以看到：
+
+-   这个过程里有大量的通过ioctl对于vt配置的操作，其中就包括将其KDSKBMODE设置为K_OFF。
+-   xorg的明确注释符合我们的理解：disable掉kernel tty侧对于key的处理和buffering。——buffering指的是tty的input流，也就是我们熟悉的printk/stdin相关的。
+-   貌似xorg也支持attach模式，有一个直接switch_to的路径。
+-   xorg注册了SIGUSR1，这是后续用来从内核接受tty相关状态改变的信号：aquire和release。
+
+
+## 九、wayland环境下的kbdmode {#九-wayland环境下的kbdmode}
+
+在gnome/wayland环境下，则是由systemd-logind调用的：
+
+```nil
+(gdb)
+Thread 1 hit Breakpoint 2, vt_do_kdskbmode (console=1, arg=arg@entry=4) at drivers/tty/vt/keyboard.c:1841
+1841    {
+1: $lx_current()->comm = "systemd-logind\000"
+(gdb) c
+Continuing.
+```
+
+systemd-login通过dbus提供了相关接口：
+
+```c
+static int method_take_control(sd_bus_message *message, void *userdata, sd_bus_error *error) {
+        ...
+        r = session_set_controller(s, sd_bus_message_get_sender(message), force, true);
+        return sd_bus_reply_method_return(message, NULL);
+}
+
+int session_set_controller(Session *s, const char *sender, bool force, bool prepare) {
+        ...
+
+        /* When setting a session controller, we forcibly mute the VT and set
+         * it into graphics-mode. Applications can override that by changing
+         * VT state after calling TakeControl(). However, this serves as a good
+         * default and well-behaving controllers can now ignore VTs entirely.
+         * Note that we reset the VT on ReleaseControl() and if the controller
+         * exits.
+         * If logind crashes/restarts, we restore the controller during restart
+         * (without preparing the VT since the controller has probably overridden
+         * VT state by now) or reset the VT in case it crashed/exited, too. */
+        if (prepare) {
+                r = session_prepare_vt(s);
+        }
+
+        session_release_controller(s, true);
+        s->controller = TAKE_PTR(name);
+        session_save(s);
+
+        return 0;
+}
+
+static int session_prepare_vt(Session *s) {
+    ...
+
+        vt = session_open_vt(s, /* reopen = */ false);
+        r = fchown(vt, s->user->user_record->uid, -1);
+        r = ioctl(vt, KDSKBMODE, K_OFF);
+        r = ioctl(vt, KDSETMODE, KD_GRAPHICS);
+
+        /* Oh, thanks to the VT layer, VT_AUTO does not work with KD_GRAPHICS.
+         * So we need a dummy handler here which just acknowledges *all* VT
+         * switch requests. */
+        mode.mode = VT_PROCESS;
+        mode.relsig = SIGRTMIN;
+        mode.acqsig = SIGRTMIN + 1;
+        r = ioctl(vt, VT_SETMODE, &mode);
+
+        return 0;
+}
+```
+
+可以看到：
+
+-   logind通过dbus提供了session/vt相关的操作接口，尤其是控制权相关的。
+-   同样的，会设置K_OFF，KD_GRAPHICS之类的……
+
+另外还有一个操作，当我们切换tty时：
+
+```nil
+$ virsh send-key debian12 KEY_LEFTCTRL KEY_LEFTALT KEY_F3
+```
+
+可以看到agentty会设置：
+
+```nil
+Thread 1 hit Breakpoint 2, vt_do_kdskbmode (console=2, arg=arg@entry=3) at drivers/tty/vt/keyboard.c:1841
+1841    {
+1: $lx_current()->comm = "(agetty)\000\000\000\000\000\000\000"
+(gdb) c
+Continuing.
+```
+
+agentty，大概是tty创建之后跑的默认第一个程序，会打印出“login：”让我们输入用户名。——当我们按下回车时，其实就从agentty跳转到password程序了……
+
+
+## 十、验证以及NEXT {#十-验证以及next}
+
+到这里基本就差不多了，但是我们还可以验证一下：
+
+在treeland登陆后，直接修改其关联kbd的kbdmode：
+
+```nil
+Thread 1 hit Breakpoint 8, kbd_keycode (hw_raw=<optimized out>, down=1, keycode=36) at drivers/tty/vt/keyboard.c:1408
+1408            tty = vc->port.tty;
+(gdb) p vc
+$12 = (struct vc_data *) 0xffff88810115b400
+(gdb) p vc->vc_num
+$13 = 1
+(gdb) set kbd_table[1].kbdmode = 4
+(gdb) c
+Continuing.
+```
+
+再触发：
+
+```nil
+virsh send-key uos-v25-mutable KEY_LEFTCTRL KEY_LEFTALT KEY_DELETE
+```
+
+结果：没有重启，也没有弹出dde-lock。——ok，符合预期。没有弹出dde-lock大概是因为没有服务在DDE环境里关注该事件。
+
+Next：
+
+-   treeland fix：应该最好是参考wayland，通过systemd接口来实现session管理，合理配置vt。

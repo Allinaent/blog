@@ -3,12 +3,16 @@ title: Links
 links:
   - title: GitHub
     description: GitHub is the world's largest software development platform.
-    website: https://github.com
+    website: https://github.com/Allinaent
     image: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
   - title: TypeScript
     description: TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.
     website: https://www.typescriptlang.org
     image: ts-logo-128.jpg
+  - title: annas-archive
+    description: You can download any book from here
+    website: https://annas-archive.org/
+    image: https://r2.guolongji.xyz/allinaent/2024/12/8a321e0308e10432b7667101d88a7eb3.png
 menu:
     main: 
         weight: -50
@@ -17,7 +21,8 @@ menu:
 
 comments: false
 ---
-
+在此收录一些比较好的链接 :)
+<!--
 To use this feature, add `links` section to frontmatter.
 
 This page's frontmatter:
@@ -35,3 +40,4 @@ links:
 ```
 
 `image` field accepts both local and external images.
+-->

@@ -1,10 +1,11 @@
 +++
 title = "b 站上的数学好课"
 date = 2024-12-12T19:35:00+08:00
-lastmod = 2024-12-13T15:10:46+08:00
+lastmod = 2024-12-13T16:32:04+08:00
 categories = ["math"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/3347f176357f4145e1d75ccd268ee8d8.jpg"
 +++
 
 ## 集成低分辨率的视频 {#集成低分辨率的视频}
