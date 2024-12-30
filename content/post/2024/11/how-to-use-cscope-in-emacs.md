@@ -1,7 +1,7 @@
 +++
 title = "用服务器看内核代码的最小化实践"
 date = 2024-11-27T21:26:00+08:00
-lastmod = 2024-11-27T21:49:51+08:00
+lastmod = 2024-12-30T10:43:20+08:00
 categories = ["kernel"]
 draft = false
 toc = true
@@ -57,3 +57,84 @@ C-c s g
 global 可以增量更新，增量更新的速度快，那请问我要写代码了，我为什么不先写个文档，把内核的东西的理顺了。快速看代码和写一个新功能本来就不是一个需求。我平时是看代码分析问题的时候更多，而不是搞懂一个子系统来写代码的时候多。而且，我可以复制一份新的代码来写，用 git 看修改，只读旧代码。
 
 如果一定要写代码，我当然也不介意编一个 global 来用。这个等到再有需要的时候再写一个博客吧。
+
+
+## 补充 {#补充}
+
+随着服务器场景下看代码情况使用的变多，我发现有些服务器环境下xcsope 包也没有，网下的版本xcscope.el
+下载下来的版本也有 bug 。我不想编译 emacs 和 cscope ，也不想解这方面的bug 。服务器上没有开发环境的支持是合理的。因为它是生产环境。所以进一步最下化，看看退一步有没有坚实的基础命令可以解决我的问题，是有的。
+
+安装 cscope 包（不是 xcscope ）然后，使用在shell 下使用命令，直接用 0 配置无高亮的 vim 即可。
+
+<https://stackoverflow.com/questions/14915971/cscope-how-to-use-cscope-to-search-for-a-symbol-using-command-line>
+
+找函数定义：
+
+cscope -d -f ./cscope.out -R -L1 start_kernel
+
+找调用：
+
+cscope -d -f ./cscope.out -R -L3 start_kernel
+
+找符号：
+
+cscope -d -f ./cscope.out -R -L0 start_kernel
+
+0 Find this C symbol:
+
+1 Find this function definition:
+
+2 Find functions called by this function:
+
+3 Find functions calling this function:
+
+4 Find this text string:
+
+5 Change this text string:
+
+6 Find this egrep pattern:
+
+7 Find this file:
+
+8 Find files #including this file:
+
+既然 cscope 版本的有了，那 global 的也写在这块吧。
+
+global 在服务器上没有，桌面版的远程机器可以安装。命令简单到不需要用 alias 就能记住：
+
+<https://www.panghuli.cn/notebook/emacs/modes/gnu-global-manual.html>
+
+生成索引 ggtags
+
+增量更新索引 global -uv
+
+查找定义 global xxx
+
+查找引用 global -r xxx
+
+查找符号 global -xs xxx
+
+为了防止忘记，这部分以注释的形式，放到 .bashrc 当中，这样最合适！
+
+还有 rg 的快速搜索，这块后面再补充吧。
+
+
+## 再补充 {#再补充}
+
+上面的命令是不是挺难记的。把上面的命令改成 alias 这样在本地看代码就好用了。服务器上没有这个 alias
+怎么办？搜一下：use local alias in remote server
+
+<https://superuser.com/questions/503784/loading-local-shell-aliases-to-ssh-session-dynamicaly>
+
+<https://serverfault.com/questions/849947/execute-local-alias-through-ssh-on-remote-server>
+
+```bash
+function ssh_with_rc() {
+   RC_DATA=`cat ${HOME}/.bashrc | base64 -w 0`
+   ssh -t $@ "echo \"${RC_DATA}\" | base64 --decode > /tmp/${USER}_bashrc; bash --rcfile /tmp/${USER}_bashrc; rm /tmp/${USER}_bashrc"
+}
+
+alias ssh="ssh_with_rc"
+```
+
+此乃神器！！！已经更新到我的 .bashrc 当中，试用了一下，出忽意料，十分好用。
