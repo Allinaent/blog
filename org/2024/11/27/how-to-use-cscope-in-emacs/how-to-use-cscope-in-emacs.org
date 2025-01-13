@@ -105,6 +105,15 @@ cscope -d -f ./cscope.out -R -L0 start_kernel
 
 8 Find files #including this file:
 
+把常用的命令用 alias 简化一下：
+
+#+begin_src bash
+# cscope
+alias csd="cscope -d -f ./cscope.out -R -L1 "
+alias csr="cscope -d -f ./cscope.out -R -L3 "
+alias css="cscope -d -f ./cscope.out -R -L0 "
+#+end_src
+
 既然 cscope 版本的有了，那 global 的也写在这块吧。
 
 global 在服务器上没有，桌面版的远程机器可以安装。命令简单到不需要用 alias 就能记住：

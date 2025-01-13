@@ -1,0 +1,19 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/01
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-01-13 一 11:43]
+#+TITLE: 用 alias 安装一常用脚本的例子
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image
+
+faddr2line 这个脚本分析内核函数栈的时候经常使用：
+
+#+begin_src bash
+alias ljfaddr2line="sudo bash -c 'if ! [ -f /usr/bin/faddr2line ];then wget -P /usr/bin https://r2.guolongji.xyz/faddr2line;chmod +x /usr/bin/faddr2line; else :; fi'"
+#+end_src
+
+把这个写成 alias 的话，我可以在任意通过 ssh 连接的机器上使用 ljfaddr2line 来安装脚本，非常地方便。

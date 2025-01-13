@@ -1,0 +1,620 @@
++++
+title = "crash 的进一步使用"
+date = 2024-12-31T09:17:00+08:00
+lastmod = 2025-01-08T13:46:05+08:00
+categories = ["kernel"]
+draft = false
+toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+## 写在前面 {#写在前面}
+
+解决问题的能力更多的在于面对一个新的问题的时候找思路的能力。这种能力一方面来自于积累的知识；另一方面来自于不惧困难的勇敢，面对复杂场面沉着冷静的心态和追求突破未知的疯狂热爱，智力的差别并不很重要。
+
+
+## 分析 {#分析}
+
+如果生成的是 vmcore.uncomplete 这种是生成的不完整的。如果是用 sys 命令看到的这种：
+
+```nil
+crash> sys
+      KERNEL: vmlinux
+    DUMPFILE: 127.0.0.1-2024-12-26-19:19:57/vmcore  [PARTIAL DUMP]
+        CPUS: 12
+        DATE: Thu Dec 26 19:19:50 CST 2024
+      UPTIME: 01:44:24
+LOAD AVERAGE: 6.64, 2.86, 1.22
+       TASKS: 1138
+    NODENAME: Server-69d7f539-1039-4275-aab4-344b5e60f23e
+     RELEASE: 4.19.90-2305.1.0.0199.56.uel20.x86_64
+     VERSION: #1 SMP Fri May 12 19:23:49 CST 2023
+     MACHINE: x86_64  (2399 Mhz)
+      MEMORY: 24 GB
+       PANIC: "Kernel panic - not syncing: hung_task: blocked tasks"
+```
+
+这个里面有 PARTICIAL 的，并不是 DUMP 的不完整，可以正常分析。
+
+bt -f：强制显示所有栈帧，包含损坏或不可解析的栈帧。
+
+bt -F：只显示有效的栈帧，跳过不可解析的部分。bt -f ，使用这个命令的目的是。
+
+所以一般用 bt -f 来查看更全面的栈信息。
+
+```nil
+crash> bt -f
+PID: 55       TASK: ffff9812fce7bd00  CPU: 10   COMMAND: "khungtaskd"
+ #0 [ffff9812fd0f7d18] machine_kexec at ffffffff92e569af
+    ffff9812fd0f7d20: 0000000000000000 ffff980fc0000000
+    ffff9812fd0f7d30: 0000000014001000 ffff980fd4001000
+    ffff9812fd0f7d40: 0000000014000000 0a00080000050657
+    ffff9812fd0f7d50: a19deeb3b4259800 0000000000000000
+    ffff9812fd0f7d60: ffff9812fd0f7eb0 ffffffff942db609
+    ffff9812fd0f7d70: ffffffff92f59611
+ #1 [ffff9812fd0f7d70] __crash_kexec at ffffffff92f59611
+    ffff9812fd0f7d78: ffffffff94412780 ffffffff94412fa0
+    ffff9812fd0f7d88: ffff9812fd0f7ec0 ffffffff942db609
+    ffff9812fd0f7d98: ffff9812fd0f7eb0 0000000000000000
+    ffff9812fd0f7da8: ffff9810c3dbeb70 0000000000000000
+    ffff9812fd0f7db8: ffffffff94bdba14 ffffffff93835157
+    ffff9812fd0f7dc8: 0000000000000001 ffff9812fce7bd00
+    ffff9812fd0f7dd8: 0000000000000000 0000000000000000
+    ffff9812fd0f7de8: ffff9812fd0f7d78 00000000000000fd
+    ffff9812fd0f7df8: ffffffff92f595a0 0000000000000010
+    ffff9812fd0f7e08: 0000000000000046 ffff9812fd0f7d70
+    ffff9812fd0f7e18: 0000000000000018 a19deeb3b4259800
+    ffff9812fd0f7e28: 0000000100091a00 ffffffff92eaf0f2
+ #2 [ffff9812fd0f7e30] panic at ffffffff92eaf0f2
+    ffff9812fd0f7e38: 0000000100000008 ffff9812fd0f7ec0
+    ffff9812fd0f7e48: ffff9812fd0f7e58 a19deeb3b4259800
+    ffff9812fd0f7e58: 0000000000000000 0000000000000000
+    ffff9812fd0f7e68: 00000000003ffb9a fffffffefff6e60a
+    ffff9812fd0f7e78: ffffffff93835157 ffffffff94bdba14
+    ffff9812fd0f7e88: 0000000100091a00 0000000000000000
+    ffff9812fd0f7e98: 00000000003ffb9a 7fffffffffffffff
+    ffff9812fd0f7ea8: ffffffff94412fa0 ffff981127f9c730
+    ffff9812fd0f7eb8: ffffffff92f8d250
+ #3 [ffff9812fd0f7eb8] watchdog at ffffffff92f8d250
+    ffff9812fd0f7ec0: ffffffff94412780 0000000000000002
+    ffff9812fd0f7ed0: 0000000000002ee0 0000000000000078
+    ffff9812fd0f7ee0: ffff9812fce3e060 ffff9812fcd78e40
+    ffff9812fd0f7ef0: ffff9810c1e1fd40 ffff9812fce7bd00
+    ffff9812fd0f7f00: 0000000000000000 ffffffff92f8cfe0
+    ffff9812fd0f7f10: ffffffff92ed37c3
+ #4 [ffff9812fd0f7f10] kthread at ffffffff92ed37c3
+    ffff9812fd0f7f18: ffff9812fce3e098 ffffffff92ed36b0
+    ffff9812fd0f7f28: 0000000000000000 ffff9812fcd78e40
+    ffff9812fd0f7f38: 0000000000000000 0000000000000000
+    ffff9812fd0f7f48: 0000000000000000 ffffffff93a0022f
+ #5 [ffff9812fd0f7f50] ret_from_fork at ffffffff93a0022f
+```
+
+bt -a 查看所有的cpu 栈帧。
+
+```nil
+crash> bt -a
+PID: 0        TASK: ffffffff94412780  CPU: 0    COMMAND: "swapper/0"
+ #0 [fffffe0000008e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe0000008e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe0000008eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe0000008ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe0000008ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffffffff94403e88  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000000  RCX: 0000000000000200
+    RDX: 0000000000000001  RSI: 0000000000000000  RDI: ffff9812fbe238c0
+    RBP: 0000000000000000   R8: 00000446c941e4ce   R9: 0000000000000001
+    R10: 0000000000000001  R11: ffff9810c5208f28  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffffffff94403e88] native_safe_halt at ffffffff938348ee
+ #6 [ffffffff94403e88] default_idle at ffffffff9383451c
+ #7 [ffffffff94403eb0] do_idle at ffffffff92ee5a6f
+ #8 [ffffffff94403ef0] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffffffff94403f10] start_kernel at ffffffff94e751b1
+#10 [ffffffff94403f50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1e8bd00  CPU: 1    COMMAND: "swapper/1"
+ #0 [fffffe0000034e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe0000034e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe0000034eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe0000034ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe0000034ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: do_idle+497]
+    RIP: ffffffff92ee5aa1  RSP: ffff9810c1e87ed8  RFLAGS: 00000287
+    RAX: 0000000000004dca  RBX: 0000000000000001  RCX: 0000000000000017
+    RDX: 00000000000124f8  RSI: 0003603501800000  RDI: ffffffff95601040
+    RBP: ffff9810c1e8bd00   R8: 00000446c9436374   R9: 0000000000000001
+    R10: 0000000000000001  R11: 0000000000000000  R12: 000005b2a961197e
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1e87ed8] do_idle at ffffffff92ee5aa1
+ #6 [ffff9810c1e87f10] cpu_startup_entry at ffffffff92ee5d3f
+ #7 [ffff9810c1e87f30] start_secondary at ffffffff92e4b1cd
+ #8 [ffff9810c1e87f50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 10616    TASK: ffff9810c4340000  CPU: 2    COMMAND: "ptsdevice"
+ #0 [ffff9810c65abeb0] crash_nmi_callback at ffffffff92e496e3
+ #1 [ffff9810c65abeb8] nmi_handle at ffffffff92e26313
+ #2 [ffff9810c65abf10] default_do_nmi at ffffffff92e267de
+ #3 [ffff9810c65abf30] do_nmi at ffffffff92e269c1
+ #4 [ffff9810c65abf50] nmi at ffffffff93a015a6
+    RIP: 00007fff47f26a0d  RSP: 00007f6937bfb320  RFLAGS: 00000202
+    RAX: 000005b616722f8f  RBX: 00007fff47f23080  RCX: 000000000000003a
+    RDX: 00000225c3abb712  RSI: 000000000000003a  RDI: 00007f6937bfb33c
+    RBP: 00007f6937bfb320   R8: 00007fff47f24000   R9: 00000446c9436574
+    R10: 001aa46b5e800000  R11: 0000000000000001  R12: 0000000000118e78
+    R13: 00007f6937bfb33c  R14: 000000c00089b520  R15: 00007f695fd2a927
+    ORIG_RAX: ffffffffffffffff  CS: 0033  SS: 002b
+
+PID: 0        TASK: ffff9810c1e89e80  CPU: 3    COMMAND: "swapper/3"
+ #0 [fffffe000008ce50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe000008ce58] nmi_handle at ffffffff92e26313
+ #2 [fffffe000008ceb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe000008ced0] do_nmi at ffffffff92e269c1
+ #4 [fffffe000008cef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1e97ea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000003  RCX: 0000000000000200
+    RDX: 0000000000000001  RSI: 0000000000000000  RDI: ffff9812fbee38c0
+    RBP: 0000000000000003   R8: 00000446c941c8a6   R9: 0000000000000001
+    R10: 0000000000000001  R11: 0000000000000000  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1e97ea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1e97ea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1e97ed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1e97f10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1e97f30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1e97f50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1e8db80  CPU: 4    COMMAND: "swapper/4"
+ #0 [fffffe00000b8e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe00000b8e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe00000b8eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe00000b8ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe00000b8ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1e9bea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000004  RCX: 0000000000000200
+    RDX: 0000000000000001  RSI: 0000000000000000  RDI: ffff9812fbf238c0
+    RBP: 0000000000000004   R8: 00000446c937578d   R9: 0000000000000001
+    R10: 0000000000000001  R11: ffff9810cc2c61a8  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1e9bea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1e9bea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1e9bed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1e9bf10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1e9bf30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1e9bf50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1eabd00  CPU: 5    COMMAND: "swapper/5"
+ #0 [fffffe00000e4e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe00000e4e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe00000e4eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe00000e4ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe00000e4ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1e9fea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000005  RCX: ffffffff944adec0
+    RDX: ffff9812fbf63b00  RSI: 0000000000000000  RDI: ffff9812fbf638c0
+    RBP: 0000000000000005   R8: 00000446c8f32ca4   R9: 0000000000000001
+    R10: 0000000000000001  R11: 00000000000003f0  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1e9fea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1e9fea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1e9fed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1e9ff10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1e9ff30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1e9ff50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1ea8000  CPU: 6    COMMAND: "swapper/6"
+ #0 [fffffe0000110e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe0000110e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe0000110eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe0000110ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe0000110ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1eb3ea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000006  RCX: 0000000000000000
+    RDX: ffff98112355bdb0  RSI: 0000000000000083  RDI: ffff9812fbfa38c0
+    RBP: 0000000000000006   R8: ffff98112355bdb0   R9: ffff981106cfbdb0
+    R10: 0000000000000000  R11: 00000000000003db  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1eb3ea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1eb3ea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1eb3ed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1eb3f10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1eb3f30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1eb3f50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1ea9e80  CPU: 7    COMMAND: "swapper/7"
+ #0 [fffffe000013ce50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe000013ce58] nmi_handle at ffffffff92e26313
+ #2 [fffffe000013ceb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe000013ced0] do_nmi at ffffffff92e269c1
+ #4 [fffffe000013cef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: llist_add_batch+14]
+    RIP: ffffffff933a378e  RSP: ffff9812fbfc3918  RFLAGS: 00000046
+    RAX: 0000000000000000  RBX: ffff9810c6270000  RCX: 0000000000000000
+    RDX: ffff9812fbe236e0  RSI: ffff9810c6270030  RDI: ffff9810c6270030
+    RBP: ffff9812fbfc3990   R8: 00000446c94395e9   R9: 0000000000000004
+    R10: 0000000000000000  R11: 000000000000afb8  R12: ffff9810c6270be4
+    R13: 0000000000000000  R14: 0000000000000046  R15: 0000000000022a80
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9812fbfc3918] llist_add_batch at ffffffff933a378e
+ #6 [ffff9812fbfc3918] try_to_wake_up at ffffffff92ee184e
+ #7 [ffff9812fbfc3928] __wake_up_common at ffffffff92efded6
+ #8 [ffff9812fbfc3998] __wake_up_common at ffffffff92efded6
+ #9 [ffff9812fbfc39f0] ep_poll_callback at ffffffff9311d0c3
+#10 [ffff9812fbfc3a58] __wake_up_common at ffffffff92efded6
+#11 [ffff9812fbfc3aa8] __wake_up_common_lock at ffffffff92efe04c
+#12 [ffff9812fbfc3b10] sock_def_readable at ffffffff936a80dc
+#13 [ffff9812fbfc3b20] tcp_rcv_established at ffffffff93749e78
+#14 [ffff9812fbfc3b60] tcp_v4_do_rcv at ffffffff93755d3d
+#15 [ffff9812fbfc3b80] tcp_v4_rcv at ffffffff937576df
+#16 [ffff9812fbfc3bf0] ip_local_deliver_finish at ffffffff9372c770
+#17 [ffff9812fbfc3c10] ip_local_deliver at ffffffff9372cc69
+#18 [ffff9812fbfc3c60] ip_rcv at ffffffff9372cd8c
+#19 [ffff9812fbfc3cb8] __netif_receive_skb_core at ffffffff936c8e33
+#20 [ffff9812fbfc3d08] dev_gro_receive at ffffffff936ca48f
+#21 [ffff9812fbfc3d78] __netif_receive_skb_one_core at ffffffff936c964c
+#22 [ffff9812fbfc3db0] netif_receive_skb_internal at ffffffff936c972d
+#23 [ffff9812fbfc3dd8] napi_gro_flush at ffffffff936c994d
+#24 [ffff9812fbfc3e18] napi_complete_done at ffffffff936c9a30
+#25 [ffff9812fbfc3e30] virtnet_poll at ffffffffc0476e96 [virtio_net]
+#26 [ffff9812fbfc3ed0] net_rx_action at ffffffff936c9c1a
+#27 [ffff9812fbfc3f50] __softirqentry_text_start at ffffffff93c000e8
+#28 [ffff9812fbfc3fb0] irq_exit at ffffffff92eb567b
+#29 [ffff9812fbfc3fc0] do_IRQ at ffffffff93a01eaf
+--- <IRQ stack> ---
+#30 [ffff9810c1eb7dd8] ret_from_intr at ffffffff93a00a4f
+    [exception RIP: pvclock_clocksource_read+18]
+    RIP: ffffffff92e5f672  RSP: ffff9810c1eb7e88  RFLAGS: 00000206
+    RAX: 00000000269bd9ac  RBX: 000005b2a2071cba  RCX: 0000000000000017
+    RDX: 0000000000000db5  RSI: 0000000000000036  RDI: ffffffff956011c0
+    RBP: 0000000000000000   R8: 00000446c9437763   R9: 0000000000000001
+    R10: 0000000000000001  R11: ffff9810c5206568  R12: 0000000000118e88
+    R13: ffffffff95251440  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffd8  CS: 0010  SS: 0018
+#31 [ffff9810c1eb7ea0] kvm_clock_get_cycles at ffffffff92e5e54d
+#32 [ffff9810c1eb7ea8] ktime_get at ffffffff92f3c00e
+#33 [ffff9810c1eb7ed0] do_idle at ffffffff92ee5a8d
+#34 [ffff9810c1eb7f10] cpu_startup_entry at ffffffff92ee5d3f
+#35 [ffff9810c1eb7f30] start_secondary at ffffffff92e4b1cd
+#36 [ffff9810c1eb7f50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 0        TASK: ffff9810c1eadb80  CPU: 8    COMMAND: "swapper/8"
+ #0 [fffffe0000168e50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe0000168e58] nmi_handle at ffffffff92e26313
+ #2 [fffffe0000168eb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe0000168ed0] do_nmi at ffffffff92e269c1
+ #4 [fffffe0000168ef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1ebbea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 0000000000000008  RCX: 0000000000000001
+    RDX: 0000000000000000  RSI: 0000000000000083  RDI: ffff9812fc0238c0
+    RBP: 0000000000000008   R8: ffff9812fc01d880   R9: 0000000000000000
+    R10: 0000000000000000  R11: 000000000000013e  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1ebbea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1ebbea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1ebbed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1ebbf10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1ebbf30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1ebbf50] secondary_startup_64 at ffffffff92e000e6
+
+PID: 10908    TASK: ffff9812fa721e80  CPU: 9    COMMAND: "ptsdevice"
+ #0 [ffff981106f03eb0] crash_nmi_callback at ffffffff92e496e3
+ #1 [ffff981106f03eb8] nmi_handle at ffffffff92e26313
+ #2 [ffff981106f03f10] default_do_nmi at ffffffff92e267de
+ #3 [ffff981106f03f30] do_nmi at ffffffff92e269c1
+ #4 [ffff981106f03f50] nmi at ffffffff93a015a6
+    RIP: 000000000043d4bf  RSP: 00007f69257b0bf0  RFLAGS: 00000246
+    RAX: 0000000000000000  RBX: 000000c00055c400  RCX: 0000000000000000
+    RDX: 0000000035e2eabd  RSI: 00007f69257b0bc0  RDI: 00007f69257b0b6c
+    RBP: 00007f69257b0c50   R8: 00007fff47f24000   R9: 00000446c943a134
+    R10: 00007f69257b0bc0  R11: 0000000000000001  R12: 00007f69257b0bd0
+    R13: 0000000000000000  R14: 000000c000115520  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0033  SS: 002b
+
+PID: 55       TASK: ffff9812fce7bd00  CPU: 10   COMMAND: "khungtaskd"
+ #0 [ffff9812fd0f7d18] machine_kexec at ffffffff92e569af
+ #1 [ffff9812fd0f7d70] __crash_kexec at ffffffff92f59611
+ #2 [ffff9812fd0f7e30] panic at ffffffff92eaf0f2
+ #3 [ffff9812fd0f7eb8] watchdog at ffffffff92f8d250
+ #4 [ffff9812fd0f7f10] kthread at ffffffff92ed37c3
+ #5 [ffff9812fd0f7f50] ret_from_fork at ffffffff93a0022f
+
+PID: 0        TASK: ffff9810c1ec3d00  CPU: 11   COMMAND: "swapper/11"
+ #0 [fffffe00001ece50] crash_nmi_callback at ffffffff92e496e3
+ #1 [fffffe00001ece58] nmi_handle at ffffffff92e26313
+ #2 [fffffe00001eceb0] default_do_nmi at ffffffff92e267de
+ #3 [fffffe00001eced0] do_nmi at ffffffff92e269c1
+ #4 [fffffe00001ecef0] end_repeat_nmi at ffffffff93a01663
+    [exception RIP: native_safe_halt+14]
+    RIP: ffffffff938348ee  RSP: ffff9810c1ecfea8  RFLAGS: 00000246
+    RAX: ffffffff93834500  RBX: 000000000000000b  RCX: 0000000000000001
+    RDX: ffff981102813db0  RSI: 0000000000000083  RDI: ffff9812fc0e38c0
+    RBP: 000000000000000b   R8: ffff9812fc0dd880   R9: ffff981102813db0
+    R10: 0000000000000000  R11: 0000000000000000  R12: 0000000000000000
+    R13: 0000000000000000  R14: 0000000000000000  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+--- <NMI exception stack> ---
+ #5 [ffff9810c1ecfea8] native_safe_halt at ffffffff938348ee
+ #6 [ffff9810c1ecfea8] default_idle at ffffffff9383451c
+ #7 [ffff9810c1ecfed0] do_idle at ffffffff92ee5a6f
+ #8 [ffff9810c1ecff10] cpu_startup_entry at ffffffff92ee5d3f
+ #9 [ffff9810c1ecff30] start_secondary at ffffffff92e4b1cd
+#10 [ffff9810c1ecff50] secondary_startup_64 at ffffffff92e000e6
+```
+
+这里面搜索 ptsdevice 能找到两个用户态的进程，他们的CPU 段寄存器是 CS: 0010 是处于用户态的。
+
+crash 里面的 log 查看到最下面：
+
+```nil
+[ 6241.892910] IPv6: enp4s3: IPv6 duplicate address fe80::a5ee:fa3e:e483:c220 used by fa:16:3e:59:43:3a detected!
+[ 6242.672811] IPv6: enp4s3: IPv6 duplicate address fe80::5939:d48c:ef42:8aed used by fa:16:3e:48:86:87 detected!
+[ 6253.393176] IPv6: enp4s3: IPv6 duplicate address fe80::e3ca:8f51:4e19:bf1a used by fa:16:3e:53:01:1c detected!
+[ 6254.273130] IPv6: enp4s3: IPv6 duplicate address fe80::bd86:8fe7:f916:9fc4 used by fa:16:3e:03:13:4d detected!
+[ 6254.473089] IPv6: enp4s3: IPv6 duplicate address fe80::785f:75f6:28d1:8780 used by fa:16:3e:b3:41:35 detected!
+[ 6254.762820] IPv6: enp4s3: IPv6 duplicate address fe80::49e7:df90:7d0e:af64 used by fa:16:3e:60:c8:e5 detected!
+[ 6254.982821] IPv6: enp4s3: IPv6 duplicate address fe80::a5ee:fa3e:e483:c220 used by fa:16:3e:59:43:3a detected!
+[ 6255.552750] IPv6: enp4s3: IPv6 duplicate address fe80::5939:d48c:ef42:8aed used by fa:16:3e:48:86:87 detected!
+[ 6264.912070] INFO: task khugepaged:60 blocked for more than 120 seconds.
+[ 6264.912104]       Not tainted 4.19.90-2305.1.0.0199.56.uel20.x86_64 #1
+[ 6264.912131] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 6264.912162] khugepaged      D    0    60      2 0x80000000
+[ 6264.912186] Call Trace:
+[ 6264.912204]  ? __schedule+0x286/0x740
+[ 6264.912220]  schedule+0x29/0xc0
+[ 6264.912236]  schedule_timeout+0x1ee/0x3a0
+[ 6264.912254]  ? enqueue_entity+0x12c/0x520
+[ 6264.912274]  wait_for_completion+0x126/0x190
+[ 6264.912293]  ? wake_up_state+0x10/0x10
+[ 6264.912310]  __flush_work+0x17a/0x2a0
+[ 6264.912328]  ? lock_timer_base+0x67/0x80
+[ 6264.912345]  ? worker_attach_to_pool+0xa0/0xa0
+[ 6264.912364]  ? __queue_work+0x13f/0x410
+[ 6264.912381]  ? lru_add_drain_cpu+0xf0/0xf0
+[ 6264.912399]  lru_add_drain_all+0x12e/0x1a0
+[ 6264.912418]  khugepaged+0x66/0x22a0
+[ 6264.912435]  ? finish_wait+0x80/0x80
+[ 6264.912450]  ? collapse_shmem.constprop.47+0xda0/0xda0
+[ 6264.912472]  kthread+0x113/0x130
+[ 6264.912487]  ? kthread_create_worker_on_cpu+0x70/0x70
+[ 6264.912508]  ret_from_fork+0x1f/0x40
+[ 6264.912619] Kernel panic - not syncing: hung_task: blocked tasks
+[ 6264.912644] CPU: 10 PID: 55 Comm: khungtaskd Kdump: loaded Not tainted 4.19.90-2305.1.0.0199.56.uel20.x86_64 #1
+[ 6264.912683] Hardware name: OpenStack Foundation OpenStack Nova, BIOS rel-1.12.1-0-ga5cab58-20230409_150425-szxrtosci10000 04/01/2014
+[ 6264.912730] Call Trace:
+[ 6264.912746]  dump_stack+0x66/0x8b
+[ 6264.912764]  panic+0xe4/0x292
+[ 6264.912778]  ? _raw_spin_lock_irq+0x27/0x27
+[ 6264.912797]  watchdog+0x270/0x3e0
+[ 6264.912813]  ? hungtask_pm_notify+0x40/0x40
+[ 6264.912831]  kthread+0x113/0x130
+[ 6264.912845]  ? kthread_create_worker_on_cpu+0x70/0x70
+[ 6264.912867]  ret_from_fork+0x1f/0x40
+```
+
+这个里面表明的是10 号的CPU 核心触发了 kdump 。但是这里不是出问题的地方吧。
+
+结合这个脚本：
+
+```bash
+#!/bin/bash
+
+# 定义输出文件名
+output_file="/var/log/pidstat_log.txt"
+
+# 定义 pidstat 命令及其参数
+pidstat_cmd="pidstat 2 5"
+pidstat_pts_cmd="pidstat -C pts 2 5"
+
+# 循环执行
+while true; do
+  # 获取当前时间
+  timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+  # 记录时间戳
+  echo "-------------------- $timestamp --------------------" >> "$output_file"
+
+  # 执行 pidstat 并记录输出
+  echo "所有进程统计信息:" >> "$output_file"
+  eval "$pidstat_cmd" >> "$output_file" 2>&1  # 将标准输出和标准错误都重定向到文件
+
+  echo "" >> "$output_file" #添加空行分割
+
+  echo "pts 相关进程统计信息:" >> "$output_file"
+  eval "$pidstat_pts_cmd" >> "$output_file" 2>&1
+
+  echo "" >> "$output_file" #添加空行分割
+  # 休眠 60 秒
+  sleep 60
+done
+```
+
+看的出来是 pts_device 这个进程阻塞了。
+
+foreach bt ，这个命令可以看到所有的进程的栈信息，用这个来搜索非常好。
+
+每一次的日志是不太一样的，第一个 crash 的日志当中有 OOM 的部分。我要问清楚是从哪一次开始扩容的。不用问别人，直接用sys 命令自己看一下子。第一次是 8 核 12 GB 的内存。确实有
+OOM 。
+
+现在我问你一个问题，这个coredump 到底D 状态的进程是卡在哪一行指令了？
+
+绑核执行的意义是什么？排除在不同的 CPU 核心上面调度的问题吗？
+
+
+### 进展 {#进展}
+
+ ps -m -C 2 ，用这个命令可以看到 ptsdevice 和migration 这两个进程上一次被调度到的时间。发现是因为 khugepaged 这个进程一直得不到调度从到调度从而触发了 hung task 。
+
+ps -A 用于列出系统中所有的进程。
+
+为什么别的进程得不到调度呢？这里写了一个小程序来模拟。
+
+```c
+#include <stdio.h>
+
+int main()
+{
+        while (1) {
+                1+1;
+        }
+        return 0;
+}
+```
+
+为了模拟更真实的情况，写了一个内核模块：
+
+per_cpu_worker.c
+
+```c
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/sched.h>
+#include <linux/kthread.h>
+#include <linux/delay.h>
+#include <linux/percpu.h>
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("A per-CPU worker thread example");
+
+static DEFINE_PER_CPU(struct task_struct *, worker_thread);
+
+// 工作线程的执行函数
+static int worker_function(void *data) {
+    int cpu = smp_processor_id();
+    int i = 0;
+    pr_info("Worker thread started on CPU %d\n", cpu);
+
+    for (i = 0; i < 100; i++) {
+        pr_info("CPU %d: iteration %d\n", cpu, i + 1);
+        msleep(6000); // 睡眠 6 秒
+    }
+
+    pr_info("Worker thread finished on CPU %d\n", cpu);
+    return 0;
+}
+
+// 初始化模块
+static int __init my_module_init(void) {
+    int cpu;
+
+    for_each_possible_cpu(cpu) {
+        struct task_struct *thread;
+
+        thread = kthread_create(worker_function, NULL, "worker_thread_%d", cpu);
+        if (IS_ERR(thread)) {
+            pr_err("Failed to create worker thread on CPU %d\n", cpu);
+            return PTR_ERR(thread);
+        }
+
+        // 将线程绑定到对应的 CPU
+        kthread_bind(thread, cpu);
+        wake_up_process(thread);
+        per_cpu(worker_thread, cpu) = thread;
+    }
+
+    pr_info("Module loaded and worker threads started\n");
+    return 0;
+}
+
+// 卸载模块
+static void __exit my_module_exit(void) {
+    int cpu;
+
+    for_each_possible_cpu(cpu) {
+        struct task_struct *thread = per_cpu(worker_thread, cpu);
+        if (thread) {
+            kthread_stop(thread);
+            pr_info("Worker thread stopped on CPU %d\n", cpu);
+        }
+    }
+
+    pr_info("Module unloaded\n");
+}
+
+module_init(my_module_init);
+module_exit(my_module_exit);
+```
+
+下面是 Makefile
+
+```Makefile
+obj-m += per_cpu_worker.o
+
+all:
+        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+        make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+```
+
+这个程序很简单，但是这个程序使用 chrt -p -o 0 5144 后。可以将其更改成 sched_other 的调度方式，这样子的话就可以继续调度了。
+
+crash 当中使用 ps -y 1 这样就能查到所有的 FIFO 调度方式的进程，确实在这个里面能够看到有很多的 ptsdevice 进程。
+
+好文：
+
+<https://zhuanlan.zhihu.com/p/580170448>
+
+使用ps -eLfc可以在CLS一栏中查看进程的调度策略，最下面为最新内核中定义的调度策略(5.5)
+
+TS  SCHED_OTHER
+
+FF  SCHED_FIFO
+
+RR  SCHED_RR
+
+B   SCHED_BATCH
+
+ISO SCHED_ISO
+
+IDL SCHED_IDLE
+
+<https://www.cnblogs.com/charlieroro/p/12133100.html>
+
+用户态下面有 pthread_spinlock_t ，这个是属于用户态的锁，这块是可能会卡住的。
+
+<https://blog.csdn.net/lilichang11106/article/details/84069357>
+
+绐用户写一个脚本跑一段时间看看能否解决问题：
+
+写了一个 chrt_ff.sh 的脚本：
+
+```bash
+#!/bin/bash
+output_file="/var/log/chrt_log.txt"
+while true; do
+  timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+  echo "----------- $timestamp -------------" >> "$output_file"
+  ps -eLfc|grep ptsdevice|grep " FF "|grep -v "grep"|awk '{print $2}'|while read line;do echo "chrt -p -o 0 "$line >> "$output_file";chrt -p -o 0 $line;done
+  #ps -eLfc|grep " FF "|grep -v "grep"|awk '{print $2}'|while read line;do echo "chrt -p -o 0 "$line >> "$output_file";done
+  sleep 60
+done
+```
+
+nohup ./chrt_ff.sh &gt; /dev/null 2&gt;&amp;1 &amp;
+
+客户提到了中断的亲和性这块：<https://xiaoyaozi.blog.csdn.net/article/details/47420479>
+
+可以将网卡的中断绑定到多个核心上。
