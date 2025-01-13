@@ -1,10 +1,11 @@
 +++
 title = "用 alias 安装一常用脚本的例子"
 date = 2025-01-13T11:43:00+08:00
-lastmod = 2025-01-13T11:50:20+08:00
+lastmod = 2025-01-13T12:45:04+08:00
 categories = ["kernel"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png"
 +++
 
 faddr2line 这个脚本分析内核函数栈的时候经常使用：
