@@ -1,7 +1,7 @@
 +++
 title = "crash 的进一步使用"
 date = 2024-12-31T09:17:00+08:00
-lastmod = 2025-01-08T13:46:05+08:00
+lastmod = 2025-01-15T11:14:03+08:00
 categories = ["kernel"]
 draft = false
 toc = true
@@ -618,3 +618,32 @@ nohup ./chrt_ff.sh &gt; /dev/null 2&gt;&amp;1 &amp;
 客户提到了中断的亲和性这块：<https://xiaoyaozi.blog.csdn.net/article/details/47420479>
 
 可以将网卡的中断绑定到多个核心上。
+
+
+## 结案 {#结案}
+
+这个问题被强力的队友找到了答案：<https://gitee.com/openeuler/kernel/commit/2586af1ac187f6b3a50930a4e33497074e81762d>
+
+替换内核：
+
+```bash
+这个放到一个目录比如kernel.
+xz -d -T 0 kernel_install.tar.xz
+tar xvf kernel_install.tar
+cd kernel_install
+cp -r lib/modules/4.19.90-2305.1.0.0199.56test1+ /lib/modules/
+installkernel 4.19.90-2305.1.0.0199.56test1+ vmlinuz-4.19.90-2305.1.0.0199.56test1+ System.map-4.19.90-2305.1.0.0199.56test1+
+```
+
+这个问题是实时系统和统用系统遇到的一个典型的配置问题。
+
+换完内核后进行测试，内核线程不会被卡住了，非常好：
+
+```bash
+cd test/
+ls
+./test &
+chrt -p -f 1 1892
+insmod per_cpu_worker.ko &
+dmesg -w
+```

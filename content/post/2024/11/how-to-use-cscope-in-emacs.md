@@ -1,13 +1,201 @@
 +++
-title = "用服务器看内核代码的最小化实践"
+title = "用服务器看内核代码的最小化实践，无感同步环境"
 date = 2024-11-27T21:26:00+08:00
-lastmod = 2025-01-13T12:35:21+08:00
+lastmod = 2025-01-16T17:32:48+08:00
 categories = ["kernel"]
 draft = false
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
 
+之前看代码需要自己本地的环境，但是这个环境太大了，不够轻便。而其实想办好不同的事要用很多不同的工具，适合的才是好的。不能杀鸡用牛刀。也不能用龙门吊砸核桃。
+
+
+## 安装 {#安装}
+
+在 rhel/centos 系的系统看内核代码，最简单的就是：
+
+yum install xcscope
+
+yum install ctags
+
+yum install emacs
+
+终端下 0 配置的 emacs 并不丑，请接受这一点。
+
+在 .emacs.d/init.el 当中加入：
+
+```lisp
+(load-file "/usr/share/emacs/site-lisp/xcscope.el")                                                       |
+(require 'xcscope)
+```
+
+
+## 使用 {#使用}
+
+进入内核目录，执行：
+
+make cscope tags
+
+<https://www.linumiz.com/linux-kernel-source-browsing-using-cscope/>
+
+就这么简简单单的一句话，就做完了，而且，只会索引机器的架构的代码；其它架构的直接过滤掉了。
+
+C-c s s
+
+C-c s c
+
+C-c s g
+
+就这三条命令，足以看代码。
+
+
+## 其它 {#其它}
+
+问我为什么没有用 global ？因为这个源中默认没有，需要找代码编译。就在机器上用一下，浪费时间不？
+
+global 可以增量更新，增量更新的速度快，那请问我要写代码了，我为什么不先写个文档，把内核的东西的理顺了。快速看代码和写一个新功能本来就不是一个需求。我平时是看代码分析问题的时候更多，而不是搞懂一个子系统来写代码的时候多。而且，我可以复制一份新的代码来写，用 git 看修改，只读旧代码。
+
+如果一定要写代码，我当然也不介意编一个 global 来用。这个等到再有需要的时候再写一个博客吧。
+
+
+## 补充 {#补充}
+
+随着服务器场景下看代码情况使用的变多，我发现有些服务器环境下xcsope 包也没有，网下的版本xcscope.el下载下来的版本也有 bug
+。我不想编译 emacs 和 cscope ，也不想解这方面的bug 。服务器上没有开发环境的支持是合理的。因为它是生产环境。所以进一步最下化，看看退一步有没有坚实的基础命令可以解决我的问题，是有的。
+
+安装 cscope 包（不是 xcscope ）然后，使用在shell 下使用命令，直接用 0 配置无高亮的 vim 即可。
+
+<https://stackoverflow.com/questions/14915971/cscope-how-to-use-cscope-to-search-for-a-symbol-using-command-line>
+
+找函数定义：
+
+cscope -d -f ./cscope.out -R -L1 start_kernel
+
+找调用：
+
+cscope -d -f ./cscope.out -R -L3 start_kernel
+
+找符号：
+
+cscope -d -f ./cscope.out -R -L0 start_kernel
+
+0 Find this C symbol:
+
+1 Find this function definition:
+
+2 Find functions called by this function:
+
+3 Find functions calling this function:
+
+4 Find this text string:
+
+5 Change this text string:
+
+6 Find this egrep pattern:
+
+7 Find this file:
+
+8 Find files #including this file:
+
+把常用的命令用 alias 简化一下：
+
+```bash
+# cscope
 alias csd="cscope -d -f ./cscope.out -R -L1 "
 alias csr="cscope -d -f ./cscope.out -R -L3 "
 alias css="cscope -d -f ./cscope.out -R -L0 "
+```
+
+既然 cscope 版本的有了，那 global 的也写在这块吧。
+
+global 在服务器上没有，桌面版的远程机器可以安装。命令简单到不需要用 alias 就能记住：
+
+<https://www.panghuli.cn/notebook/emacs/modes/gnu-global-manual.html>
+
+生成索引 ggtags
+
+增量更新索引 global -uv
+
+查找定义 global xxx
+
+查找引用 global -r xxx
+
+查找符号 global -xs xxx
+
+为了防止忘记，这部分以注释的形式，放到 .bashrc 当中，这样最合适！
+
+还有 rg 的快速搜索，这块后面再补充吧。
+
+
+## 再补充 {#再补充}
+
+上面的命令是不是挺难记的。把上面的命令改成 alias 这样在本地看代码就好用了。服务器上没有这个 alias怎么办？搜一下：use
+local alias in remote server
+
+<https://superuser.com/questions/503784/loading-local-shell-aliases-to-ssh-session-dynamicaly>
+
+<https://serverfault.com/questions/849947/execute-local-alias-through-ssh-on-remote-server>
+
+```bash
+function ssh_with_rc() {
+   RC_DATA=`cat ${HOME}/.bashrc | base64 -w 0`
+   ssh -t $@ "echo \"${RC_DATA}\" | base64 --decode > /tmp/${USER}_bashrc; bash --rcfile /tmp/${USER}_bashrc; rm /tmp/${USER}_bashrc"
+}
+
+alias ssh="ssh_with_rc"
+```
+
+此乃神器！！！已经更新到我的 .bashrc 当中，试用了一下，出忽意料，十分好用。
+
+
+## 再次补充，无感快速，vim 要练！ {#再次补充-无感快速-vim-要练}
+
+emacs 在恶心的各路发行版本很难做到无感。做一个超大的 docker 集成环境也不好。这个世界，没有独一无二的好东西，做为一个使用工具者。vim 和 emacs 做到同样熟练带绐我的好处是非常地大的！
+
+上面的脚本可以优化判断配置文件是否存在。还可以不同的软件手动加载不同的配置文件。 .tmux.config.1 .bashrc.1 .vimrc.1 这三个配置非常轻量就可以做到非常地好用。在此基础上继续扩充，比如我可以增加一些脚本的安装命令，比如 gdb 的 python 扩展什么的，如果轻量的话，就可以加入其中，脚本工具是非常重要的一种知识积累的方法。
+
+再比如 ebpf 的一些脚本的使用呢？
+
+<https://github.com/ojroques/vim-oscyank/blob/main/plugin/oscyank.vim>
+
+通过这篇文章又完美地解决了转义序列的问题！Clipboard (OSC52) ，这个配合一个支持 OSC52 的终端，例如 kitty ，我可以有些时间生活在终端当中了。vim 确实比 emacs 更简洁，有一种极简的风格。记得之前 B 站上有一个 UP 主叫 thecw ，它配的 linux 环境很让人喜欢。
+
+<https://ppwwyyxx.com/blog/2023/Terminal-Escape-Sequences/>
+
+<https://taoshu.in/vim/vim-copy-over-ssh.html>
+
+```vimscript
+function! s:raw_echo(str)
+  if has('win32') && has('nvim')
+    call chansend(v:stderr, a:str)
+  else
+    if filewritable('/dev/fd/2')
+      call writefile([a:str], '/dev/fd/2', 'b')
+    else
+      exec("silent! !echo " . shellescape(a:str))
+      redraw!
+    endif
+  endif
+endfunction
+
+function Copy()
+  let c = join(v:event.regcontents,"\n")
+  let c64 = system("base64", c)
+  let s = "\e]52;c;" . trim(c64) . "\x07"
+  call s:raw_echo(s)
+endfunction
+autocmd TextYankPost * call Copy()
+```
+
+另外在 tmux 当中打开这一行：
+
+```nil
+set-option -g set-clipboard on
+```
+
+
+## 结尾 {#结尾}
+
+我已经把通过 ssh 环境自动同步的方法写到了我的配置文件中：<https://gitee.com/allinaent/onlyconfig> ，原理不难，核心就是
+ssh 别名 v 别名，和 t 别名，有兴趣的可以看一下。
