@@ -1,0 +1,508 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/02
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-02-17 一 16:48]
+#+TITLE: ssh -X 转发的一些记录
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+ssh -x 报错失败了：
+
+#+begin_src bash
+ssh -X root@xx.xx.xx.xx
+X11 forwarding request failed on channel 0
+#+end_src
+
+ssh -X -v root@xx.xx.xx.xx 来看一下：
+
+#+begin_src bash
+yum install xauth
+touch .Xauthority
+sudo yum install -y wqy-zenhei wqy-microhei
+#+end_src
+
+#+begin_src bash
+export LANG=zh_CN.UTF-8
+export LC_CTYPE=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+#+end_src
+
+这样子就可以了。工作机是 X86 架构的，而 arm 架构上的问题用本地的 x86 上的 virt-manager 会有问题。
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[https://r2.guolongji.xyz/allinaent/2025/02/2f95c991b942c023a7dff2692abb039f.png]]
+
+
+#+attr_html: :link t
+#+caption: /"caption"/
+#+attr_html: :class fancy
+#+attr_html: :target _blank
+#+attr_html: :alt Caption not used as alt text
+#+attr_html: :width 900
+[[https://r2.guolongji.xyz/allinaent/2025/02/4b119f1518f02765740a9a2e4fd67bc1.png]]
+
+
+需要在 virt-manager 当中手动添加图形协议和鼠标键盘才行。用的少了还真不清楚这些小细节，没什么用，可能过几年就是废经验了。
+
+
+* 我有一块硬盘sda，系统装在这块盘上，后面加了一块盘sdb，我可以用lvm将sdb扩容到sda上面吗？
+
+是的，您可以使用 *LVM（逻辑卷管理）*
+将新增加的硬盘（=/dev/sdb=）扩展到已有的系统硬盘（=/dev/sda=）上。LVM
+是一种非常灵活的磁盘管理工具，允许您将多个硬盘或分区组合成一个虚拟磁盘空间，并支持动态扩展和管理。
+
+*** 以下是将 =sdb= 扩展到 =sda= 上的步骤：
+:PROPERTIES:
+:CUSTOM_ID: 以下是将-sdb-扩展到-sda-上的步骤
+:END:
+**** 1. *查看现有的 LVM 设置*
+:PROPERTIES:
+:CUSTOM_ID: 查看现有的-lvm-设置
+:END:
+首先，查看现有的 LVM 配置，了解您的系统中是否已经使用了
+LVM。如果是的话，确认 LVM 是否已经使用了 =/dev/sda= 。
+
+#+begin_src sh
+sudo pvs   # 查看物理卷
+sudo vgs   # 查看卷组
+sudo lvs   # 查看逻辑卷
+#+end_src
+
+**** 2. *初始化新硬盘 =sdb=*
+:PROPERTIES:
+:CUSTOM_ID: 初始化新硬盘-sdb
+:END:
+如果硬盘 =sdb= 还没有配置为 LVM 物理卷，需要先将其初始化为 LVM 物理卷。
+
+1. *分区 =sdb=* ：使用 =fdisk= 或 =parted= 对 =sdb=
+   进行分区。如果硬盘没有分区，先创建一个新分区。
+
+   #+begin_src sh
+   sudo fdisk /dev/sdb
+   #+end_src
+
+   在 =fdisk= 中，您可以创建一个新的分区，并确保将分区类型设置为 LVM
+   类型（=8e=）。
+
+2. *将分区 =/dev/sdb1= 初始化为物理卷* ：
+
+   #+begin_src sh
+   sudo pvcreate /dev/sdb1
+   #+end_src
+
+**** 3. *将 =sdb= 添加到现有的卷组*
+:PROPERTIES:
+:CUSTOM_ID: 将-sdb-添加到现有的卷组
+:END:
+将新创建的物理卷 =/dev/sdb1= 添加到现有的卷组中。
+
+假设您的现有卷组名称为 =vg_name= ，可以使用以下命令将新硬盘加入：
+
+#+begin_src sh
+sudo vgextend vg_name /dev/sdb1
+#+end_src
+
+**** 4. *扩展逻辑卷*
+:PROPERTIES:
+:CUSTOM_ID: 扩展逻辑卷
+:END:
+将卷组扩展之后，您可以扩展卷组中的逻辑卷（通常是根文件系统所在的逻辑卷）来增加可用空间。
+
+1. *查看现有逻辑卷*：
+
+   #+begin_src sh
+   sudo lvdisplay
+   #+end_src
+
+2. 假设逻辑卷名称为 =lv_root= ，您可以使用以下命令扩展逻辑卷大小：
+
+   #+begin_src sh
+   sudo lvextend -l +100%FREE /dev/vg_name/lv_root
+   #+end_src
+
+   这会将卷组中所有剩余的可用空间分配给 =lv_root=
+   逻辑卷。您也可以指定大小，如 =+50G=，以增加 50GB 的空间。
+
+**** 5. *扩展文件系统*
+:PROPERTIES:
+:CUSTOM_ID: 扩展文件系统
+:END:
+扩展逻辑卷后，文件系统还需要扩展以使用新增加的空间。如果您使用的是
+=ext4= 文件系统，可以使用以下命令：
+
+#+begin_src sh
+sudo resize2fs /dev/vg_name/lv_root
+#+end_src
+
+对于 =xfs= 文件系统，则使用：
+
+#+begin_src sh
+sudo xfs_growfs /dev/vg_name/lv_root
+#+end_src
+
+**** 6. *确认扩容成功*
+:PROPERTIES:
+:CUSTOM_ID: 确认扩容成功
+:END:
+最后，确认您的磁盘和文件系统已成功扩展：
+
+- 查看卷组的空间：
+
+  #+begin_src sh
+  sudo vgdisplay vg_name
+  #+end_src
+
+- 查看逻辑卷的空间：
+
+  #+begin_src sh
+  sudo lvdisplay /dev/vg_name/lv_root
+  #+end_src
+
+- 查看文件系统的空间：
+
+  #+begin_src sh
+  df -h
+  #+end_src
+
+*** 总结
+:PROPERTIES:
+:CUSTOM_ID: 总结
+:END:
+通过 LVM，您可以将新硬盘 =/dev/sdb= 扩展到现有的 =/dev/sda=
+上。具体步骤包括将 =sdb=
+初始化为物理卷、将其添加到现有的卷组、扩展逻辑卷以及扩展文件系统。这样，您可以实现动态扩容，而不必重新分区或重新安装操作系统。
+
+
+* 如何确认硬盘是不是分区了？
+
+在 Linux 中，可以使用以下方法来确认一个硬盘是否已经分区。
+
+*** 1. *查看硬盘设备信息*
+:PROPERTIES:
+:CUSTOM_ID: 查看硬盘设备信息
+:END:
+首先，查看系统中所有的硬盘和分区。可以使用 =lsblk=
+命令来列出所有的块设备，包括硬盘和分区。
+
+#+begin_src sh
+lsblk
+#+end_src
+
+该命令的输出会显示类似以下的信息：
+
+#+begin_src sh
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0    0  100G  0 disk
+├─sda1   8:1    0   50G  0 part /
+└─sda2   8:2    0   50G  0 part /data
+#+end_src
+
+如果硬盘上有分区，=lsblk= 会显示出分区（如 =sda1=、=sda2=
+等）。如果硬盘没有分区，它只会显示硬盘本身（如
+=sda= ），并且分区栏将是空的。
+
+*** 2. *使用 =fdisk= 查看分区表*
+:PROPERTIES:
+:CUSTOM_ID: 使用-fdisk-查看分区表
+:END:
+=fdisk=
+是另一个可以查看硬盘分区情况的工具。可以使用以下命令查看硬盘的分区表：
+
+#+begin_src sh
+sudo fdisk -l /dev/sda
+#+end_src
+
+其中 =/dev/sda=
+是你要检查的硬盘。如果硬盘上有分区，输出会列出硬盘的分区信息。例如：
+
+#+begin_src sh
+Disk /dev/sda: 100 GiB, 100000000000 bytes, 195312500 sectors
+Disk model: Example Model
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+
+Device      Start       End   Sectors   Size Type
+/dev/sda1    2048   1026047   1024000   500M EFI System
+/dev/sda2  1026048 195312499 194286452  92.5G Linux filesystem
+#+end_src
+
+如果硬盘没有分区，=fdisk= 会显示一个空的分区表，并提示“没有分区表”。
+
+*** 3. *使用 =parted= 检查分区情况*
+:PROPERTIES:
+:CUSTOM_ID: 使用-parted-检查分区情况
+:END:
+你也可以使用 =parted= 命令来检查硬盘的分区信息：
+
+#+begin_src sh
+sudo parted /dev/sda print
+#+end_src
+
+输出将显示硬盘的分区情况。如果没有分区，会显示类似于“无分区表”的信息。
+
+*** 4. *查看 =/proc/partitions=*
+:PROPERTIES:
+:CUSTOM_ID: 查看-procpartitions
+:END:
+=/proc/partitions= 文件包含了当前系统中所有块设备的分区信息。可以通过以下命令查看：
+
+#+begin_src sh
+cat /proc/partitions
+#+end_src
+
+如果硬盘没有分区，你将只看到硬盘设备本身，没有列出任何子分区。
+
+*** 5. *使用 =blkid= 检查磁盘分区*
+:PROPERTIES:
+:CUSTOM_ID: 使用-blkid-检查磁盘分区
+:END:
+=blkid=
+命令列出所有块设备及其文件系统信息。如果硬盘没有分区，则该命令不会显示分区信息。
+
+#+begin_src sh
+sudo blkid
+#+end_src
+
+*** 总结：
+:PROPERTIES:
+:CUSTOM_ID: 总结
+:END:
+- *=lsblk=* : 查看硬盘及其分区的简洁信息。
+- *=fdisk -l=* : 查看硬盘的详细分区表。
+- *=parted print=* : 查看硬盘的分区信息。
+- *=/proc/partitions=* : 查看当前系统的分区信息。
+- *=blkid=* : 查看块设备的文件系统类型。
+
+如果硬盘上没有分区，你将无法看到任何分区设备（如 =sda1=、=sda2= 等）。
+
+
+磁盘的操作步骤：
+
+#+begin_src bash
+fdisk /dev/sdb
+p # show partition information
+m # help
+n # new partition
+l # show type
+t # change partion type: input lvm or 8e
+w # write
+#+end_src
+
+#+begin_src
+[root@localhost ~]# pvcreate /dev/sdb1
+  Physical volume "/dev/sdb1" successfully created.
+
+[root@localhost ~]# pvs
+  PV         VG  Fmt  Attr PSize   PFree
+  /dev/sda3  uos lvm2 a--   38.41g      0
+  /dev/sdb1      lvm2 ---  <20.00g <20.00g
+[root@localhost ~]#
+[root@localhost ~]# vgs
+  VG  #PV #LV #SN Attr   VSize  VFree
+  uos   1   2   0 wz--n- 38.41g    0
+[root@localhost ~]#
+[root@localhost ~]#
+[root@localhost ~]# lvs
+  LV   VG  Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root uos -wi-ao---- 34.41g
+  swap uos -wi-ao----  4.00g
+
+[root@localhost ~]# vgextend uos /dev/sdb1
+  Volume group "uos" successfully extended
+
+
+[root@localhost ~]# lvdisplay
+  --- Logical volume ---
+  LV Path                /dev/uos/swap
+  LV Name                swap
+  VG Name                uos
+  LV UUID                g3h2LU-DNT6-Uyvg-ugk9-2gPz-4Xpm-7Xur4R
+  LV Write Access        read/write
+  LV Creation host, time localhost.localdomain, 2025-02-17 17:59:20 +0800
+  LV Status              available
+  # open                 2
+  LV Size                4.00 GiB
+  Current LE             1024
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           252:1
+
+  --- Logical volume ---
+  LV Path                /dev/uos/root
+  LV Name                root
+  VG Name                uos
+  LV UUID                LGlrwq-nOmr-1WsL-2MfZ-cDjj-iSEx-xxQxfD
+  LV Write Access        read/write
+  LV Creation host, time localhost.localdomain, 2025-02-17 17:59:21 +0800
+  LV Status              available
+  # open                 1
+  LV Size                34.41 GiB
+  Current LE             8809
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           252:0
+
+[root@localhost ~]# lvextend -l +100%FREE /dev/uos/root
+  Size of logical volume uos/root changed from 34.41 GiB (8809 extents) to <54.41 GiB (13928 extents).
+  Logical volume uos/root successfully resized.
+
+[root@localhost ~]# xfs_growfs /dev/uos/root
+meta-data=/dev/mapper/uos-root   isize=512    agcount=4, agsize=2255104 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=9020416, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=4404, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 9020416 to 14262272
+
+[root@localhost ~]# vgdisplay uos
+  --- Volume group ---
+  VG Name               uos
+  System ID
+  Format                lvm2
+  Metadata Areas        2
+  Metadata Sequence No  5
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                2
+  Open LV               2
+  Max PV                0
+  Cur PV                2
+  Act PV                2
+  VG Size               <58.41 GiB
+  PE Size               4.00 MiB
+  Total PE              14952
+  Alloc PE / Size       14952 / <58.41 GiB
+  Free  PE / Size       0 / 0
+  VG UUID               3qJUMS-X0NU-dCtd-n9uD-AWTl-9qhT-0jsiSP
+
+[root@localhost ~]# lvdisplay /dev/uos/root
+  --- Logical volume ---
+  LV Path                /dev/uos/root
+  LV Name                root
+  VG Name                uos
+  LV UUID                LGlrwq-nOmr-1WsL-2MfZ-cDjj-iSEx-xxQxfD
+  LV Write Access        read/write
+  LV Creation host, time localhost.localdomain, 2025-02-17 17:59:21 +0800
+  LV Status              available
+  # open                 1
+  LV Size                <54.41 GiB
+  Current LE             13928
+  Segments               2
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           252:0
+
+[root@localhost ~]# df -h
+文件系统              容量  已用  可用 已用% 挂载点
+devtmpfs              3.0G     0  3.0G    0% /dev
+tmpfs                 3.3G     0  3.3G    0% /dev/shm
+tmpfs                 3.3G   28M  3.3G    1% /run
+tmpfs                 3.3G     0  3.3G    0% /sys/fs/cgroup
+/dev/mapper/uos-root   55G  7.2G   48G   14% /
+tmpfs                 3.3G  640K  3.3G    1% /tmp
+/dev/sda2            1014M  251M  764M   25% /boot
+/dev/sda1             599M   12M  588M    2% /boot/efi
+tmpfs                 670M  320K  670M    1% /run/user/0
+/dev/sr0              6.5G  6.5G     0  100% /media/root/UOS
+#+end_src
+
+用 df -hT 来查看之前的文件系统，是 xfs 的，所以上面用到的方法是用的 xfs_growfs 来扩展的空间：
+#+begin_src bash
+/dev/mapper/uos-root xfs        35G  7.1G   28G   21% /
+#+end_src
+
+上面的 lvm 扩容成功了，非常地棒！！！
+
+
+进入 live 系统后，dracut shell ，lvscan 再 lvchange -ay /dev/vg_name/lv_name 来 activate 。后面即可 mount 。
+
+grub 进入 dracut ，linux 那一行末尾加上 rd.break 就可以进入 dracut 当中。不需要去掉前面的 rhgb quiet 。
+
+
+
+
+* 用 dracut 重新生成 initramfs
+
+是的， =dracut= 确实可以用来生成或更新 =initramfs= 镜像，并且可以通过它来将新的内核模块（ =.ko= 文件）包含到生成的 =initramfs=
+镜像中。
+
+如果你已经有一个内核模块，并且希望使用 =dracut= 生成新的 =initramfs=
+镜像以包含该模块，过程会相对简化。你只需要确保在运行 =dracut=
+时，它会正确地包括新的模块。
+
+*** 使用 =dracut= 生成新的 =initramfs= 镜像
+:PROPERTIES:
+:CUSTOM_ID: 使用-dracut-生成新的-initramfs-镜像
+:END:
+1. *将 =.ko= 文件放置到合适的目录*
+   将你要加入的 =.ko= 文件放入 =/lib/modules/$(uname -r)/= 目录下。假设你的内核版本是 =$(uname -r)= ，你可以将模块复制到：
+
+   #+begin_src sh
+   cp /path/to/your/module.ko /lib/modules/$(uname -r)/
+   #+end_src
+
+2. *更新模块依赖*
+   使用 =depmod=
+   命令更新内核模块的依赖信息。这样做可以确保内核能够识别新加入的模块：
+
+   #+begin_src sh
+   depmod -a
+   #+end_src
+
+3. *使用 =dracut= 生成新的 =initramfs= 镜像*
+   接下来，使用 =dracut= 来生成新的 =initramfs=
+   镜像，包含你刚刚添加的模块。你可以通过以下命令来重新生成
+   =initramfs= ：
+
+   #+begin_src sh
+   dracut --force /path/to/new-initramfs.img $(uname -r)
+   #+end_src
+
+   这里， =--force= 参数会强制覆盖已有的 =initramfs= 文件，而
+   =$(uname -r)= 会确保生成与你当前内核版本匹配的 =initramfs= 镜像。
+
+4. *更新引导加载器配置*
+   如果你的系统使用 GRUB
+   或其他引导加载器，需要更新引导配置，以确保使用新的 =initramfs=
+   镜像。如果你使用的是 GRUB，可以运行：
+
+   #+begin_src sh
+   update-grub
+   #+end_src
+
+5. *重新启动系统*
+   最后，重新启动系统，确保新的 =initramfs=
+   镜像和内核模块能够在启动时正确加载。
+
+*** 总结
+:PROPERTIES:
+:CUSTOM_ID: 总结
+:END:
+使用 =dracut= 来生成新的 =initramfs=
+镜像是非常简便的，它会自动处理很多细节，包括模块的引入和生成。如果你将
+=.ko= 文件正确地放置到 =/lib/modules/$(uname -r)/=
+目录下，并且更新了模块依赖（ =depmod -a= ）， =dracut= 在生成 =initramfs=
+时会自动将这些模块包括进来。

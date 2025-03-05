@@ -5,7 +5,7 @@
 #+HUGO_AUTO_SET_LASTMOD: t
 #+HUGO_DRAFT: false
 #+DATE: [2024-05-16 四 14:31]
-#+TITLE: 如臂使指——构建自己的个人知识库
+#+TITLE: 如臂使指——构建自己的个人知识库（反转再反转）
 #+HUGO_TAGS:
 #+HUGO_CATEGORIES: emacs prose
 #+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/3ebba5ba2655501d082d485a73ba52fb.jpg
@@ -315,5 +315,66 @@ https://tool.chinaz.com/baiduspider
 多的事无能为力。人不是神，平时应该考虑自己目前的情况下能做什么。现实中成长，做不到最好也
 要做到足够好。
 
+* 再总结（弃用之？rclone sync）
 
+2025.3.4 新增：
 
+我用的 qnap 的 nas 来同步 zotero 当中的数学笔记，经过长时间的使用发现，同步这块速度太慢了，每次开机都要同步 sqlite 和一
+些不知道的文件，需要花 20 分钟左右。不关机重起不用重新同步了，但只要一关机就需要重新同步，对 zotero 的同步策略我不太清楚。
+但我认为我对davfs 的缓存还有 zotero 的同步都调整过了，但是始终无法解决这个问题。我只是想看点数学书而已。或都我至少不用于
+比较大的 pdf 的存储了。
+
+又试了一下使用 rclone 来进行同步，我发现第一次开始的时候同步的速度也很慢：
+
+time rclone sync mydata:/Zotero /home/uos/nas/mydata/Zotero --progress --exclude "/@Recently-Snapshot/**"  --transfers 20 --multi-thread-streams 20
+
+这样好像快多了。
+
+还有一种方式：
+
+rclone mount remote:path /path/to/mountpoint --vfs-cache-mode full --vfs-cache-max-age 0 --no-check-certificate
+
+off：不缓存文件，直接在访问时下载。
+
+minimal：缓存文件的元数据（如文件大小、修改时间等）。
+
+writes：缓存文件内容，但只在写操作时缓存。
+
+full：完全缓存文件，适合需要高效读取的场景。
+
+这种方法好像也很不错。
+
+这样子是写回去：
+
+time rclone sync  /home/uos/nas/mydata/Zotero mydata:/Zotero --progress --exclude "/@Recently-Snapshot/**" --exclude "zotero.sqlite*" --exclude "translators/*" --transfers 20 --multi-thread-streams 20
+
+写回去也要很长时间，为什么呢？增加了一些 exclude 目录再次测试，还是速度感人，同步一下要 2min 的时间。
+
+time rclone sync  /home/uos/nas/mydata/Zotero mydata:/Zotero --progress --exclude "/@Recently-Snapshot/**" --transfers 20 --multi-thread-streams 20 --drive-chunk-size 64M --bwlimit 0
+
+然面这也是一种方案，只是这种方案不是很爽。写成脚本，也算是一种方法吧。做到 .bashrc 的 alias 里面。
+
+* 为什么不用 emacs 的 org-noter ？
+
+在 pdf 上面勾勾画画，zotero 做的还是非常地不错的。emacs 当中的 pdf-tools 插件就差很多。这套方案可以同步视频文件。
+
+总而言之，zotero 是一个有着漂亮界面的软件，也是一个开源的软件，它算是一个网页版集大成的软件，所以我还是会以这种稍微有一
+些笨着的方式使用 zotero ，因为 zotero 一定会在后续帮肋到我。做对而有些难度的事，这才是正确的方向。
+
+* 什么是做事？就是找到舒服的姿式
+
+做任何事，如果做到了极致，一定是愉快的。当然，要做到极致也是非常地累的。但是只要有一件事能做到极致，那么就极有可能在第二
+件，第三件事情上也做到极致。
+
+* 最终最终的解决方案
+
+最终不在使用 webdav 进行同步了，我最后惊喜的发现，用 syncthing 或者 verysync 来同步，verysync 完全免费且速度快到爆炸。唯
+一需要注意的就是不要开多个 zotero 进行同步，这本来就是应该注意的。在中国同步 2 个G 的大文件加小文件只需要 1 min 。我的
+zotero 和 emacs 都解决了最后的痛点。以后只剩下集中精力填补我匮乏的知识了。关了 zotero 自带的同步功能，测试没有问题！！！
+zotero 唯一需要设置的只有一个存储库的位置即可。
+
+无人扶我青云志，我自蹋雪至山巅。
+
+https://www.toutiao.com/w/1823541503128576/
+
+人生孤勇路，从无永随人。

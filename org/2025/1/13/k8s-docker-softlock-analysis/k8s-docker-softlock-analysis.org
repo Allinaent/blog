@@ -600,8 +600,18 @@ unsigned int cpumask_next(int n, const struct cpumask *srcp)
         return find_next_bit(cpumask_bits(srcp), nr_cpumask_bits, n + 1);
 }
 EXPORT_SYMBOL(cpumask_next);
-
 #+end_src
 
 卡在 22 行括号那一行。
 
+#+begin_src bash
+#!/bin/bash
+output_file="/var/log/rt_log.txt"
+while true; do
+  timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+  echo "----------- $timestamp -------------" >> "$output_file"
+  ps -eo pid,comm,policy|grep FF >> "$output_file";
+  #ps -eLfc|grep " FF "|grep -v "grep"|awk '{print $2}'|while read line;do echo "chrt -p -o 0 "$line >> "$output_file";done
+  sleep 15
+done
+#+end_src
