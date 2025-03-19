@@ -1,7 +1,7 @@
 +++
 title = "如何配置多网卡服务器的网络"
 date = 2024-12-11T19:55:00+08:00
-lastmod = 2024-12-12T11:46:08+08:00
+lastmod = 2025-03-12T15:37:05+08:00
 categories = ["kernel"]
 draft = false
 toc = false
@@ -9,6 +9,14 @@ image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc
 +++
 
 ## NetworkManager 配置文件 {#networkmanager-配置文件}
+
+在 centos 当中是： `/etc/sysconfig/network-scripts/ifcfg-xxx`
+
+在 debian 当中是： `/etc/network/` 当中
+
+也有可能在： `/etc/systemd/network/` 当中
+
+在 UOS 当中是： /etc/NetworkManager/system-connections
 
 ```nil
 TYPE=Ethernet
@@ -43,3 +51,60 @@ PEERDNS=no
 
 ipmitool ，什么是 ipmi ？这个是智慧管理平台，需要内核打开对这个驱动的支持，ipim 才能使用。才能够通过
 ipimtool 来设置 bmc 的 ip 。
+
+有些机器使用 impitool 的话会报错，需要手动执行一下下面的命令：
+
+modprobe ipmi_devintf
+
+modprobe ipmi_msghandler
+
+modprobe ipmi_si type=kcs ports=0xca2 regspacings=1
+
+设置方法：
+
+查看BMC网络信息（通常配置通道1, 第一个网卡）：ipmitool lan print 1
+
+-   设置BMC使用IP地址：ipmitool lan set 1 ipaddr 172.16.21.98
+-   设置BMC使用子网掩码：ipmitool lan set 1 netmask 255.255.255.0
+-   设置BMC使用网关：ipmitool lan set 1 defgw ipaddr 172.16.21.205
+
+其它的一些命令，转载自： <https://forum.cambricon.com/index.php?m=content&c=index&a=show&catid=186&id=628>
+
+查看整机状态:  ipmitool chassis power status
+
+系统开机:  ipmitool chassis power on
+
+系统关机:  ipmitool chassis power off
+
+系统重启:  ipmitool chassis power reset
+
+查看网络信息:  ipmitool lan print 1
+
+设置网络为DHCP模式:  ipmitool lan set 1 ipsrc dhcp
+
+设置网络为Static模式:  ipmitool lan set 1 ipsrc static
+
+修改IP地址:  ipmitool lan set 1 ipaddr 新地址
+
+修改子网掩码:  ipmitool lan set 1 netmask 255.255.255.0
+
+修改网关:  ipmitool lan set 1 defgw ipaddr 新的网关地址
+
+查看SEL日志: ipmitool sel list
+
+查看SEL日志详情: ipmitool sel elist
+
+查看Sensor信息: ipmitool sensor list
+
+查看SDR信息:  ipmitool sdr list
+
+重启BMC:  ipmitool mc reset &lt; warm | cold &gt;  warm表示软重启，cold表示硬重启
+
+查看FRU信息: ipmitool fru
+
+
+## 大型交换机的一些配置 {#大型交换机的一些配置}
+
+大型的交换机一般看 H3C 的手册就知道了，这个比家用的功能多很多了吧。感觉主要就是 vlan 的一些管理功能。
+
+<https://www.h3c.com/cn/Service/Document_Software/Document_Center/Switches/Catalog/S5600/S5600/Command/Command_Manual/H3C_S5600_CM-Release_1702(V1.00)/>
