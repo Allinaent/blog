@@ -1,7 +1,7 @@
 +++
 title = "一次软锁问题的分析"
 date = 2025-01-13T14:40:00+08:00
-lastmod = 2025-01-14T11:40:12+08:00
+lastmod = 2025-06-13T10:20:10+08:00
 categories = ["kernel"]
 draft = false
 toc = true
@@ -13,6 +13,9 @@ image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc
 python pandas 或者 R 的 data.frame ，可以处理 CSV 。
 
 小数据用 wps ，截图就很好的。
+
+
+## call trace 1 {#call-trace-1}
 
 ```nil
 Jan  5 03:41:25 cc-cdfusion-obwind-x86-compute-4 kernel: watchdog: BUG: soft lockup - CPU#30 stuck for 23s! [kubelet:810499]
@@ -174,11 +177,46 @@ static unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
 
 函数调用关系： nr += lruvec_page_state_local(lruvec, NR_LRU_BASE + lru); 这一行出的问题。
 
+```c { linenos=true, linenostart=761 }
+static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+                                                    enum node_stat_item idx)
+{
+        struct mem_cgroup_per_node *pn;
+        long x = 0;
+        int cpu;
+
+        if (mem_cgroup_disabled())
+                return node_page_state(lruvec_pgdat(lruvec), idx);
+
+        pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+        for_each_possible_cpu(cpu)
+                x += per_cpu(pn->lruvec_stat_local->count[idx], cpu);
+#ifdef CONFIG_SMP
+        if (x < 0)
+                x = 0;
+#endif
+        return x;
+}
+```
+
 ```nil
 memcg_numa_stat_show
   for_each_node_state(nid, N_MEMORY)
     mem_cgroup_node_nr_lru_pages(iter, nid, stat->lru_mask);
       lruvec_page_state_local(lruvec, NR_LRU_BASE + lru);
+        for_each_possible_cpu(cpu);
+```
+
+RIP 是卡在了：for_each_possible_cpu(cpu) 这一行。
+
+```c
+#define for_each_cpu(cpu, mask)                 \
+        for ((cpu) = 0; (cpu) < 1; (cpu)++, (void)mask)
+...
+
+#define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)
+
+
 ```
 
 关系图像：
@@ -256,7 +294,10 @@ cc cc cc               -> int3 (断点指令)
 7.neg：对寄存器的值取反，即求负值
 ```
 
-出问题的机器不停的在报call trace ，出现的 call trace 主要就两个栈，还有一种是下面这个，cpu_stop_queue_work+0xf0/0xf0 的情况，可以看一下3155 行这个 call trace ，它打印的罗：
+
+## call trace 2 {#call-trace-2}
+
+出问题的机器不停的在报 call trace ，出现的 call trace 主要就两个栈，还有一种是下面这个，cpu_stop_queue_work+0xf0/0xf0 的情况，可以看一下3155 行这个 call trace ，它打印的：
 
 ```nil
 Jan  5 04:01:17 cc-cdfusion-obwind-x86-compute-4 kernel: watchdog: BUG: soft lockup - CPU#16 stuck for 22s! [migration/16:92]
@@ -314,4 +355,325 @@ Jan  5 04:01:17 cc-cdfusion-obwind-x86-compute-4 kernel: RDX: 0000000000001000 R
 Jan  5 04:01:17 cc-cdfusion-obwind-x86-compute-4 kernel: RBP: 000000c001872358 R08: 0000000000000000 R09: 0000000000000000
 Jan  5 04:01:17 cc-cdfusion-obwind-x86-compute-4 kernel: R10: 0000000000000000 R11: 0000000000000202 R12: 000000c0018725b8
 Jan  5 04:01:17 cc-cdfusion-obwind-x86-compute-4 kernel: R13: 0000000000000000 R14: 000000c000a49520 R15: 0000000000000080
+```
+
+这个的调用关系如下：
+
+```nil
+ret_from_fork
+  kthread_bind
+    smpboot_thread_fn
+      cpu_stopper_thread
+        cpu_stop_queue_work
+          stop_machine
+```
+
+先看一下 rip 卡住的地方：RIP: 0010:multi_cpu_stop+0x41/0xf0
+./faddr2line vmlinux multi_cpu_stop+0x41/0xf0
+multi_cpu_stop+0x41/0xf0:
+multi_cpu_stop 于 kernel/stop_machine.c:210
+
+卡在：if (msdata-&gt;state != curstate) { 这一行当中。
+
+```c { linenos=true, linenostart=186 }
+/* This is the cpu_stop function which stops the CPU. */
+static int multi_cpu_stop(void *data)
+{
+        struct multi_stop_data *msdata = data;
+        enum multi_stop_state curstate = MULTI_STOP_NONE;
+        int cpu = smp_processor_id(), err = 0;
+        unsigned long flags;
+        bool is_active;
+
+        /*
+         * When called from stop_machine_from_inactive_cpu(), irq might
+         * already be disabled.  Save the state and restore it on exit.
+         */
+        local_save_flags(flags);
+
+        if (!msdata->active_cpus)
+                is_active = cpu == cpumask_first(cpu_online_mask);
+        else
+                is_active = cpumask_test_cpu(cpu, msdata->active_cpus);
+
+        /* Simple state machine */
+        do {
+                /* Chill out and ensure we re-read multi_stop_state. */
+                cpu_relax_yield();
+                if (msdata->state != curstate) {
+                        curstate = msdata->state;
+                        switch (curstate) {
+                        case MULTI_STOP_DISABLE_IRQ:
+                                local_irq_disable();
+                                hard_irq_disable();
+#ifdef CONFIG_ARM64
+                                gic_arch_disable_irqs();
+                                sdei_mask_local_cpu();
+#endif
+                                break;
+                        case MULTI_STOP_RUN:
+                                if (is_active)
+                                        err = msdata->fn(msdata->data);
+                                break;
+                        default:
+                                break;
+                        }
+                        ack_state(msdata);
+                } else if (curstate > MULTI_STOP_PREPARE) {
+                        /*
+                         * At this stage all other CPUs we depend on must spin
+                         * in the same loop. Any reason for hard-lockup should
+                         * be detected and reported on their side.
+                         */
+                        touch_nmi_watchdog();
+                }
+        } while (curstate != MULTI_STOP_EXIT);
+
+#ifdef CONFIG_ARM64
+        sdei_unmask_local_cpu();
+        gic_arch_restore_irqs(flags);
+#endif
+        local_irq_restore(flags);
+        return err;
+}
+```
+
+往上找堆栈：cpu_stop_queue_work+0xf0/0xf0
+
+./faddr2line vmlinux cpu_stop_queue_work+0xf0/0xf0
+cpu_stop_queue_work+0xf0/0xf0:
+multi_cpu_stop 于 kernel/stop_machine.c:188
+
+卡在 { ，这个看起来很奇怪。
+
+```c { linenos=true, linenostart=187 }
+/* This is the cpu_stop function which stops the CPU. */
+static int multi_cpu_stop(void *data)
+{
+        struct multi_stop_data *msdata = data;
+        enum multi_stop_state curstate = MULTI_STOP_NONE;
+        int cpu = smp_processor_id(), err = 0;
+        unsigned long flags;
+        bool is_active;
+
+        /*
+         * When called from stop_machine_from_inactive_cpu(), irq might
+         * already be disabled.  Save the state and restore it on exit.
+         */
+        local_save_flags(flags);
+        ...
+```
+
+卡在函数的第一行。
+
+再往上找堆栈，（其实越往上看意义越小，只是为了理解上文的流程）：
+
+./faddr2line vmlinux smpboot_thread_fn+0x10e/0x160
+smpboot_thread_fn+0x10e/0x160:
+smpboot_thread_fn 于 kernel/smpboot.c:164
+
+卡在 ht-&gt;thread_fn(td-&gt;cpu); 这一行。
+
+```c
+/**
+ * smpboot_thread_fn - percpu hotplug thread loop function
+ * @data:       thread data pointer
+ *
+ * Checks for thread stop and park conditions. Calls the necessary
+ * setup, cleanup, park and unpark functions for the registered
+ * thread.
+ *
+ * Returns 1 when the thread should exit, 0 otherwise.
+ */
+static int smpboot_thread_fn(void *data)
+{
+        struct smpboot_thread_data *td = data;
+        struct smp_hotplug_thread *ht = td->ht;
+
+        while (1) {
+                set_current_state(TASK_INTERRUPTIBLE);
+                preempt_disable();
+                if (kthread_should_stop()) {
+                        __set_current_state(TASK_RUNNING);
+                        preempt_enable();
+                        /* cleanup must mirror setup */
+                        if (ht->cleanup && td->status != HP_THREAD_NONE)
+                                ht->cleanup(td->cpu, cpu_online(td->cpu));
+                        kfree(td);
+                        return 0;
+                }
+
+                if (kthread_should_park()) {
+                        __set_current_state(TASK_RUNNING);
+                        preempt_enable();
+                        if (ht->park && td->status == HP_THREAD_ACTIVE) {
+                                BUG_ON(td->cpu != smp_processor_id());
+                                ht->park(td->cpu);
+                                td->status = HP_THREAD_PARKED;
+                        }
+                        kthread_parkme();
+                        /* We might have been woken for stop */
+                        continue;
+                }
+
+                BUG_ON(td->cpu != smp_processor_id());
+
+                /* Check for state change setup */
+                switch (td->status) {
+                case HP_THREAD_NONE:
+                        __set_current_state(TASK_RUNNING);
+                        preempt_enable();
+                        if (ht->setup)
+                                ht->setup(td->cpu);
+                        td->status = HP_THREAD_ACTIVE;
+                 continue;
+
+                case HP_THREAD_PARKED:
+                        __set_current_state(TASK_RUNNING);
+                        preempt_enable();
+                        if (ht->unpark)
+                                ht->unpark(td->cpu);
+                        td->status = HP_THREAD_ACTIVE;
+                        continue;
+                }
+
+                if (!ht->thread_should_run(td->cpu)) {
+                        preempt_enable_no_resched();
+                        schedule();
+                } else {
+                        __set_current_state(TASK_RUNNING);
+                        preempt_enable();
+                        ht->thread_fn(td->cpu);
+                }
+        }
+}
+```
+
+
+## call trace 3 {#call-trace-3}
+
+还有一个堆栈可以分析一下：
+
+```nil
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RIP: 0010:find_next_bit+0x23/0x60
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: Code: 0f 1f 80 00 00 00 00 48 39 d6 76 3b 49 89 d0 89 d1 48 c7 c0 ff ff ff ff 49 c1 e8 06 48 d3 e0 48 83 e2 c0 4a 23 04 c7 48 89 c1 <74> 12 eb 1d 48 89 d1 48 c1 e9 06 48 8b 0c cf 48 85 c9 75 0d 48 83
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RSP: 0018:ffff9ffb19983df0 EFLAGS: 00000286 ORIG_RAX: ffffffffffffff13
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RAX: fffffffffffffff0 RBX: 0000000000000004 RCX: fffffffffffffff0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RDX: 0000000000000000 RSI: 0000000000000080 RDI: ffffffff99e7fbe0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RBP: ffff8bf526e0c000 R08: 0000000000000000 R09: 0000000000000000
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: R10: 0000000000000000 R11: ffff9ffb19983d18 R12: 0000000000000020
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: R13: 0000000000000010 R14: 0000000000000000 R15: 0000000000000000
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: FS:  00007f6bc3fff700(0000) GS:ffff8bd93fbc0000(0000) knlGS:0000000000000000
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: CR2: 000000c003be9000 CR3: 000000fcfb0c0000 CR4: 00000000003506e0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: Call Trace:
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: cpumask_next+0x17/0x20
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: mem_cgroup_node_nr_lru_pages+0xa5/0xf0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: memcg_numa_stat_show+0x16f/0x1f0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: seq_read+0x14a/0x3e0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: vfs_read+0x89/0x130
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: ksys_read+0x5a/0xd0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: do_syscall_64+0x5b/0x1e0
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: entry_SYSCALL_64_after_hwframe+0x44/0xa9
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RIP: 0033:0x42348e
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: Code: 48 89 6c 24 38 48 8d 6c 24 38 e8 0d 00 00 00 48 8b 6c 24 38 48 83 c4 40 c3 cc cc cc 49 89 f2 48 89 fa 48 89 ce 48 89 df 0f 05 <48> 3d 01 f0 ff ff 76 15 48 f7 d8 48 89 c1 48 c7 c0 ff ff ff ff 48
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RSP: 002b:000000c000dc6318 EFLAGS: 00000202 ORIG_RAX: 0000000000000000
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RAX: ffffffffffffffda RBX: 0000000000000033 RCX: 000000000042348e
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RDX: 0000000000001000 RSI: 000000c00167a000 RDI: 0000000000000033
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: RBP: 000000c000dc6358 R08: 0000000000000000 R09: 0000000000000000
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: R10: 0000000000000000 R11: 0000000000000202 R12: 000000c000dc65b8
+Jan  5 04:00:37 cc-cdfusion-obwind-x86-compute-4 kernel: R13: 0000000000000000 R14: 000000c000a49520 R15: 0000000000000080
+```
+
+```c { linenos=true, linenostart=9 }
+/**
+ * cpumask_next - get the next cpu in a cpumask
+ * @n: the cpu prior to the place to search (ie. return will be > @n)
+ * @srcp: the cpumask pointer
+ *
+ * Returns >= nr_cpu_ids if no further cpus set.
+ */
+unsigned int cpumask_next(int n, const struct cpumask *srcp)
+{
+        /* -1 is a legal arg here. */
+        if (n != -1)
+                cpumask_check(n);
+        return find_next_bit(cpumask_bits(srcp), nr_cpumask_bits, n + 1);
+}
+EXPORT_SYMBOL(cpumask_next);
+```
+
+卡在 22 行括号那一行。
+
+```bash
+#!/bin/bash
+output_file="/var/log/rt_log.txt"
+while true; do
+  timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+  echo "----------- $timestamp -------------" >> "$output_file"
+  ps -eo pid,comm,policy|grep FF >> "$output_file";
+  #ps -eLfc|grep " FF "|grep -v "grep"|awk '{print $2}'|while read line;do echo "chrt -p -o 0 "$line >> "$output_file";done
+  sleep 15
+done
+```
+
+
+## 结论 {#结论}
+
+最终证明是这个补丁可以解决问题，看来是内核函数执行效率低导致的 softlock ，这种问题是一种很典型的软锁问题！
+
+```nil
+commit e2ab04ccd47860da26895878c3a6eebed873d2cd
+Author: Shakeel Butt <shakeelb@google.com>
+Date:   Fri Aug 6 15:29:31 2021 +0800
+
+    mm/memcg: optimize memory.numa_stat like memory.stat
+
+    mainline inclusion
+    from mainline-v5.8-rc1
+    commit dd8657b6c1cb5e65b13445b4a038736e81cf80ea
+    CVE: NA
+    BugFix: UBXC000117
+
+    --------------------------------
+
+    Currently reading memory.numa_stat traverses the underlying memcg tree
+    multiple times to accumulate the stats to present the hierarchical view of
+    the memcg tree.  However the kernel already maintains the hierarchical
+    view of the stats and use it in memory.stat.  Just use the same mechanism
+    in memory.numa_stat as well.
+
+    I ran a simple benchmark which reads root_mem_cgroup's memory.numa_stat
+    file in the presense of 10000 memcgs.  The results are:
+
+    Without the patch:
+    $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
+
+    real    0m0.700s
+    user    0m0.001s
+    sys     0m0.697s
+
+    With the patch:
+    $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
+
+    real    0m0.001s
+    user    0m0.001s
+    sys     0m0.000s
+
+    [akpm@linux-foundation.org: avoid forcing out-of-line code generation]
+    Signed-off-by: Shakeel Butt <shakeelb@google.com>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Reviewed-by: Andrew Morton <akpm@linux-foundation.org>
+    Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+    Cc: Roman Gushchin <guro@fb.com>
+    Cc: Michal Hocko <mhocko@kernel.org>
+    Link: http://lkml.kernel.org/r/20200304022058.248270-1-shakeelb@google.com
+    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+
+    Conflicts:
+            mm/memcontrol.c
+
+    Signed-off-by: Jing Xiangfeng <jingxiangfeng@huawei.com>
+    Reviewed-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+    Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 ```

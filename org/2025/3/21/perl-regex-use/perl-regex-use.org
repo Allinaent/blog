@@ -1,0 +1,260 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/03
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-03-21 五 16:21]
+#+TITLE: perl 兼容的正则表达式
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: technology
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/e6104c843f0ccfcf964a9d1e4e42dca7.png
+
+* 写一个脚本
+
+#+begin_src bash
+grep -oP '<a\s+[^>]*>.*?</a>' *.html
+#+end_src
+
+
+说明：
+
+#+begin_src
+-o：只输出匹配的部分。
+
+-P：启用 Perl 兼容的正则表达式。
+
+<a\s+[^>]*>.*?</a>：匹配 <a> 标签及其内容。
+
+*.html：匹配当前目录下所有的 .html 文件。
+#+end_src
+
+#+begin_src bash
+grep -oP 'href="\K[^"]+' *.html
+#+end_src
+
+说明：
+
+#+begin_src
+grep -oP：启用 Perl 兼容的正则表达式，并只输出匹配的部分。
+
+href="\K[^"]+：
+
+href="：匹配 href="。
+
+\K：忽略前面的匹配内容。
+
+[^"]+：匹配引号内的内容（直到下一个引号为止）。
+
+*.html：匹配当前目录下所有的 .html 文件。
+#+end_src
+
+最终完成了一个脚本：
+
+#+begin_src bash
+
+# 使用这个下载 koji 上面的 rpm 包
+ljkoji() {
+        curl -sS "$1" |grep -oP '<a\s+[^>]*>.*?</a>' |grep -oP 'href="\K[^"]+'|grep rpm |while read line;do wget $line;done
+}
+# 举例：ljkoji "http://10.30.38.131/koji/taskinfo?taskID=2827825" ，注意必须加引号
+
+#+end_src
+
+* 多行匹配
+
+grep -P 支持多行匹配。
+
+是的， *Perl 兼容的正则表达式（PCRE，Perl Compatible Regular Expressions）* 支持多行匹配。多行匹配是指正则表达式可以跨越
+多行文本进行匹配，通常用于处理包含换行符的文本。
+
+--------------
+
+*** 1. *多行匹配的模式修饰符*
+:PROPERTIES:
+:CUSTOM_ID: 多行匹配的模式修饰符
+:END:
+在 Perl
+兼容的正则表达式中，可以使用模式修饰符来启用多行匹配。常用的修饰符包括：
+
+- * =m= 修饰符*：
+  - 启用多行模式（Multiline Mode）。
+  - 在多行模式下， =^= 和 =$=
+    分别匹配每一行的开头和结尾，而不是整个字符串的开头和结尾。
+- * =s= 修饰符*：
+  - 启用单行模式（Single-line Mode）。
+  - 在单行模式下， =.= 可以匹配换行符（ =\n= ）。
+
+--------------
+
+*** 2. *多行匹配的示例*
+:PROPERTIES:
+:CUSTOM_ID: 多行匹配的示例
+:END:
+**** 示例 1：使用 =m= 修饰符
+:PROPERTIES:
+:CUSTOM_ID: 示例-1使用-m-修饰符
+:END:
+假设有一个多行文本：
+
+#+begin_example
+Line 1
+Line 2
+Line 3
+#+end_example
+
+使用 =m= 修饰符匹配每一行的开头：
+
+#+begin_src perl
+/^Line \d+/gm
+#+end_src
+
+- =^= ：匹配每一行的开头。
+- =Line \d+= ：匹配 "Line" 后跟一个或多个数字。
+- =g= ：全局匹配。
+- =m= ：多行模式。
+
+**** 示例 2：使用 =s= 修饰符
+:PROPERTIES:
+:CUSTOM_ID: 示例-2使用-s-修饰符
+:END:
+假设有一个多行文本：
+
+#+begin_example
+Start
+Middle
+End
+#+end_example
+
+使用 =s= 修饰符匹配整个文本：
+
+#+begin_src perl
+/Start.*End/s
+#+end_src
+
+- =Start= ：匹配 "Start"。
+- =.*= ：匹配任意字符（包括换行符）。
+- =End= ：匹配 "End"。
+- =s= ：单行模式。
+
+--------------
+
+*** 3. *在 Shell 中使用 Perl 兼容的正则表达式*
+:PROPERTIES:
+:CUSTOM_ID: 在-shell-中使用-perl-兼容的正则表达式
+:END:
+**** 使用 =grep -P=
+:PROPERTIES:
+:CUSTOM_ID: 使用-grep--p
+:END:
+=grep= 的 =-P= 选项支持 Perl 兼容的正则表达式。
+
+***** 示例：
+:PROPERTIES:
+:CUSTOM_ID: 示例
+:END:
+#+begin_src sh
+echo -e "Line 1\nLine 2\nLine 3" | grep -P '^Line \d+'
+#+end_src
+
+- 输出：
+
+  #+begin_example
+  Line 1
+  Line 2
+  Line 3
+  #+end_example
+
+**** 使用 =perl=
+:PROPERTIES:
+:CUSTOM_ID: 使用-perl
+:END:
+=perl= 命令可以直接使用 Perl 兼容的正则表达式。
+
+***** 示例：
+:PROPERTIES:
+:CUSTOM_ID: 示例-1
+:END:
+#+begin_src sh
+echo -e "Start\nMiddle\nEnd" | perl -nle 'print if /Start.*End/s'
+#+end_src
+
+- 输出：
+
+  #+begin_example
+  Start
+  Middle
+  End
+  #+end_example
+
+--------------
+
+*** 4. *在编程语言中使用 Perl 兼容的正则表达式*
+:PROPERTIES:
+:CUSTOM_ID: 在编程语言中使用-perl-兼容的正则表达式
+:END:
+**** 在 Python 中使用 =re= 模块
+:PROPERTIES:
+:CUSTOM_ID: 在-python-中使用-re-模块
+:END:
+Python 的 =re= 模块支持 Perl 兼容的正则表达式。
+
+***** 示例：
+:PROPERTIES:
+:CUSTOM_ID: 示例-2
+:END:
+#+begin_src python
+import re
+
+text = "Start\nMiddle\nEnd"
+pattern = re.compile(r'Start.*End', re.DOTALL)
+match = pattern.search(text)
+if match:
+    print(match.group())
+#+end_src
+
+- 输出：
+
+  #+begin_example
+  Start
+  Middle
+  End
+  #+end_example
+
+**** 在 PHP 中使用 =preg= 函数
+:PROPERTIES:
+:CUSTOM_ID: 在 =php= 中使用 =preg= 函数
+:END:
+PHP 的 =preg= 函数支持 Perl 兼容的正则表达式。
+
+***** 示例：
+:PROPERTIES:
+:CUSTOM_ID: 示例-3
+:END:
+#+begin_src php
+$text = "Start\nMiddle\nEnd";
+preg_match('/Start.*End/s', $text, $matches);
+echo $matches[0];
+#+end_src
+
+- 输出：
+
+  #+begin_example
+  Start
+  Middle
+  End
+  #+end_example
+
+--------------
+
+*** 5. *总结*
+:PROPERTIES:
+:CUSTOM_ID: 总结
+:END:
+- *=m= 修饰符* ：启用多行模式，=^= 和 =$= 分别匹配每一行的开头和结尾。
+- *=s= 修饰符* ：启用单行模式，=.= 可以匹配换行符。
+- *在 Shell 中* ：可以使用 =grep -P= 或 =perl= 命令。
+- *在编程语言中* ：Python 的 =re= 模块和 PHP 的 =preg= 函数都支持 Perl兼容的正则表达式。
+
+通过合理使用模式修饰符，可以实现多行文本的匹配和处理。
+

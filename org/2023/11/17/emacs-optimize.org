@@ -119,6 +119,24 @@ https://github.com/rime/squirrel/issues/146
 上屏直接按 enter 键，关键还是提高自己的速度和准确率，不能完全信赖工具，工具只是一时的。而
 知识才是无价的。工具只是一时的，而重要的知识才是无价的。所以现在这种程度就够了。
 
+** 设置 fcitx5 的输入法切换方法
+
+这个软件的配置文件是：~/.config/fcitx5/ ，这里面关于输入法切换的快捷键都要设置成空的。如图：
+
+[[https://r2.guolongji.xyz/allinaent/2025/03/9249e1aa5a0f97d6234bb3d4619d2e64.png]]
+
+而在 ~/.local/share/fcitx5/rime/default.custom.yaml 当中：
+
+#+begin_src
+ascii_composer/switch_key:
+    Caps_Lock: commit_code
+    # Shift_L: inline_ascii             # 会导致emacs的快捷键无法使用
+    Shift_L: commit_code
+    Shift_R: commit_code
+    # Control_L: inline_ascii
+    Control_R: none
+#+end_src
+
 ** 终端里有户名和机器名的配色问题
 
 将 .bashrc 当中的 force_color_prompt=yes 就可以了。这也是一个小 bug 的修复

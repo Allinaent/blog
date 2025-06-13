@@ -1,0 +1,679 @@
++++
+title = "理解 linux 内核调度"
+date = 2025-03-19T15:24:00+08:00
+lastmod = 2025-03-21T22:30:08+08:00
+draft = false
+toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
++++
+
+## 一些资料 {#一些资料}
+
+linux 内核相关的学习视频：
+
+<https://space.bilibili.com/1987842289/upload/video>
+
+这些视频比较全，如果遇到问题可以从这里面搜一下看看有没有相关的学习资料。
+
+子牙老师：
+
+直接在微信公众号上搜“硬核子牙 调度”，这样就能搜到一些比较好的文章。
+
+
+## 关于调度 {#关于调度}
+
+微信上面把原理讲了一下：
+
+调度原理一：
+
+<https://mp.weixin.qq.com/s/Fh8G5f3r6ao9N0tSgyjvkw>
+
+调度原理二：
+
+<https://mp.weixin.qq.com/s/0QIcAAChzsBWzg4qlYMD3w>
+
+想彻弄明白细节需要把结构本和函数列出来，核心的代码在： include/linux/sched.h 和 kernel/sched/core.c 当中。
+
+SMT 域：同一个核心的硬件线程。
+
+CORE 域：同一个核心的所有硬件线程。
+
+MC 域：同一个 CPU 芯片的所有核心。
+
+DIE 域：同一个 CPU 封装的所有 CPU 芯片。
+
+SYSTEM 域：整个系统的所有 CPU。
+
+{{< figure src="https://r2.guolongji.xyz/allinaent/2025/03/11636c89bf1fd2e4869b0de1f25094b1.png" >}}
+
+
+## 调度很简单 {#调度很简单}
+
+早期莱纳茨刚写linux的时候，让cpu两个任务一个打印0，一个打印 1 。这个发明一点也不难想，但是就是很有效。
+
+明白了！你指的是 **Linus Torvalds 早期编写 Linux内核时** ，为了演示多任务调度而实现的一个简单示例：让 CPU在两个任务之间切换，一个任务打印 `0` ，另一个任务打印 `1` 。这个示例确实是Linux 早期开发阶段的一个经典案例，用于验证内核的 **任务调度** 功能。
+
+---
+
+
+### 背景 {#背景}
+
+在 Linux 内核的早期版本中，Linus Torvalds实现了一个非常简单的任务调度器，用于验证内核是否能够支持多任务并发执行。这个调度器的核心功能是在两个任务之间切换，一个任务打印 `0` ，另一个任务打印 `1` 。通过观察输出结果（交替的 `0` 和 `1` ），可以验证调度器是否正常工作。
+
+这种实现非常原始，但它展示了操作系统核心功能之一： **任务调度** 。
+
+---
+
+
+### 实现原理 {#实现原理}
+
+1.  **任务定义** ：
+    -   定义两个简单的任务，每个任务是一个无限循环，分别打印 `0` 和 `1` 。
+    -   任务的代码可能是用汇编语言或 C 语言编写的。
+2.  **任务切换** ：
+    -   实现一个简单的调度器，负责在两个任务之间切换。
+    -   任务切换的核心是保存当前任务的上下文（如寄存器状态），并恢复下一个任务的上下文。
+3.  **定时器中断** ：
+    -   使用定时器中断触发任务切换。
+    -   每次定时器中断发生时，调度器会切换到另一个任务。
+4.  **输出结果** ：
+    -   如果调度器工作正常，输出结果应该是交替的 `0` 和 `1` 。
+
+---
+
+
+### 示例代码（概念性） {#示例代码概念性}
+
+以下是一个概念性的代码示例，展示了早期 Linux内核中可能实现的多任务调度：
+
+
+#### 任务定义 {#任务定义}
+
+```C
+void task0() {
+    while (1) {
+        print("0");
+    }
+}
+
+void task1() {
+    while (1) {
+        print("1");
+    }
+}
+```
+
+
+#### 调度器 {#调度器}
+
+```C
+struct task {
+    void (*function)(); // 任务函数指针
+    void* stack;        // 任务栈指针
+    void* context;      // 任务上下文
+};
+
+struct task tasks[2];
+int current_task = 0;
+
+// 保存当前任务的上下文
+void save_context(struct task* t) {
+    // 保存寄存器状态到 t->context
+}
+
+// 恢复下一个任务的上下文
+void restore_context(struct task* t) {
+    // 从 t->context 恢复寄存器状态
+}
+
+// 任务切换
+void schedule() {
+    // 保存当前任务的上下文
+    save_context(&tasks[current_task]);
+
+    // 切换到下一个任务
+    current_task = (current_task + 1) % 2;
+
+    // 恢复下一个任务的上下文
+    restore_context(&tasks[current_task]);
+}
+
+// 定时器中断处理函数
+void timer_interrupt() {
+    schedule();
+}
+```
+
+
+#### 初始化任务 {#初始化任务}
+
+```C
+void init_tasks() {
+    tasks[0].function = task0;
+    tasks[0].stack = allocate_stack();
+    tasks[0].context = allocate_context();
+
+    tasks[1].function = task1;
+    tasks[1].stack = allocate_stack();
+    tasks[1].context = allocate_context();
+}
+```
+
+
+#### 主函数 {#主函数}
+
+```C
+void main() {
+    init_tasks();
+    start_timer(timer_interrupt);
+
+    // 启动第一个任务
+    restore_context(&tasks[0]);
+}
+```
+
+---
+
+
+### 运行结果 {#运行结果}
+
+如果调度器工作正常，输出结果应该是交替的 `0` 和 `1` ，例如：
+
+```text
+0 1 0 1 0 1 0 1 ...
+```
+
+---
+
+
+### 意义 {#意义}
+
+这个简单的示例展示了操作系统核心功能之一： **任务调度** 。通过实现任务切换，Linus Torvalds 验证了 Linux 内核能够支持多任务并发执行。这是 Linux内核发展的一个重要里程碑，为后续更复杂的功能（如进程管理、内存管理、文件系统等）奠定了基础。
+
+---
+
+
+### 总结 {#总结}
+
+你提到的早期 Linux 内核中让 CPU 打印交替的 `0` 和 `1` 的示例，是 Linus Torvalds用于验证任务调度功能的简单实现。这个示例展示了任务切换的核心原理，是Linux内核发展过程中的一个重要实验。虽然它非常简单，但它为后续更复杂的功能奠定了基础。
+
+
+## 设计者思维 {#设计者思维}
+
+我的思维一直是一个设计者，只看一些细节总是让我这样思维的人感到难以理解。世界是稳定的，是现实的，客观的。理论在这个世界中是可以认识的。
+
+select_task_rq 是 linux 内核调度器的一个关键函数，用于为任务选择合适的 CPU 核心，它的实现包含以下步骤：
+
+检查 CPU 亲和性。
+
+负载均衡，选择负载较轻的 CPU。
+
+唤醒优化，优先选择当前 CPU。
+
+NUMA 感知，选择最优的 CPU 组。
+
+默认选择当前 CPU。
+
+通过 select_task_rq()，Linux 内核能够高效地将任务分配到合适的 CPU 核心上运行，从而实现负载均衡和性能优化。
+
+
+### 实时调度器的核心算法 {#实时调度器的核心算法}
+
+1.  固定优先级调度（Fixed-Priority Scheduling）
+
+这是 Linux 实时调度器的默认调度策略。
+
+每个实时任务都有一个固定的优先级（rt_priority），范围是 1（最低）到 99（最高）。
+
+调度器总是选择优先级最高的就绪任务来运行。
+
+如果多个任务具有相同的优先级，则使用 轮转调度（Round-Robin） 策略，每个任务运行一个固定的时间片（sched_rr_timeslice）。
+
+1.  最早截止时间优先（Earliest Deadline First, EDF）
+
+EDF 是一种动态优先级调度算法，适用于周期性或具有明确截止时间的实时任务。
+
+每个任务都有一个截止时间（deadline），调度器总是选择截止时间最早的任务来运行。
+
+EDF 需要显式配置任务的截止时间，通常通过 sched_setattr() 系统调用设置。
+
+
+### x86 有哪些汇编文件 {#x86-有哪些汇编文件}
+
+什么需要用汇编写很好理解，初始化硬件。cpu 切换进程上下文。
+
+汇编当中有一些有趣的函数，比如：
+
+还有一些有意思的宏，把底层的汇编包起来，比如：
+
+```c
+#define ENTRY(entry) OFFSET(pt_regs_ ## entry, pt_regs, entry)
+        ENTRY(bx);
+        ENTRY(cx);
+        ENTRY(dx);
+        ENTRY(sp);
+        ENTRY(bp);
+        ENTRY(si);
+        ENTRY(di);
+        ENTRY(r8);
+        ENTRY(r9);
+        ENTRY(r10);
+        ENTRY(r11);
+        ENTRY(r12);
+        ENTRY(r13);
+        ENTRY(r14);
+        ENTRY(r15);
+        ENTRY(flags);
+        BLANK();
+#undef ENTRY
+```
+
+1.  标记函数入口
+    ENTRY宏用于标记一个符号（通常是一个函数）的入口点。在汇编中，它通常是定义符号地址的起始点。
+
+    例如：
+
+    ENTRY(start_kernel)
+    这里，start_kernel是内核启动的函数名称。ENTRY宏将它标记为一个入口点，并确保正确的符号定义。
+2.  确保正确的对齐在x86架构中，处理器的指令集要求函数的入口通常需要对齐（比如，16字节对齐）。ENTRY宏通常会包括一些对齐的指令，以确保函数入口在内存中的位置满足对齐要求，从而避免不必要的性能损失。
+
+    例如，ENTRY宏可能会插入一些填充字节或对齐指令，如：
+
+    .align 16
+3.  生成符号表
+    ENTRY宏也负责生成符号表中的符号，使得函数或标签可以在内核的其他部分引用。这有助于调试和符号解析。
+4.  与汇编语言的入口约定结合在x86架构中，ENTRY宏还会处理与函数入口相关的调用约定，特别是在汇编代码中。这意味着，它会确保堆栈对齐，保存和恢复寄存器等必要的操作。
+
+
+### start_kernel 函数 {#start-kernel-函数}
+
+这里面的 void __init setup_arch(char \*\*cmdline_p) 这个函数确定内核是不是被 EFI loader 加载了。
+
+
+## EFI loader {#efi-loader}
+
+**EFI Loader\*（EFI 引导加载程序）是一种用于在UEFI（统一可扩展固件接口） \*系统上加载操作系统的引导程序。它是 UEFI固件的一**
+部分，负责在系统启动时加载操作系统的内核或引导管理器（如GRUB）。以下是 EFI Loader 的详细说明及其用途：
+
+---
+
+
+### 1. **UEFI 和 EFI Loader 的背景** {#uefi-和-efi-loader-的背景}
+
+-   **UEFI** ：
+    -   UEFI 是一种现代化的固件接口，用于替代传统的
+        BIOS（基本输入输出系统）。
+    -   它提供了更强大的功能，如支持更大的硬盘、更快的启动速度、图形化界面以及网络支持。
+-   **EFI Loader** ：
+    -   EFI Loader 是 UEFI 固件的一部分，负责加载操作系统或引导管理器。
+    -   它通常是一个 `.efi` 文件，存储在 EFI 系统分区（ESP）中。
+
+---
+
+
+### 2. **EFI Loader 的作用** {#efi-loader-的作用}
+
+EFI Loader
+的主要作用是在系统启动时加载操作系统或引导管理器。具体功能包括：
+
+
+#### （1）\*加载操作系统内核\* {#加载操作系统内核}
+
+-   EFI Loader 可以直接加载操作系统的内核（如 Linux 的 `vmlinuz` ）。
+-   例如，Linux 内核可以编译为 EFI 可执行文件（ `vmlinuz.efi` ），由 EFI Loader 直接加载。
+
+
+#### （2）\*加载引导管理器\* {#加载引导管理器}
+
+-   EFI Loader 可以加载引导管理器（如GRUB、systemd-boot），由引导管理器进一步加载操作系统。
+-   引导管理器通常提供更复杂的功能，如多操作系统选择、内核参数配置等。
+
+
+#### （3）\*提供启动菜单\* {#提供启动菜单}
+
+-   EFI Loader 可以显示启动菜单，允许用户选择要启动的操作系统或内核。
+-   例如，GRUB 的 EFI 版本（ `grubx64.efi` ）可以显示多操作系统选择菜单。
+
+
+#### （4）\*传递启动参数\* {#传递启动参数}
+
+-   EFI Loader 可以向操作系统传递启动参数（如内核命令行参数）。
+-   这些参数可以用于配置内核的行为（如调试模式、根文件系统位置等）。
+
+
+#### （5）\*支持安全启动（Secure Boot）\* {#支持安全启动secure-boot}
+
+-   EFI Loader 支持 UEFI的安全启动功能，确保只有经过签名的操作系统或引导管理器可以被加载。
+-   这可以防止恶意软件在启动过程中加载。
+
+---
+
+
+### 3. **EFI Loader 的工作流程** {#efi-loader-的工作流程}
+
+EFI Loader 的工作流程通常包括以下步骤：
+
+1.  **系统启动** ：
+    -   系统通电后，UEFI 固件开始执行。
+2.  \*加载 EFI Loader\*：
+    -   UEFI 固件从 EFI 系统分区（ESP）中加载 EFI Loader（如 `bootx64.efi`
+        或 `grubx64.efi` ）。
+3.  **执行 EFI Loader** ：
+    -   EFI Loader 初始化硬件，并加载操作系统内核或引导管理器。
+4.  **加载操作系统** ：
+    -   如果 EFI Loader 是引导管理器（如GRUB），它会显示启动菜单，并加载用户选择的操作系统。
+    -   如果 EFI Loader 是操作系统内核（如 `vmlinuz.efi` ），它会直接启动操作系统。
+5.  **启动完成** ：
+    -   操作系统接管系统控制权，完成启动过程。
+
+---
+
+
+### 4. **EFI Loader 的常见实现** {#efi-loader-的常见实现}
+
+以下是一些常见的 EFI Loader 实现：
+
+
+#### （1）\*GRUB\* {#grub}
+
+-   GRUB 是一个流行的引导管理器，支持 UEFI 和传统 BIOS。
+-   它的 EFI 版本是 `grubx64.efi` （64 位系统）或 `grubia32.efi` （32位系统）。
+-   GRUB
+    提供了强大的功能，如多操作系统支持、内核参数配置、文件系统访问等。
+
+
+#### （2）\*systemd-boot\* {#systemd-boot}
+
+-   `systemd-boot` 是一个轻量级的引导管理器，通常用于基于 systemd 的 Linux发行版（如 Fedora、Arch Linux）。
+-   它的 EFI 版本是 `bootx64.efi` 。
+-   `systemd-boot` 提供了简单的启动菜单和快速启动功能。
+
+
+#### （3）\*Windows Boot Manager\* {#windows-boot-manager}
+
+-   Windows 的 EFI Loader 是 `bootmgfw.efi=，位于 EFI 系统分区的
+      =EFI/Microsoft/Boot/` 目录下。
+-   它负责加载 Windows 操作系统内核（ `winload.efi` ）。
+
+
+#### （4）\*Linux 内核 EFI Stub\* {#linux-内核-efi-stub}
+
+-   Linux 内核可以编译为 EFI 可执行文件（ `vmlinuz.efi` ），直接由 UEFI固件加载。
+-   这种方式跳过了引导管理器，简化了启动流程。
+
+---
+
+
+### 5. **EFI Loader 的存储位置** {#efi-loader-的存储位置}
+
+EFI Loader 通常存储在 **EFI 系统分区（ESP）** 中，这是一个 FAT32格式的分区，挂载点为 `/boot/efi` 。常见的 EFI Loader 文件路径包括：
+
+-   `/EFI/BOOT/BOOTX64.EFI` ：默认的 EFI Loader，用于 64 位系统。
+-   `/EFI/ubuntu/grubx64.efi` ：Ubuntu 的 GRUB EFI Loader。
+-   `/EFI/Microsoft/Boot/bootmgfw.efi` ：Windows 的 EFI Loader。
+
+---
+
+
+### 6. **EFI Loader 的配置** {#efi-loader-的配置}
+
+EFI Loader 的配置通常存储在 EFI 系统分区中，例如：
+
+-   **GRUB** ：配置文件位于 =/boot/grub/grub.cfg=。
+-   **systemd-boot** ：配置文件位于 `/boot/loader/entries/` 目录下。
+-   **Windows Boot Manager** ：配置文件位于 `EFI/Microsoft/Boot/BCD` 。
+
+---
+
+
+### 7. **EFI Loader 的用途总结** {#efi-loader-的用途总结}
+
+EFI Loader 的主要用途包括：
+
+1.  \*加载操作系统内核\*：直接启动操作系统。
+2.  **加载引导管理器** ：提供多操作系统选择和配置功能。
+3.  **支持安全启动** ：确保只有经过签名的操作系统或引导管理器可以被加载。
+4.  **提供启动菜单** ：允许用户选择要启动的操作系统或内核。
+5.  **传递启动参数** ：配置内核的行为。
+
+---
+
+
+### 8. **总结** {#总结}
+
+EFI Loader 是 UEFI系统启动过程中的关键组件，负责加载操作系统或引导管理器。它提供了强大的功能，如多操作系统支持、安全启动、启动菜单等，是现代计算机系统启动流程的核心部分。通过EFI Loader，用户可以灵活地管理和启动多个操作系统。
+
+
+## grub这个efi loader可以手动指定加载某个内核吗？ {#grub这个efi-loader可以手动指定加载某个内核吗}
+
+是的， **GRUB** 作为 EFI Loader 可以手动指定加载某个内核。GRUB提供了灵活的配置和交互式菜单，允许用户选择要加载的内核或操作系统。以下是手动指定加载某个内核的几种方法：
+
+---
+
+
+### 1. **通过 GRUB 菜单选择内核** {#通过-grub-菜单选择内核}
+
+-   在系统启动时，GRUB 会显示一个启动菜单，列出可用的内核和操作系统。
+-   使用上下箭头键选择要加载的内核，然后按 `Enter` 键启动。
+
+---
+
+
+### 2. **通过 GRUB 命令行手动加载内核** {#通过-grub-命令行手动加载内核}
+
+-   在 GRUB 菜单界面，按 `c` 键进入 GRUB 命令行模式。
+-   在命令行中，可以手动指定内核和 initramfs 文件，然后启动系统。
+
+
+#### 示例： {#示例}
+
+假设内核文件为 `/boot/vmlinuz-5.15.0-50-generic` ，initramfs 文件为 `/boot/initrd.img-5.15.0-50-generic` ，根文件系统在
+`/dev/sda1` 。
+
+```grub
+grub> linux /boot/vmlinuz-5.15.0-50-generic root=/dev/sda1
+grub> initrd /boot/initrd.img-5.15.0-50-generic
+grub> boot
+```
+
+
+#### 说明： {#说明}
+
+-   `linux` ：指定内核文件。
+-   `initrd` ：指定 initramfs 文件。
+-   `boot` ：启动系统。
+
+---
+
+
+### 3. **修改 GRUB 配置文件** {#修改-grub-配置文件}
+
+-   GRUB 的配置文件通常位于 `/boot/grub/grub.cfg` 。
+-   可以通过编辑配置文件来指定默认加载的内核或添加新的启动项。
+
+
+#### 示例： {#示例-1}
+
+在 `/etc/grub.d/40_custom` 中添加一个新的启动项：
+
+```grub
+menuentry 'My Custom Kernel' {
+    set root='hd0,msdos1'
+    linux /boot/vmlinuz-5.15.0-50-generic root=/dev/sda1
+    initrd /boot/initrd.img-5.15.0-50-generic
+}
+```
+
+然后更新 GRUB 配置：
+
+```sh
+sudo update-grub
+```
+
+
+#### 说明： {#说明-1}
+
+-   `menuentry` ：定义一个新的启动项。
+-   `set root` ：指定根分区。
+-   `linux` ：指定内核文件。
+-   `initrd` ：指定 initramfs 文件。
+
+---
+
+
+### 4. **通过 GRUB 环境变量指定内核** {#通过-grub-环境变量指定内核}
+
+-   GRUB 支持环境变量，可以通过设置环境变量来指定默认加载的内核。
+
+
+#### 示例： {#示例-2}
+
+在 GRUB 命令行中设置环境变量：
+
+```grub
+grub> set default_kernel=/boot/vmlinuz-5.15.0-50-generic
+grub> set default_initrd=/boot/initrd.img-5.15.0-50-generic
+grub> set root=/dev/sda1
+grub> linux $default_kernel root=$root
+grub> initrd $default_initrd
+grub> boot
+```
+
+
+#### 说明： {#说明-2}
+
+-   `set` ：设置环境变量。
+-   `$default_kernel` 和 `$default_initrd` ：引用环境变量。
+
+---
+
+
+### 5. **使用 GRUB 的 `configfile` 命令** {#使用-grub-的-configfile-命令}
+
+-   可以使用 `configfile` 命令加载另一个 GRUB
+    配置文件，从而指定要加载的内核。
+
+
+#### 示例： {#示例-3}
+
+假设有一个自定义的 GRUB 配置文件 `/boot/grub/custom.cfg` ，内容如下：
+
+```grub
+menuentry 'Custom Kernel' {
+    linux /boot/vmlinuz-5.15.0-50-generic root=/dev/sda1
+    initrd /boot/initrd.img-5.15.0-50-generic
+}
+```
+
+在 GRUB 命令行中加载该配置文件：
+
+```grub
+grub> configfile /boot/grub/custom.cfg
+```
+
+
+#### 说明： {#说明-3}
+
+-   `configfile` ：加载指定的 GRUB 配置文件。
+
+---
+
+
+### 6. **通过 UEFI 固件直接加载内核** {#通过-uefi-固件直接加载内核}
+
+-   如果内核编译为 EFI 可执行文件（如 `vmlinuz.efi` ），可以通过 UEFI固件直接加载内核，而无需使用 GRUB。
+
+
+#### 示例： {#示例-4}
+
+1.  将内核文件复制到 EFI 系统分区：
+    ```sh
+    sudo cp /boot/vmlinuz-5.15.0-50-generic /boot/efi/EFI/ubuntu/vmlinuz.efi
+    ```
+
+2.  在 UEFI 启动菜单中选择 `vmlinuz.efi` 启动。
+
+---
+
+
+### 7. **总结** {#总结}
+
+| 方法                | 说明                                |
+|-------------------|-----------------------------------|
+| **GRUB 菜单**       | 在启动时选择要加载的内核。          |
+| **GRUB 命令行**     | 手动指定内核和 initramfs 文件。     |
+| **修改 GRUB 配置文件** | 添加新的启动项或修改默认启动项。    |
+| **GRUB 环境变量**   | 设置环境变量来指定内核和 initramfs 文件。 |
+| **`configfile` 命令** | 加载自定义的 GRUB 配置文件。        |
+| **UEFI 固件直接加载** | 如果内核编译为 EFI 可执行文件，可以直接通过 UEFI 固件加载。 |
+
+通过这些方法，你可以灵活地手动指定加载某个内核，满足不同的启动需求。
+
+
+## 中断使用 {#中断使用}
+
+网络设备：NET_RX_SOFTIRQ 和 NET_TX_SOFTIRQ。
+
+块设备：BLOCK_SOFTIRQ。
+
+定时器：TIMER_SOFTIRQ。
+
+任务队列：TASKLET_SOFTIRQ 和 HI_SOFTIRQ。
+
+高分辨率定时器：HRTIMER_SOFTIRQ。
+
+RCU：RCU_SOFTIRQ。
+
+软中断：用于高频、低延迟的任务，不能睡眠。
+
+任务队列：基于软中断的简化机制，适合中等频率的任务，不能睡眠。
+
+工作队列：用于低频、可能阻塞的任务，可以睡眠。
+
+| 特性  | 软中断（Softirq） | 任务队列（Tasklets） | 工作队列（Workqueues） |
+|-----|--------------|----------------|------------------|
+| 执行上下文 | 中断上下文或 ksoftirqd | 软中断上下文   | 进程上下文       |
+| 能否睡眠 | 不能             | 不能           | 可以             |
+| 优先级 | 最高             | 中等           | 最低             |
+| 适用场景 | 高频、低延迟任务 | 中等频率任务   | 低频、可能阻塞的任务 |
+| 示例  | 网络数据包处理   | USB中断处理    | 文件系统操作     |
+
+
+### 如何查看软中断 {#如何查看软中断}
+
+/proc/softirqs：查看每种软中断的触发次数。
+
+mpstat：查看软中断占用的 CPU 时间百分比。
+
+top：实时查看软中断负载。
+
+perf：详细分析软中断的性能。
+
+dstat：多功能监控工具，查看软中断负载。
+
+sar：查看软中断负载的历史记录。
+
+/proc/interrupts：查看硬件中断的触发次数（与软中断相关）。
+
+查看软中断：
+
+/proc/softirqs：查看每种软中断的触发次数。
+
+mpstat：查看软中断占用的 CPU 时间百分比。
+
+top：查看软中断的实时负载。
+
+查看硬件中断：
+
+/proc/interrupts：查看每个硬件中断的触发次数。
+
+mpstat：查看硬件中断占用的 CPU 时间百分比。
+
+perf：详细分析硬件中断的性能。
+
+
+### 命令 {#命令}
+
+cat /proc/interrupts | less -S
+
+或者： vim 下使用 :set nocrap 不换行看的话，格式就很清楚了。
