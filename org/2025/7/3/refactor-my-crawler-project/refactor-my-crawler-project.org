@@ -1,0 +1,99 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/07
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-07-03 四 15:26]
+#+TITLE: 开发一个 python 程序自动更新 vul 网站
+#+HUGO_TAGS:
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+
+背景：之前用 deekseek 加上自己的理解，还有之前同事写的 python 脚本，写了一个用于更新公司 vul 网站多个架构，多个版本的
+cve 状态，因为最近我负责服务器主线的 cve 相关事务。cve 实在是有些多，之前我在v20 的时候使用自动更新功能是没有问题的。
+
+后来公司的 vul 网站更新了，增加了 v25 的 cve 状态维护。安全团队人员有离职，又更新了新功能。我在自已调试看文档的过程中遇
+到了不少的错误，逐渐失去了耐心，想到自己写的 python 代码很初级，都写在了一个文件里面。
+
+又想到，python 如些的常用，我之前写的 python 还没有一个博客记录自己的一点编程经验。与安全部的同事沟通，他们也不愿花时间
+和我一起调试。那这一次就下大一点力度，把 python 写的更高级一点。
+
+比如代码组织结构，“找别人麻烦”用到的测试用例，如果接口不好用的话，有一个时间戳，有一个有力的说法即可。
+
+
+
+一、基本原则
+
+单一职责原则 (SRP)
+
+每个模块/类只负责一个明确的功能点。
+
+高内聚低耦合
+
+相关功能集中，模块间依赖最小化。
+
+依赖倒置原则 (DIP)
+
+依赖抽象而非具体实现。
+
+明确边界
+
+通过接口或协议定义模块间的交互方式。
+
+重构，重构，重构，let's go
+
+* 代码功能拆分与重构
+
+
+1. vul web 接口相关的写到一个文件里面去。
+
+2. cve.org 网站的爬取方法写在一个文件里面去。
+
+3. 主体流程写到一个文件里面去。
+
+4. git 本地的查找功能写到一个文件里面去。
+
+举个例子，类似下面的这个结构。
+
+#+begin_src
+project/
+├── core/          # 核心业务逻辑（纯Python，无外部依赖）
+│   ├── services/  # 业务服务层
+│   └── models/    # 数据模型/领域对象
+├── adapters/      # 适配层（对接外部服务/数据库）
+│   ├── db/        # 数据库操作
+│   └── api/       # 第三方API调用
+├── infrastructure/ # 基础设施
+│   ├── config.py  # 配置管理
+│   └── logging.py # 日志处理
+└── entrypoints/   # 入口层
+    ├── cli.py     # 命令行入口
+    └── web.py     # Web接口
+#+end_src
+
+* 优化的核心想法
+
+- 公司的 cve 接口请求速度有点慢，那我可以分多次请求，每次只处理一页，这样会快很多。
+
+- 将容易出错的地方用 try catch 包住。
+
+- 日志，多打一些核心的日志。
+
+- python如何将一个get请求封装成可变接口，使之更容易使用？
+
+问了一下 deepseek ，绐的答案还不错。
+
+
+* 如何将 python 项目做成一个可执行的程序？
+
+使用 pyinstaller 来打包。我的目的是好用，令使用起来越简单越好。
+
+* 结尾
+
+花了 2 ，3 天写了一个小项目，地址在：https://gitee.com/allinaent/vul_update
+
+感兴趣的话可以看一下。
+
+
