@@ -83,8 +83,8 @@
 
       // 为每个 article 元素添加 margin-bottom 样式
       articles.forEach(article => {
-	  article.style.marginLeft = '20px';
-	  article.style.marginRight = '20px';
+	  //article.style.marginLeft = '20px';
+	  //article.style.marginRight = '20px';
 	  article.style.marginBottom = '20px';
       });
 
@@ -101,19 +101,22 @@
       });
 
       const button = document.querySelector('.search-form button');
-      if (button != undefined && button != null)
+      if (button != undefined && button != null) {
 	  button.style.marginLeft = '-70px';
-
-      const nav = document.querySelector('.pagination');
-      if (nav != undefined && nav != null) {
-	  nav.style.marginLeft = '20px';
-	  nav.style.marginRight = '20px';
+	  button.style.right = '0px';
+	  button.style.bottom = '0px';
       }
 
-      const footer = document.querySelector('.site-footer');
-      if (footer != undefined && footer != null) {
-	  footer.style.marginLeft = '20px';
-	  footer.style.marginRight = '20px';
+      const main = document.querySelector('.main');
+      if (main != undefined && main != null) {
+	  main.style.marginLeft = '20px';
+	  main.style.marginRight = '20px';
+      }
+
+      const archieve = document.querySelector('.article-list--compact');
+      if (archieve != undefined && archieve != null) {
+	  archieve.style.marginTop = '20px';
+	  archieve.style.marginBottom = '20px';
       }
 
       const sitemeta = document.querySelector('.site-meta');
