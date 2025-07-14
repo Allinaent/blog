@@ -21,3 +21,97 @@
 	$(this).removeAttr('href');
   })
 </script>
+
+<script>
+  // 获取所有元素
+  var isOldChrome = false
+  const allElements = document.querySelectorAll('.menu');
+
+  // 遍历所有元素
+  allElements.forEach(element => {
+      const childElements = element.children;
+      // 获取该元素的计算样式
+      const style = window.getComputedStyle(element);
+
+      // 获取 gap 属性的值
+      var gapValue = style.getPropertyValue('gap');
+      var distance = 0
+      // 检查 gap 是否有值，且值不为空
+      if (gapValue) {
+	  const element1 = element.children[0];
+	  const element2 = element.children[1];
+	  if (childElements[0] !== undefined && childElements[0] !== null
+	      && childElements[1] !== undefined && childElements[1] !== null) {
+	      // 获取元素1和元素2的边界框
+	      const rect1 = element1.getBoundingClientRect();
+	      const rect2 = element2.getBoundingClientRect();
+
+	      // 计算两个元素的中心点坐标
+	      const centerX1 = rect1.right;
+	      const centerY1 = rect1.bottom;
+
+	      const centerX2 = rect2.left;
+	      const centerY2 = rect2.top;
+
+	      // 计算欧几里得距离（直线距离）
+	      //distance = Math.sqrt(Math.pow(centerX2 - centerX1, 2) + Math.pow(centerY2 - centerY1, 2));
+	      distance = centerY2-centerY1;
+	  } else {
+	      return
+	  }
+	  //console.log(gapValue)
+	  if (gapValue == 'normal') {
+	      gapValue = '15px'
+	  }
+	  //console.log(distance)
+	  //console.log(window.innerWidth)
+	  if (distance < 10 && window.innerWidth >= 768) {
+	      isOldChrome = true;
+	      for (let i = 0; i < childElements.length; i++) {
+		  // 应用 margin 来模拟 gap 效果
+		  //if (index !== 0) {
+		  childElements[i].style.marginLeft = gapValue;
+		  childElements[i].style.marginTop = gapValue;
+		  //}
+	      }
+	  }
+      }
+  });
+  if (isOldChrome == true) {
+      // 获取所有的 article 标签
+      const articles = document.querySelectorAll('article');
+
+      // 为每个 article 元素添加 margin-bottom 样式
+      articles.forEach(article => {
+	  article.style.marginLeft = '20px';
+	  article.style.marginRight = '20px';
+	  article.style.marginBottom = '20px';
+      });
+
+      const articleHeaders = document.querySelectorAll('.article-title');
+      articleHeaders.forEach(articleHeaders => {
+	  articleHeaders.style.marginTop = '5px';
+	  articleHeaders.style.marginBottom = '5px';
+      });
+
+      const tags = document.querySelectorAll('.tagCloud-tags a');
+      tags.forEach(tags => {
+	  tags.style.marginRight = '10px';
+	  tags.style.marginBottom = '10px';
+      });
+
+      const button = document.querySelector('.search-form button');
+      if (button != undefined && button != null)
+	  button.style.marginLeft = '-70px';
+
+      const sitemeta = document.querySelector('.site-meta');
+      sitemeta.style.marginTop = '20px';
+
+      const widget = document.querySelectorAll('.widget');
+       widget.forEach(widget => {
+	  widget.style.marginTop = '30px';
+      });
+  }
+
+</script>
+
