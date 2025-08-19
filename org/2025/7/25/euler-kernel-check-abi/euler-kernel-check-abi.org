@@ -1,0 +1,486 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/07
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-07-25 五 16:46]
+#+TITLE: 对比两个系统内核的 kabi
+#+HUGO_TAGS: 
+#+HUGO_CATEGORIES: 
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+
+* 系统部使用的工具
+
+https://gitee.com/openeuler/oecp/
+
+欧拉使用的是编译好的 rpm 包来对比的。
+
+
+* 使用 cursor 来写一个 kabi 工具
+
+#+begin_src markdown
+---
+alwaysApply: false
+---
+# 你是一个linux内核的编程大师
+# 你想做一个kabi的白名单符号导出工具
+# 你要用到gcc或者clang的词法分析库
+# 你的目的是粗略的用词法分析将白名单的函数涉及到的kabi的结构体还有函数原型用文件记录下来用于对比
+# 白名单的路径是在:
+./scripts/package/rpm/kabi_whitelist_x86_64
+./scripts/package/rpm/kabi_whitelist_aarch64
+# 你的思路是先将linux的内核代码做一下预编译，然后只关心白名单当中的函数，对相关的文件，函数，结构体做词法分析，将原型按标准化的人们方便可读的 格式输出到一个记录用的文件，kabi.record文件，可以是json，也可以是别的可读性强的格式
+# 你可以参考下面的代码
+./scripts/uos/kabi/check_kabi.sh
+#+end_src
+
+公司绐的付费账号，开起了 claude-4-sonnet, claude-3-sonnet, o3, gemini-2.5-pro, gpt-4.1 这几个模型。
+
+
+经过反复的让 AI 来编成好像实现了上述的的功能，用法如下。
+
+
+这个功能依赖 libclang ，所以就 pip3 install libclang clang
+
+sudo apt install libclang-dev clang
+
+#+begin_src bash
+# ./script/uos/kabi/record_kabi.sh -c # 使用 clang 的语法分析版本。
+time ./record_kabi.sh -a x86_64 --kernel-root /home/guolongji/kernel-v25 2>&1 |tee 1111.log
+#+end_src
+
+效果不理想。公司花了一点钱，让我认识到这个可能在小项目画个图这种事上面还是可以的，但是对于需要反复调试分析的工作，代码量比较大的项目。支持还是比较差！
+
+
+* 分析原来脚本的过程
+
+#+begin_src bash
+make uos419_defconfig
+
+make prepare
+
+make modules_prepare
+
+KABI_TMP_DIR 这个是什么目录？
+
+就是 ./kabiTempDir
+
+
+GENKSYMS=./scripts/genksyms/genksyms 
+
+这个软件有什么用处？只是为了生成内核的符号表和版本，不能用于导出函数和结构体的原型。
+
+uos/kabi/Kabi.path_x86_64 ，这个是什么？
+
+grep "\.c" uos/kabi/Kabi.path_x86_64 |sed 's/\.c$/\.i/'
+
+这个是 .i 的文件列表。
+
+把脚本拆分一下，方便定位一下问题。
+
+
+
+grep "\.c" scripts/uos/kabi/Kabi.path_x86_64 |sed 's/\.c$/\.i/' > c.tmp
+
+grep "\.S" scripts/uos/kabi/Kabi.path_x86_64 | sed 's/\.S$/\.s/' > t.tmp
+
+grep "\.S" scripts/uos/kabi/Kabi.path_x86_64 | sed 's/\.S$/\.s\.i/' > s.tmp
+
+make -j${cpus} CPP="gcc -E -D__GENKSYMS__"  $(< c.tmp)
+
+make -j${cpus} CPP="gcc -E -D__ASSEMBLY__ -Wa,-gdwarf-2" $(< t.tmp)
+#+end_src
+
+
+#+begin_src bash
+root@localhost:/home/guolongji/kernel# make crypto/rsa_helper.o
+  CALL    scripts/checksyscalls.sh
+  DESCEND  objtool
+  ASN.1   crypto/rsapubkey.asn1.h
+  ASN.1   crypto/rsaprivkey.asn1.h
+  CC      crypto/rsa_helper.o
+#+end_src
+
+错误：
+
+致命错误：init/utsversion-tmp.h：没有那个文件或目录
+
+drivers/scsi/scsi_sysfs.c:1110:10: 致命错误：scsi_devinfo_tbl.c：没有那个文件或目录
+
+lib/crc32.c:48:10: 致命错误：crc32table.h：没有那个文件或目录
+
+
+这个 rsapubkey.asn1.h 是怎么生成的？
+
+./scripts/asn1_compiler crypto/rsapubkey.asn1 crypto/rsapubkey.asn1.c crypto/rsapubkey.asn1.h
+
+其它的报错也是可以手动生成的。
+
+
+“服务器6.6当时我写脚本时候，那个概率出错，就是不知道为啥多核处理时候有些依赖连接文件.i没生成，要是单核处理就没问题，当时
+感觉是6.6的编译环境有关系”
+
+find . -name "*.i"|xargs rm
+
+验证一下是不是这个问题。
+
+#+begin_src bash
+for i in $(< t.tmp);do (echo "#include <linux/kernel.h>" ;echo "#include <asm/asm-prototypes.h>" ;cat $i | grep "\<__export_symbol_" | sed 's/.*__export_symbol_[\w]*\(.*\).*:.*/EXPORT_SYMBOL(\1);/' ) > $i.c;done
+#+end_src
+
+我尝试了单独运行前面这些过程，没有问题。
+
+for i in {1..10}; do sh ./scripts/uos/kabi/check_kabi.sh 2>&1|tee $i.log; done
+
+grep "出错" *.log
+
+grep "错误" *.log
+
+$MODULE_TMP_KABI 和 $KABI_SYMS，这两个哪个是新生成的，哪个是之前记录的呢？
+
+* 脚本问题解决
+
+最终尝试下找到了解决概率对比 kabi 失败的问题。
+
+#+begin_src bash
+diff --git a/scripts/uos/kabi/check_kabi.sh b/scripts/uos/kabi/check_kabi.sh
+index 6247829f7096..39616d8961e2 100755
+--- a/scripts/uos/kabi/check_kabi.sh
++++ b/scripts/uos/kabi/check_kabi.sh
+@@ -134,7 +134,7 @@ function pre_c_s()
+                ret=0
+                print_info "+ 预处理C文件"
+                #预处理c代码文件
+-               make -j ${cpus} CPP="gcc -E -D__GENKSYMS__" $kabi_files_c_i >> /dev/null
++               make -j ${cpus} CPP="gcc -E -D__GENKSYMS__" $kabi_files_c_i &> /dev/null
+                # make -j 1 CPP="gcc -E -D__GENKSYMS__" $kabi_files_c_i >> /dev/null
+                if [ $? -ne 0 ]; then
+                        print_err "+ 预处理C文件出错"
+@@ -143,6 +143,14 @@ function pre_c_s()
+                fi
+        fi
+ 
++       wait;
++       # 解决预编译隐式依赖概率编译失败的问题
++       if [ "$ARCH" == "x86_64" ]; then
++               make CPP="gcc -E -D__GENKSYMS__" drivers/char/ipmi/ipmi_msghandler.i
++        elif [ "$ARCH" == "aarch64" ]; then
++               make CPP="gcc -E -D__GENKSYMS__" arch/arm64/lib/delay.i
++               make CPP="gcc -E -D__GENKSYMS__" arch/arm64/lib/csum.i
++        fi
+        if [ -n "$kabi_files_S_si" ]; then
+                ret=0
+                print_info "+ 预处理汇编文件"
+@@ -259,7 +267,6 @@ function init_kernel()
+        make drivers/scsi/scsi_sysfs.o
+        make crypto/rsa_helper.o
+        make lib/crc32.o
+-       make drivers/char/ipmi/ipmi_msghandler.o
+        print_info "--- 环境初始化完成 ---"
+ }
+#+end_src
+
+* 简化
+
+对比 euler 和 uos 的 kabi 接口：
+
+#+begin_src bash
+check-kabi -w kabi_whitelist_aarch64-4.19.90-2312.1.0.0255.oe2003sp4.aarch64 -k symvers-4.19.90-2312.1.0.0255.oe2003sp4.aarch64 -s Module.symvers
+#+end_src
+
+只能每次做编译，然后两者对比吗？
+
+每次编一下内核要 30 分钟，这个方法感觉有一些笨，有没有什么简化的方法？
+
+#+begin_src bash
+root@ltptest:/home/guolongji/kernel# count=0;time cat kabi_whitelist_x86_64 |while read line;do git grep $line|grep "EXPORT"|grep -v "^scripts"|awk -F ":" '{print $1}' >> Module.kabi_x86_64;((count++));echo -ne "Processed lines: $count\r";done
+Processed lines: 2777
+real    255m50.135s
+user    135m51.721s
+sys     4542m13.787s
+
+
+root@ltptest:/home/guolongji/kernel-v25-1# count=0;time cat kabi_whitelist_x86_64 |while read line;do git grep $line|grep "EXPORT"|grep -v "^scripts"|awk -F ":" '{print $1}' >> Module.kabi_x86_64;((count++));echo -ne "Processed lines: $count\r";done
+Processed lines: 2777
+real    274m27.161s
+user    139m20.979s
+sys     4637m41.169s
+
+#+end_src
+
+* 最终方法
+
+这个是使用的 python2 脚本。6.6 的机器环境还不能运行 python2 的脚本，所以还要把这些生成的文件放到旧系统上执行。
+
+#+begin_src python
+#!/usr/bin/python
+#
+# check-kabi - Red Hat kABI reference checking tool
+#
+# We use this script to check against reference Module.kabi files.
+#
+# Author: Jon Masters <jcm@redhat.com>
+# Copyright (C) 2007-2009 Red Hat, Inc.
+#
+# This software may be freely redistributed under the terms of the GNU
+# General Public License (GPL).
+
+# Changelog:
+# 
+# 2009/08/15 - Updated for use in RHEL6.
+# 2007/06/13 - Initial rewrite in python by Jon Masters.
+
+__author__ = "Jon Masters <jcm@redhat.com>"
+__version__ = "2.0"
+__date__ = "2009/08/15"
+__copyright__ = "Copyright (C) 2007-2009 Red Hat, Inc"
+__license__ = "GPL"
+
+import getopt
+import os
+import re
+import string
+import sys
+
+true = 1
+false = 0
+
+def load_symvers(symvers,filename):
+        """Load a Module.symvers file."""
+
+        symvers_file = open(filename,"r")
+
+        while true:
+                in_line = symvers_file.readline()
+                if in_line == "":
+                        break
+                if in_line == "\n":
+                        continue
+                checksum,symbol,directory,type,namespace = string.split(in_line, sep='\t')
+
+                symvers[symbol] = in_line[0:-1]
+
+def load_kabi(kabi,filename):
+        """Load a Module.kabi file."""
+
+        kabi_file = open(filename,"r")
+
+        while true:
+                in_line = kabi_file.readline()
+                if in_line == "":
+                        break
+                if in_line == "\n":
+                        continue
+                checksum,symbol,directory,type,namespace = string.split(in_line, sep='\t')
+
+                kabi[symbol] = in_line[0:-1]
+
+def load_whitelist(whitelist, filename):
+        """Load a whitelist file."""
+
+        whitelist_file = open(filename, "r")
+    
+        while true:
+                in_line = whitelist_file.readline()
+                if in_line == "":
+                    break
+                if in_line == "\n":
+                    continue
+                symbol = in_line.strip()
+        
+                whitelist[symbol] = in_line[0:-1]
+
+def check_kabi(symvers,kabi,whitelist):
+    """Check Module.kabi and Module.symvers files."""
+
+    fail=0
+    warn=0
+    lost=0
+    changed_symbols=[]
+    moved_symbols=[]
+    losted_symbols=[]
+
+    all_count=0
+    same_count=0
+    all_exists_count=0
+    for symbol in kabi:
+        abi_hash,abi_sym,abi_dir,abi_type,namespace = string.split(kabi[symbol], sep='\t')
+        if symbol in whitelist:
+            all_count += 1
+            if symvers.has_key(symbol):
+                sym_hash,sym_sym,sym_dir,sym_type,namespace = string.split(symvers[symbol], sep='\t')
+                if abi_hash != sym_hash:
+                    fail=1
+                    changed_symbols.append(symbol)
+                else:
+                    same_count += 1
+
+                if abi_dir != sym_dir:
+                    warn=1
+                    moved_symbols.append(symbol)
+            else:
+                lost=1
+                changed_symbols.append(symbol)
+
+    if fail:
+        print "*** ERROR - ABI BREAKAGE WAS DETECTED ***"
+        print ""
+        print "The following symbols have been changed (this will cause an ABI breakage):"
+        print ""
+        for symbol in changed_symbols:
+            print symbol
+        print ""
+
+    if warn:
+        print "*** WARNING - ABI SYMBOLS MOVED ***"
+        print ""
+        print "The following symbols moved (typically caused by moving a symbol from being"
+        print "provided by the kernel vmlinux out to a loadable module):"
+        print ""
+        for symbol in moved_symbols:
+            print symbol
+        print ""
+
+    """Halt the build, if we got errors and/or warnings. In either case,
+       double-checkig is required to avoid introducing / concealing
+       KABI inconsistencies."""
+    print("all_count=%d, all_exists_count=%d, same=%.6f%%, lost=%.6f%%" % (all_count, all_exists_count, 100 * (float(same_count)/all_count), 100 * (float(len(losted_symbols))/all_count)))
+    if fail or warn or lost:
+        sys.exit(1)
+    sys.exit(0)
+
+def usage():
+    print """
+check-kabi: check Module.kabi and Module.symvers files.
+
+    check-kabi [ -k Module.kabi ] [ -s Module.symvers ] [ -w kabi_whitelist ]
+
+"""
+
+if __name__ == "__main__":
+
+    symvers_file = ""
+    kabi_file = ""
+    whitelist_file = ""
+
+    opts, args = getopt.getopt(sys.argv[1:], 'hk:s:w:')
+
+    for o, v in opts:
+        if o == "-s":
+            symvers_file = v
+        if o == "-h":
+            usage()
+            sys.exit(0)
+        if o == "-k":
+            kabi_file = v
+        if o == "-w":
+            whitelist_file = v
+    
+    if (symvers_file == "") or (kabi_file == "") or (whitelist_file == ""):
+        usage()
+        sys.exit(1)
+
+    symvers={}
+    kabi={}
+    whitelist={}
+
+    load_symvers(symvers,symvers_file)
+    load_kabi(kabi,kabi_file)
+    load_whitelist(whitelist,whitelist_file)
+    check_kabi(symvers,kabi,whitelist)
+
+#+end_src
+
+
+
+** 检查脚本
+
+#+begin_src bash
+root@localhost:/home/guolongji/check-kabi# ./check-kabi -w x86_64 -k symvers-6.6.0-28.0.0.34.oe2403.x86_64 -s Module.symvers
+
+The following symbols have been changed (this will cause an ABI breakage):
+
+phy_disconnect
+drm_dp_mst_topology_mgr_set_mst
+sas_suspend_ha
+sas_get_local_phy
+filemap_fault
+genphy_restart_aneg
+drm_dp_link_train_clock_recovery_delay
+led_classdev_unregister
+drm_dp_mst_get_edid
+phy_start
+phy_attach_direct
+drm_dp_dpcd_read_link_status
+phy_mii_ioctl
+led_classdev_resume
+drm_dp_link_train_channel_eq_delay
+genphy_read_status
+sas_target_alloc
+sas_register_ha
+phy_device_register
+phy_ethtool_ksettings_set
+drm_dp_aux_register
+dev_attr_phy_event_threshold
+phy_suspend
+sas_ioctl
+drm_dp_mst_topology_mgr_destroy
+sas_resume_ha
+phy_connect
+drm_dp_check_act_status
+drm_dp_dpcd_read
+sas_drain_work
+sas_eh_device_reset_handler
+drm_dp_mst_topology_mgr_suspend
+phy_start_aneg
+drm_dp_dpcd_write
+fib_table_lookup
+phy_loopback
+phy_device_free
+sas_bios_param
+sas_prep_resume_ha
+phy_device_remove
+phy_stop
+sas_ssp_task_response
+sas_phy_reset
+sas_slave_configure
+__fib_lookup
+drm_dp_mst_topology_mgr_init
+drm_dp_mst_detect_port
+phy_connect_direct
+sas_domain_attach_transport
+sas_queuecommand
+drm_dp_mst_topology_mgr_resume
+led_classdev_suspend
+phy_ethtool_ksettings_get
+phy_attached_info
+sas_change_queue_depth
+sas_unregister_ha
+drm_dp_aux_unregister
+get_phy_device
+ata_link_next
+phy_resume
+sas_eh_target_reset_handler
+sas_target_destroy
+
+all_count=2433, all_exists_count=0, same=97.451706%, lost=0.000000%
+#+end_src
+
+思路，将 euler iso 当中的 Package 当中的内核包的 Symvers 基础文件拿出来。
+mkdir kernel-rpmunpressd
+cd kernel-rpmunpressd
+rpm2cpio ../kernel-6.6.0-28.0.0.34.oe2403.x86_64.rpm |cpio -idmv
+cd boot/
+gzip -kd symvers-6.6.0-28.0.0.34.oe2403.x86_64.gz
+scp symvers-6.6.0-28.0.0.34.oe2403.x86_64 root@xx.xx.xx.xx:~/
+
+将 oecp 项目当中的白名单拿出来。
+将自己修改的内核的 symvers 编译出来。
+
+使用改版的脚本计算一个 kabi 的相似度。
+
+expand -t 4 check-kabi > check-kabi-fixed
+
+python2 ./check-kabi-fixed -w aarch64 -k symvers-6.6.0-28.0.0.34.oe2403.aarch64 -s Module.symvers.1
