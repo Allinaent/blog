@@ -1,0 +1,806 @@
+#+OPTIONS: author:nil ^:{}
+#+HUGO_BASE_DIR: ../../../../../
+#+HUGO_SECTION: post/2025/09
+#+HUGO_CUSTOM_FRONT_MATTER: :toc true
+#+HUGO_AUTO_SET_LASTMOD: t
+#+HUGO_DRAFT: false
+#+DATE: [2025-09-01 一 15:00]
+#+TITLE: IMA 签名失败问题分析
+#+HUGO_TAGS: 
+#+HUGO_CATEGORIES: kernel
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg
+
+
+* 4.19 内核
+
+这个内核是没有问题的，它做签名的调用顺序是：
+
+#+begin_src
+x509_key_prepare
+  ->* 1.x509_get_sig_params 2.x509_check_for_self_signed
+    ->crypto_shash_digest: shash->digest(desc, data, len, out);
+      ->shash_digest_unaligned: crypto_shash_finup(desc, data, len, out)
+        ->crypto_shash_finup: shash->finup(desc, data, len, out);
+          ->(crypto/sm3_generic.c)crypto_sm3_finup: crypto_sm3_final(desc, hash);
+            ->(crypto/sm3_generic.c)crypto_sm3_final: sm3_base_do_finalize(desc, sm3_generic_block_fn);sm3_base_finish(desc, out);
+
+x509_key_preparse
+  ->x509_cert_parse
+    ->1.x509_get_sig_params; *2.x509_check_for_self_signed
+      ->public_key_verify_signature
+        -> sm2_compute_z_digest
+#+end_src
+
+
+* 6.6 内核
+
+#+begin_src
+b integrity_load_x509
+b x509_get_sig_params
+
+其它的用行来逐渐加打印。
+
+这个内核的 sm3 产生的签名是有问题的：
+__key_create_or_update->asymmetric_key_preparse->x509_cert_parse->x509_get_sig_param
+
+x509_cert_parse:
+  ->* 1. x509_get_sig_params 2.x509_check_for_self_signed
+    -> sm2_compute_z_digest;crypto_shash_init; crypto_shash_update; crypto_shash_finup;
+       ->crypto_sm3_finup
+         ->sm3_update
+
+x509_cert_parse:
+  ->1. x509_get_sig_params; *2.x509_check_for_self_signed
+    -> public_key_verify_signature
+      -> crypto_sig_verify
+        -> crypto_akcipher_sync_post
+#+end_src
+
+经过对比 Linux 6.6 和 4.19 内核中的 sm2_compute_z_digest 函数，我发现核心的哈希计算逻辑（即国密SM2标准中Z值的内涵）没有
+变化，但函数的接口、内部实现细节以及错误处理方式有显著差异。这些变化主要体现了内核代码的优化和抽象层次的提升。
+
+
+* 对比
+
+对比一下数据是从哪里开始有差异的？
+
+#+begin_src
+crypto_shash_digest
+  ->shash_digest_unaligned
+    ->shash_final_unaligned
+#+end_src
+
+
+** 对比点一：crypto_shash_update，这个函数只执行了一次，还是很好调试的。
+
+#+begin_src
+在 v20 下面：
+data的这个数据，data 的长度是 32
+0xffff888005c7fc20:     0x72    0x01    0x2b    0x86    0x99    0x10    0x27    0xeb
+0xffff888005c7fc28:     0x4c    0x8b    0xc8    0xa2    0x2a    0x8a    0x06    0x64
+0xffff888005c7fc30:     0xf0    0xcc    0x3c    0x42    0xaa    0x1c    0x60    0x88
+0xffff888005c7fc38:     0x86    0xd1    0x90    0x92    0xc6    0x27    0x7f    0xf9
+
+
+desc 数据主要是算法类型，
+(gdb) p *desc
+$2 = {tfm = 0xffff888005f9a6c0, flags = 0, __ctx = 0xffff888005e78890}
+(gdb) p *desc->tfm
+$3 = {descsize = 104, base = {crt_flags = 0, crt_u = {ablkcipher = {setkey = 0x0 <irq_stack_union>,
+        encrypt = 0x0 <irq_stack_union>, decrypt = 0x0 <irq_stack_union>, base = 0x0 <irq_stack_union>,
+        ivsize = 0, reqsize = 0}, blkcipher = {iv = 0x0 <irq_stack_union>,
+        setkey = 0x0 <irq_stack_union>, encrypt = 0x0 <irq_stack_union>,
+        decrypt = 0x0 <irq_stack_union>}, cipher = {cit_setkey = 0x0 <irq_stack_union>,
+        cit_encrypt_one = 0x0 <irq_stack_union>, cit_decrypt_one = 0x0 <irq_stack_union>}, compress = {
+        cot_compress = 0x0 <irq_stack_union>, cot_decompress = 0x0 <irq_stack_union>}},
+    exit = 0x0 <irq_stack_union>, __crt_alg = 0xffffffff8278b2f0 <sm3_alg+80>,
+    __crt_ctx = 0xffff888005f9a708}}
+(gdb)
+$4 = {descsize = 104, base = {crt_flags = 0, crt_u = {ablkcipher = {setkey = 0x0 <irq_stack_union>,
+        encrypt = 0x0 <irq_stack_union>, decrypt = 0x0 <irq_stack_union>, base = 0x0 <irq_stack_union>,
+        ivsize = 0, reqsize = 0}, blkcipher = {iv = 0x0 <irq_stack_union>,
+        setkey = 0x0 <irq_stack_union>, encrypt = 0x0 <irq_stack_union>,
+        decrypt = 0x0 <irq_stack_union>}, cipher = {cit_setkey = 0x0 <irq_stack_union>,
+        cit_encrypt_one = 0x0 <irq_stack_union>, cit_decrypt_one = 0x0 <irq_stack_union>}, compress = {
+        cot_compress = 0x0 <irq_stack_union>, cot_decompress = 0x0 <irq_stack_union>}},
+    exit = 0x0 <irq_stack_union>, __crt_alg = 0xffffffff8278b2f0 <sm3_alg+80>,
+    __crt_ctx = 0xffff888005f9a708}}
+
+
+在 v25 下面：
+data 的数据为：data 的长度是 2
+(gdb) x/2xb 0xffffc90000013cce
+0xffffc90000013cce:     0x00    0x80
+
+(gdb) p desc
+$1 = (struct shash_desc *) 0xffff88807fe82f80
+(gdb) p *desc
+$2 = {kabi_reserved1 = 0, kabi_reserved2 = 0, tfm = 0xffff888005ca7180, __ctx = 0xffff88807fe82f98}
+(gdb) p *desc->tfm
+$3 = {descsize = 104, kabi_reserved1 = 0, kabi_reserved2 = 0, base = {refcnt = {refs = {counter = 1}},
+    crt_flags = 0, node = -1, exit = 0x0 <fixed_percpu_data>,
+    __crt_alg = 0xffffffff83ed5308 <sm3_alg+104>, kabi_reserved1 = 0, kabi_reserved2 = 0,
+    __crt_ctx = 0xffff888005ca71c8}}
+(gdb) p *desc->__ctx
+$4 = (void *) 0x4914b2b97380166f
+
+在 25 下这个函数执行了多次：
+(gdb) x/16xb 0xffffffff83184d1c （1234567812345678）
+0xffffffff83184d1c:     0x31    0x32    0x33    0x34    0x35    0x36    0x37    0x38
+0xffffffff83184d24:     0x31    0x32    0x33    0x34    0x35    0x36    0x37    0x38
+
+
+又一次：
+#0  crypto_shash_update (desc=0xffff88807fe82f80,
+    data=0xffff8880078edc20 "\377\377\377\376", '\377' <repeats 16 times>, len=32) at crypto/shash.c:122
+#1  0xffffffff81785c0c in sm2_z_digest_update (desc=desc@entry=0xffff88807fe82f80, m=<optimized out>,
+    pbytes=pbytes@entry=32) at crypto/sm2.c:242
+#2  0xffffffff81785f02 in sm2_compute_z_digest (desc=desc@entry=0xffff88807fe82f80,
+    key=0xffff888005ca7ba0, keylen=<optimized out>, dgst=0xffff8880078edf40) at crypto/sm2.c:309
+#3  0xffffffff817b00e5 in x509_get_sig_params (cert=cert@entry=0xffff888005725240)
+
+(gdb) x/32xb 0xffff8880078edc20
+0xffff8880078edc20:     0xff    0xff    0xff    0xfe    0xff    0xff    0xff    0xff
+0xffff8880078edc28:     0xff    0xff    0xff    0xff    0xff    0xff    0xff    0xff
+0xffff8880078edc30:     0xff    0xff    0xff    0xff    0x00    0x00    0x00    0x00
+0xffff8880078edc38:     0xff    0xff    0xff    0xff    0xff    0xff    0xff    0xfc
+
+
+又一次：
+#0  crypto_shash_update (desc=0xffff88807fe82f80,
+    data=0xffff8880078edc20 "(\351\372\236\235\237^4MZ\236K\317e\t\247\363\227\211\365\025\253\217\222ݼ\275AM\224\016\223cpuidle_haltpoll", len=32) at crypto/shash.c:122
+#1  0xffffffff81785c0c in sm2_z_digest_update (desc=desc@entry=0xffff88807fe82f80, m=<optimized out>,
+    pbytes=pbytes@entry=32) at crypto/sm2.c:242
+#2  0xffffffff81785f17 in sm2_compute_z_digest (desc=desc@entry=0xffff88807fe82f80,
+    key=0xffff888005ca7ba0, keylen=<optimized out>, dgst=0xffff8880078edf40) at crypto/sm2.c:310
+#3  0xffffffff817b00e5 in x509_get_sig_params (cert=cert@entry=0xffff888005725240)
+    at crypto/asymmetric_keys/x509_public_key.c:70
+
+(gdb) x/32xb 0xffff8880078edc20
+0xffff8880078edc20:     0x28    0xe9    0xfa    0x9e    0x9d    0x9f    0x5e    0x34
+0xffff8880078edc28:     0x4d    0x5a    0x9e    0x4b    0xcf    0x65    0x09    0xa7
+0xffff8880078edc30:     0xf3    0x97    0x89    0xf5    0x15    0xab    0x8f    0x92
+0xffff8880078edc38:     0xdd    0xbc    0xbd    0x41    0x4d    0x94    0x0e    0x93
+
+
+又一次：
+(gdb) x/32xb 0xffff888005f23620
+0xffff888005f23620:     0x32    0xc4    0xae    0x2c    0x1f    0x19    0x81    0x19
+0xffff888005f23628:     0x5f    0x99    0x04    0x46    0x6a    0x39    0xc9    0x94
+0xffff888005f23630:     0x8f    0xe3    0x0b    0xbf    0xf2    0x66    0x0b    0xe1
+0xffff888005f23638:     0x71    0x5a    0x45    0x89    0x33    0x4c    0x74    0xc7
+
+
+又一次：
+(gdb) x/32xb 0xffff888005f23620
+0xffff888005f23620:     0xbc    0x37    0x36    0xa2    0xf4    0xf6    0x77    0x9c
+0xffff888005f23628:     0x59    0xbd    0xce    0xe3    0x6b    0x69    0x21    0x53
+0xffff888005f23630:     0xd0    0xa9    0x87    0x7c    0xc6    0x2a    0x47    0x40
+0xffff888005f23638:     0x02    0xdf    0x32    0xe5    0x21    0x39    0xf0    0xa0
+
+又一次：
+(gdb) x/32xb data
+0xffff8880078ed000:     0x0e    0xe1    0xad    0x1b    0x61    0x16    0xcf    0xae
+0xffff8880078ed008:     0xdc    0x1d    0xe5    0xe0    0x56    0x2b    0x67    0x44
+0xffff8880078ed010:     0x75    0xa0    0xd8    0x9f    0xe2    0x3b    0x00    0xb5
+0xffff8880078ed018:     0xbe    0x59    0xe9    0xf3    0x87    0xc3    0xdf    0xd4
+
+又一次：
+0xffff8880078ed000:     0xb9    0xb9    0x13    0x97    0x6e    0x6a    0x42    0x00
+0xffff8880078ed008:     0x7f    0x01    0x0e    0x00    0x8b    0x79    0x3b    0x98
+0xffff8880078ed010:     0x01    0x0a    0xe3    0xf4    0x77    0xae    0x0a    0x84
+0xffff8880078ed018:     0xe3    0x57    0x9b    0x1a    0x73    0x58    0x78    0x45
+
+又一次：
+0xffff8880078edf40:     0x1f    0x94    0xb0    0xbe    0x38    0xba    0x06    0x91
+0xffff8880078edf48:     0xaf    0x12    0x26    0x5d    0x3b    0xb5    0xca    0xea
+0xffff8880078edf50:     0xc9    0x8e    0x4b    0x7c    0x43    0x61    0xaf    0x84
+0xffff8880078edf58:     0xea    0x76    0x79    0xc9    0x38    0x2e    0xe3    0x71
+
+#+end_src
+
+
+** 对比点二：sm2_compute_z_digest
+
+#+begin_src
+通过 where 和 finish 来查看执行位置和结束当前的调用。
+
+v20 的：
+
+Thread 2 hit Breakpoint 3, sm2_compute_z_digest (tfm=0xffff88807a34ce00,
+    id=0xffffffff81e9e139 "1234567812345678", id_len=16,
+    dgst=0xffff888005c7fc20 "\001\363\374\177\200\210\377\377`\337x\202\377\377\377\377")
+    at crypto/sm2.c:264
+264     {
+(gdb) p *dgst
+$1 = 1 '\001'
+(gdb) p *tfm
+$2 = {base = {crt_flags = 0, crt_u = {ablkcipher = {setkey = 0x0 <irq_stack_union>,
+        encrypt = 0x0 <irq_stack_union>, decrypt = 0x0 <irq_stack_union>, base = 0x0 <irq_stack_union>,
+        ivsize = 0, reqsize = 0}, blkcipher = {iv = 0x0 <irq_stack_union>,
+        setkey = 0x0 <irq_stack_union>, encrypt = 0x0 <irq_stack_union>,
+        decrypt = 0x0 <irq_stack_union>}, cipher = {cit_setkey = 0x0 <irq_stack_union>,
+        cit_encrypt_one = 0x0 <irq_stack_union>, cit_decrypt_one = 0x0 <irq_stack_union>}, compress = {
+        cot_compress = 0x0 <irq_stack_union>, cot_decompress = 0x0 <irq_stack_union>}},
+    exit = 0xffffffff814310c8 <crypto_akcipher_exit_tfm>, __crt_alg = 0xffffffff8278a030 <sm2+80>,
+    __crt_ctx = 0xffff88807a34ce40}}
+(gdb) x/32xb dgst
+0xffff888005c7fc20:     0x01    0xf3    0xfc    0x7f    0x80    0x88    0xff    0xff
+0xffff888005c7fc28:     0x60    0xdf    0x78    0x82    0xff    0xff    0xff    0xff
+0xffff888005c7fc30:     0x00    0x1a    0x3a    0x7a    0x80    0x88    0xff    0xff
+0xffff888005c7fc38:     0x2b    0x00    0x00    0x00    0x00    0x00    0x00    0x00
+(gdb) n
+272             if (id_len > (USHRT_MAX / 8) || !ec->Q)
+(gdb)
+275             bits_len = (uint16_t)(id_len * 8);
+(gdb) where
+#0  sm2_compute_z_digest (tfm=0xffff88807a34ce00, id=0xffffffff81e9e139 "1234567812345678", id_len=16,
+    dgst=0xffff888005c7fc20 "\001\363\374\177\200\210\377\377`\337x\202\377\377\377\377")
+    at crypto/sm2.c:275
+#1  0xffffffff8144d7f0 in cert_sig_digest_update (tfm_pkey=<optimized out>, sig=<optimized out>)
+    at crypto/asymmetric_keys/public_key.c:76
+#2  public_key_verify_signature (pkey=0xffff88807a34ce00, sig=0xffff88807f80d5a0)
+    at crypto/asymmetric_keys/public_key.c:170
+#3  0xffffffff8144d30e in restrict_link_by_signature (dest_keyring=0xffff88807ffcf700,
+    type=0xffffffff8278df60 <key_type_asymmetric>, payload=0xffff888005c7fde8,
+    trust_keyring=0xffff88807ffcf500) at crypto/asymmetric_keys/restrict.c:112
+#4  0xffffffff813d0438 in key_create_or_update (keyring_ref=0xffff88807ffcf701,
+    type=0xffffffff81e5ef1f "asymmetric", description=0x0 <irq_stack_union>, payload=0xffffc900015b6000,
+    plen=595, perm=520290304, flags=2) at security/keys/key.c:872
+#5  0xffffffff830290ea in integrity_load_x509 (id=1, path=0xffffffff82344088 "/etc/keys/x509_ima.der")
+    at security/integrity/digsig.c:130
+#6  0xffffffff8302948b in ima_load_x509 () at security/integrity/ima/ima_init.c:102
+#7  0xffffffff83028f4c in integrity_load_keys () at security/integrity/iint.c:217
+#8  0xffffffff82fe1453 in kernel_init_freeable () at init/main.c:1209
+#9  0xffffffff818acdb1 in kernel_init (unused=<optimized out>) at init/main.c:1093
+#10 0xffffffff81003465 in ret_from_fork () at arch/x86/entry/entry_64.S:362
+#11 0x0000000000000000 in ?? ()
+(gdb) finish
+Run till exit from #0  sm2_compute_z_digest (tfm=0xffff88807a34ce00,
+    id=0xffffffff81e9e139 "1234567812345678", id_len=16,
+    dgst=0xffff888005c7fc20 "\001\363\374\177\200\210\377\377`\337x\202\377\377\377\377")
+    at crypto/sm2.c:275
+cert_sig_digest_update (tfm_pkey=<optimized out>, sig=<optimized out>)
+    at crypto/asymmetric_keys/public_key.c:78
+warning: Source file is more recent than executable.
+78              if (ret)
+Value returned is $3 = 0
+(gdb) p dgst
+$4 = "r\001+\206\231\020'\353L\213Ȣ*\212\006d\360\314<B\252\034`\210\206ѐ\222\306'", <incomplete sequence \371>
+(gdb) x/32xb dgst
+0xffff888005c7fc20:     0x72    0x01    0x2b    0x86    0x99    0x10    0x27    0xeb
+0xffff888005c7fc28:     0x4c    0x8b    0xc8    0xa2    0x2a    0x8a    0x06    0x64
+0xffff888005c7fc30:     0xf0    0xcc    0x3c    0x42    0xaa    0x1c    0x60    0x88
+0xffff888005c7fc38:     0x86    0xd1    0x90    0x92    0xc6    0x27    0x7f    0xf9
+
+v25 的：
+
+Thread 2 hit Breakpoint 3, sm2_compute_z_digest (desc=desc@entry=0xffff88800717e080,
+    key=0xffff88807ffd2d80, keylen=65, dgst=0xffff88807ffd3b20) at crypto/sm2.c:270
+270     {
+(gdb) p desc
+$1 = (struct shash_desc *) 0xffff88800717e080
+(gdb) p *desc
+$2 = {kabi_reserved1 = 0, kabi_reserved2 = 0, tfm = 0xffff88807ffd2420, __ctx = 0xffff88800717e098}
+(gdb) p *desc->tfm
+$3 = {descsize = 104, kabi_reserved1 = 0, kabi_reserved2 = 0, base = {refcnt = {refs = {counter = 1}},
+    crt_flags = 0, node = -1, exit = 0x0 <fixed_percpu_data>,
+    __crt_alg = 0xffffffff83ed5308 <sm3_alg+104>, kabi_reserved1 = 0, kabi_reserved2 = 0,
+    __crt_ctx = 0xffff88807ffd2468}}
+(gdb) p dgst
+$4 = (void *) 0xffff88807ffd3b20
+(gdb) x/32xb dgst
+0xffff88807ffd3b20:     0x06    0x00    0x00    0x00    0x04    0x00    0x00    0x00
+0xffff88807ffd3b28:     0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00
+0xffff88807ffd3b30:     0x00    0x30    0xfd    0x7f    0x80    0x88    0xff    0xff
+0xffff88807ffd3b38:     0x80    0xf6    0x16    0x07    0x80    0x88    0xff    0xff
+(gdb) n
+277             ec = kmalloc(sizeof(*ec), GFP_KERNEL);
+(gdb) l
+272             unsigned int bits_len;
+273             unsigned int pbytes;
+274             u8 entl[2];
+275             int err;
+276
+277             ec = kmalloc(sizeof(*ec), GFP_KERNEL);
+278             if (!ec)
+279                     return -ENOMEM;
+280
+281             err = sm2_ec_ctx_init(ec);
+(gdb) where
+#0  sm2_compute_z_digest (desc=desc@entry=0xffff88800717e080, key=0xffff88807ffd2d80, keylen=65,
+    dgst=0xffff88807ffd3b20) at crypto/sm2.c:277
+#1  0xffffffff817b00e5 in x509_get_sig_params (cert=cert@entry=0xffff8880081bb6c0)
+    at crypto/asymmetric_keys/x509_public_key.c:70
+#2  0xffffffff817aec78 in x509_cert_parse (data=<optimized out>, datalen=595)
+    at crypto/asymmetric_keys/x509_cert_parser.c:117
+#3  0xffffffff817afd6f in x509_key_preparse (prep=0xffffc90000013e20)
+    at crypto/asymmetric_keys/x509_public_key.c:171
+#4  0xffffffff817acd62 in asymmetric_key_preparse (prep=0xffffc90000013e20)
+    at crypto/asymmetric_keys/asymmetric_type.c:418
+#5  0xffffffff816d3126 in __key_create_or_update (keyring_ref=0xffff888007143e01,
+    type=type@entry=0xffffffff8316f683 "asymmetric",
+    description=description@entry=0x0 <fixed_percpu_data>, payload=0xffffc9000004d000,
+    plen=plen@entry=595, perm=perm@entry=520290304, flags=2, allow_update=true)
+    at security/keys/key.c:842
+#6  0xffffffff816d34c0 in key_create_or_update (keyring_ref=<optimized out>,
+    type=type@entry=0xffffffff8316f683 "asymmetric",
+    description=description@entry=0x0 <fixed_percpu_data>, payload=<optimized out>, plen=plen@entry=595,
+    perm=perm@entry=520290304, flags=2) at security/keys/key.c:1007
+#7  0xffffffff846076e2 in integrity_add_key (id=id@entry=1, data=<optimized out>, size=size@entry=595,
+    perm=perm@entry=520290304) at security/integrity/digsig.c:177
+#8  0xffffffff84607922 in integrity_load_x509 (id=id@entry=1,
+    path=path@entry=0xffffffff83183cec "/etc/keys/x509_ima.der") at security/integrity/digsig.c:211
+#9  0xffffffff8460890b in ima_load_x509 () at security/integrity/ima/ima_init.c:111
+#10 0xffffffff8460761a in integrity_load_keys () at security/integrity/iint.c:232
+#11 0xffffffff81f6e466 in kernel_init (unused=<optimized out>) at init/main.c:1475
+#12 0xffffffff810b9ee0 in ret_from_fork (prev=<optimized out>, regs=0xffffc90000013f58,
+    fn=0xffffffff81f6e450 <kernel_init>, fn_arg=0x0 <fixed_percpu_data>) at arch/x86/kernel/process.c:147
+#13 0xffffffff8100456b in ret_from_fork_asm () at arch/x86/entry/entry_64.S:293
+#14 0x0000000000000000 in ?? ()
+(gdb) finish
+Run till exit from #0  sm2_compute_z_digest (desc=desc@entry=0xffff88800717e080, key=0xffff88807ffd2d80,
+    keylen=65, dgst=0xffff88807ffd3b20) at crypto/sm2.c:277
+0xffffffff817b00e5 in x509_get_sig_params (cert=cert@entry=0xffff8880081bb6c0)
+    at crypto/asymmetric_keys/x509_public_key.c:70
+70                            sm2_compute_z_digest(desc, cert->pub->key,
+Value returned is $5 = 0
+(gdb) p sig->digest
+$6 = (u8 *) 0xffff88807ffd3b20 "\037\224\260\2768\272\006\221\257\022&];\265\312\352ɎK|Ca\257\204\352vy\3118.\343q"
+(gdb) x/32/xb sig->digest
+A syntax error in expression, near `/xb sig->digest'.
+(gdb) x/32xb sig->digest
+0xffff88807ffd3b20:     0x1f    0x94    0xb0    0xbe    0x38    0xba    0x06    0x91
+0xffff88807ffd3b28:     0xaf    0x12    0x26    0x5d    0x3b    0xb5    0xca    0xea
+0xffff88807ffd3b30:     0xc9    0x8e    0x4b    0x7c    0x43    0x61    0xaf    0x84
+0xffff88807ffd3b38:     0xea    0x76    0x79    0xc9    0x38    0x2e    0xe3    0x71
+
+这两部分输出是不同的。输入也是不同的，tfm 参数不同。
+#+end_src
+
+** 对比点三，sm2_compute_z_digest 内部的代码行
+
+... ，此处代码逻辑比较复杂，没有看明白。
+
+
+* 总结邮件
+
+
+#+begin_src
+您好：
+          我是统信的linux内核研发，最近在做6.6等保可信度量（IMA）的工作。我用4.19内核环境，openssl 1.1.1生成的x509_ima.der证书。
+加载报错。我的操作步骤是按照附件md当中的步聚，openssl生成证书，编译内核，生成initrd.img，使用qemu测试。不论是kernel.org
+的linux代码，还是 anolis 的kernel，使用sm2算法签名证书的方案都会报 -129 （签名验证失败， crypto/sm2.c: _sm2_verify这个函数中）。
+
+
+4.19抓到的数据是这样的：
+qemu-kvm -enable-kvm -m 2048M -smp 2 -nographic -kernel /home/guolongji/kernel/arch/x86/boot/bzImage -s -S -initrd initramfs-4.19.90+.img -append "console=ttyS0 nokaslr"
+
+(gdb) target remote:1234
+Remote debugging using :1234
+0x000000000000fff0 in cpu_hw_events ()
+(gdb) hb start_kernel
+Hardware assisted breakpoint 1 at 0xffffffff82fe0caa: file init/main.c, line 554.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 1, start_kernel () at init/main.c:554
+554     {
+(gdb) b integrity_load_x509
+Breakpoint 2 at 0xffffffff83029056: file security/integrity/digsig.c, line 114.
+(gdb) c
+Continuing.
+[Switching to Thread 1.2]
+
+Thread 2 hit Breakpoint 2, integrity_load_x509 (id=1, path=0xffffffff82344088 "/etc/keys/x509_ima.der")
+    at security/integrity/digsig.c:114
+114     {
+(gdb) b asymmetric_key_preparse
+Breakpoint 3 at 0xffffffff8144cce2: file crypto/asymmetric_keys/asymmetric_type.c, line 373.
+(gdb) c
+Continuing.
+
+Thread 2 hit Breakpoint 3, asymmetric_key_preparse (prep=0xffff888005c7fde0)
+    at crypto/asymmetric_keys/asymmetric_type.c:373
+373     {
+(gdb) bt
+#0  asymmetric_key_preparse (prep=0xffff888005c7fde0) at crypto/asymmetric_keys/asymmetric_type.c:373
+#1  0xffffffff813d0338 in key_create_or_update (keyring_ref=0xffff88807bb3f301,
+    type=0xffffffff81e5ef1f "asymmetric", description=0x0 <irq_stack_union>, payload=0xffffc900015b6000,
+    plen=595, perm=520290304, flags=2) at security/keys/key.c:852
+#2  0xffffffff830290ea in integrity_load_x509 (id=1, path=0xffffffff82344088 "/etc/keys/x509_ima.der")
+    at security/integrity/digsig.c:130
+#3  0xffffffff8302948b in ima_load_x509 () at security/integrity/ima/ima_init.c:102
+#4  0xffffffff83028f4c in integrity_load_keys () at security/integrity/iint.c:217
+#5  0xffffffff82fe1453 in kernel_init_freeable () at init/main.c:1209
+#6  0xffffffff818acdb1 in kernel_init (unused=<optimized out>) at init/main.c:1093
+#7  0xffffffff81003465 in ret_from_fork () at arch/x86/entry/entry_64.S:362
+#8  0x0000000000000000 in ?? ()
+(gdb) p *prep
+$1 = {description = 0x0 <irq_stack_union>, payload = {rcu_data0 = 0x0 <irq_stack_union>, data = {
+      0x0 <irq_stack_union>, 0x0 <irq_stack_union>, 0x0 <irq_stack_union>, 0x0 <irq_stack_union>}},
+  data = 0xffffc900015b6000, datalen = 595, quotalen = 0, expiry = 9223372036854775807}
+(gdb) x/595xb prep->payload
+Value can't be converted to integer.
+(gdb) x/595xb prep->data
+0xffffc900015b6000:     0x30    0x82    0x02    0x4f    0x30    0x82    0x01    0xf5
+0xffffc900015b6008:     0xa0    0x03    0x02    0x01    0x02    0x02    0x14    0x24
+0xffffc900015b6010:     0x53    0x5c    0x41    0xdd    0xfb    0xc0    0x50    0x39
+0xffffc900015b6018:     0x03    0x31    0x7c    0xef    0x66    0xdd    0x7c    0x09
+0xffffc900015b6020:     0x9a    0x38    0x65    0x30    0x0a    0x06    0x08    0x2a
+0xffffc900015b6028:     0x81    0x1c    0xcf    0x55    0x01    0x83    0x75    0x30
+0xffffc900015b6030:     0x75    0x31    0x0b    0x30    0x09    0x06    0x03    0x55
+0xffffc900015b6038:     0x04    0x06    0x13    0x02    0x43    0x4e    0x31    0x10
+0xffffc900015b6040:     0x30    0x0e    0x06    0x03    0x55    0x04    0x08    0x0c
+0xffffc900015b6048:     0x07    0x42    0x65    0x69    0x4a    0x69    0x6e    0x67
+0xffffc900015b6050:     0x31    0x11    0x30    0x0f    0x06    0x03    0x55    0x04
+0xffffc900015b6058:     0x07    0x0c    0x08    0x59    0x69    0x5a    0x68    0x75
+0xffffc900015b6060:     0x61    0x6e    0x67    0x31    0x0c    0x30    0x0a    0x06
+0xffffc900015b6068:     0x03    0x55    0x04    0x0a    0x0c    0x03    0x75    0x6f
+0xffffc900015b6070:     0x73    0x31    0x0b    0x30    0x09    0x06    0x03    0x55
+0xffffc900015b6078:     0x04    0x0b    0x0c    0x02    0x4f    0x53    0x31    0x0b
+0xffffc900015b6080:     0x30    0x09    0x06    0x03    0x55    0x04    0x03    0x0c
+0xffffc900015b6088:     0x02    0x43    0x41    0x31    0x19    0x30    0x17    0x06
+0xffffc900015b6090:     0x09    0x2a    0x86    0x48    0x86    0xf7    0x0d    0x01
+0xffffc900015b6098:     0x09    0x01    0x16    0x0a    0x63    0x61    0x40    0x75
+0xffffc900015b60a0:     0x6f    0x73    0x2e    0x63    0x6f    0x6d    0x30    0x1e
+0xffffc900015b60a8:     0x17    0x0d    0x32    0x35    0x30    0x36    0x33    0x30
+0xffffc900015b60b0:     0x30    0x38    0x33    0x36    0x35    0x31    0x5a    0x17
+0xffffc900015b60b8:     0x0d    0x33    0x35    0x30    0x36    0x32    0x38    0x30
+0xffffc900015b60c0:     0x38    0x33    0x36    0x35    0x31    0x5a    0x30    0x7b
+0xffffc900015b60c8:     0x31    0x0b    0x30    0x09    0x06    0x03    0x55    0x04
+0xffffc900015b60d0:     0x06    0x13    0x02    0x43    0x4e    0x31    0x11    0x30
+0xffffc900015b60d8:     0x0f    0x06    0x03    0x55    0x04    0x08    0x0c    0x08
+0xffffc900015b60e0:     0x5a    0x68    0x65    0x6a    0x69    0x61    0x6e    0x67
+0xffffc900015b60e8:     0x31    0x10    0x30    0x0e    0x06    0x03    0x55    0x04
+0xffffc900015b60f0:     0x07    0x0c    0x07    0x42    0x65    0x69    0x4a    0x69
+0xffffc900015b60f8:     0x6e    0x67    0x31    0x0c    0x30    0x0a    0x06    0x03
+0xffffc900015b6100:     0x55    0x04    0x0a    0x0c    0x03    0x55    0x4f    0x53
+0xffffc900015b6108:     0x31    0x0b    0x30    0x09    0x06    0x03    0x55    0x04
+0xffffc900015b6110:     0x0b    0x0c    0x02    0x4f    0x53    0x31    0x0f    0x30
+0xffffc900015b6118:     0x0d    0x06    0x03    0x55    0x04    0x03    0x0c    0x06
+0xffffc900015b6120:     0x53    0x65    0x72    0x76    0x65    0x72    0x31    0x1b
+0xffffc900015b6128:     0x30    0x19    0x06    0x09    0x2a    0x86    0x48    0x86
+0xffffc900015b6130:     0xf7    0x0d    0x01    0x09    0x01    0x16    0x0c    0x74
+0xffffc900015b6138:     0x65    0x73    0x74    0x40    0x75    0x6f    0x73    0x2e
+0xffffc900015b6140:     0x63    0x6f    0x6d    0x30    0x59    0x30    0x13    0x06
+0xffffc900015b6148:     0x07    0x2a    0x86    0x48    0xce    0x3d    0x02    0x01
+0xffffc900015b6150:     0x06    0x08    0x2a    0x81    0x1c    0xcf    0x55    0x01
+0xffffc900015b6158:     0x82    0x2d    0x03    0x42    0x00    0x04    0x0e    0xe1
+0xffffc900015b6160:     0xad    0x1b    0x61    0x16    0xcf    0xae    0xdc    0x1d
+0xffffc900015b6168:     0xe5    0xe0    0x56    0x2b    0x67    0x44    0x75    0xa0
+0xffffc900015b6170:     0xd8    0x9f    0xe2    0x3b    0x00    0xb5    0xbe    0x59
+0xffffc900015b6178:     0xe9    0xf3    0x87    0xc3    0xdf    0xd4    0xb9    0xb9
+0xffffc900015b6180:     0x13    0x97    0x6e    0x6a    0x42    0x00    0x7f    0x01
+0xffffc900015b6188:     0x0e    0x00    0x8b    0x79    0x3b    0x98    0x01    0x0a
+0xffffc900015b6190:     0xe3    0xf4    0x77    0xae    0x0a    0x84    0xe3    0x57
+0xffffc900015b6198:     0x9b    0x1a    0x73    0x58    0x78    0x45    0xa3    0x5d
+0xffffc900015b61a0:     0x30    0x5b    0x30    0x0c    0x06    0x03    0x55    0x1d
+--Type <RET> for more, q to quit, c to continue without paging--
+0xffffc900015b61a8:     0x13    0x01    0x01    0xff    0x04    0x02    0x30    0x00
+0xffffc900015b61b0:     0x30    0x0b    0x06    0x03    0x55    0x1d    0x0f    0x04
+0xffffc900015b61b8:     0x04    0x03    0x02    0x07    0x80    0x30    0x1d    0x06
+0xffffc900015b61c0:     0x03    0x55    0x1d    0x0e    0x04    0x16    0x04    0x14
+0xffffc900015b61c8:     0x5d    0xec    0x21    0xb4    0xd8    0x04    0x96    0xb6
+0xffffc900015b61d0:     0x37    0xd3    0x79    0x1d    0x12    0x00    0xd0    0xfd
+0xffffc900015b61d8:     0x53    0xae    0x11    0x58    0x30    0x1f    0x06    0x03
+0xffffc900015b61e0:     0x55    0x1d    0x23    0x04    0x18    0x30    0x16    0x80
+0xffffc900015b61e8:     0x14    0xc7    0xba    0x07    0xea    0xa2    0xad    0x94
+0xffffc900015b61f0:     0xf0    0xf7    0x87    0x1d    0x17    0xd6    0x55    0x3f
+0xffffc900015b61f8:     0x6e    0xe0    0x59    0xbe    0x9e    0x30    0x0a    0x06
+0xffffc900015b6200:     0x08    0x2a    0x81    0x1c    0xcf    0x55    0x01    0x83
+0xffffc900015b6208:     0x75    0x03    0x48    0x00    0x30    0x45    0x02    0x21
+0xffffc900015b6210:     0x00    0x8b    0xe3    0x62    0xd0    0xf5    0x3a    0x1c
+0xffffc900015b6218:     0xc5    0x51    0x35    0x93    0x0d    0x6e    0x28    0xe5
+0xffffc900015b6220:     0xb7    0xdc    0x4e    0x82    0x7e    0x84    0x3b    0x77
+0xffffc900015b6228:     0x62    0x30    0x50    0xdc    0xed    0xee    0x16    0xc6
+0xffffc900015b6230:     0x83    0x02    0x20    0x2c    0xaa    0xeb    0x96    0xc1
+0xffffc900015b6238:     0xab    0x5c    0xa5    0x82    0xea    0x52    0xfc    0x06
+0xffffc900015b6240:     0xf7    0xef    0xc9    0xf7    0xc2    0x5b    0x69    0x51
+0xffffc900015b6248:     0xa1    0xfd    0xb0    0x6e    0x34    0xdc    0x41    0x55
+0xffffc900015b6250:     0x72    0xfc    0x89
+(gdb) b _sm2_verify
+Breakpoint 4 at 0xffffffff814328d0: file crypto/sm2.c, line 300.
+(gdb) c
+Continuing.
+
+Thread 2 hit Breakpoint 4, _sm2_verify (ec=0xffff88807f926040, hash=0xffff888005d25f60,
+    sig_r=0xffff888005d25260, sig_s=0xffff888005d25680) at crypto/sm2.c:300
+300     {
+(gdb) p *ec
+$2 = {model = MPI_EC_WEIERSTRASS, dialect = ECC_DIALECT_STANDARD, flags = 0, nbits = 256,
+  p = 0xffff888005d25a60, a = 0xffff888005d25ea0, b = 0xffff888005d25c20, G = 0xffff888005d25020,
+  n = 0xffff888005d25d20, h = 1, Q = 0xffff888005d25ae0, d = 0x0 <irq_stack_union>,
+  name = 0xffffffff81e60260 "sm2p256v1", t = {valid = {a_is_pminus3 = 0, two_inv_p = 0},
+    a_is_pminus3 = 0, two_inv_p = 0x0 <irq_stack_union>, p_barrett = 0x0 <irq_stack_union>, scratch = {
+      0xffff888005d25460, 0xffff888005d257c0, 0xffff888005d25660, 0xffff888005d25200,
+      0xffff888005d25220, 0xffff888005d25d40, 0xffff888005d259a0, 0xffff888005d25ac0,
+      0xffff888005d25640, 0xffff888005d25280, 0xffff888005d25080}}, addm = 0xffffffff814dea77 <ec_addm>,
+  subm = 0xffffffff814de6c1 <ec_subm>, mulm = 0xffffffff814dea58 <ec_mulm>,
+  pow2 = 0xffffffff814dea6f <ec_pow2>, mul2 = 0xffffffff814dea3c <ec_mul2>}
+(gdb) p sig_r
+$3 = (MPI) 0xffff888005d25260
+(gdb) p *sig_r
+$4 = {alloced = 4, nlimbs = 4, nbits = 256, sign = 0, flags = 0, d = 0xffff888005d250c0}
+(gdb) p sig_r->d
+$5 = (mpi_limb_t *) 0xffff888005d250c0
+(gdb) p *sig_r->d
+$6 = 3481525426417223299
+(gdb)
+$7 = 3481525426417223299
+(gdb) p *sig_s->d
+$8 = 7941214216125611145
+(gdb) p *hash->d
+$9 = 6081906252250076393
+(gdb) c
+Continuing.
+
+证书可以加载成功：
+[    2.309952] core: Using 10 MCE banks
+[    2.310803] sched_clock: Marking stable (2172998833, 132042149)->(2302336693, 2704289)
+[    2.312753] registered taskstats version 1
+[    2.313707] Loading compiled-in X.509 certificates
+[    2.349940] Loaded X.509 cert 'Build time autogenerated kernel key: 09a0a34cb93f79de214672bc253877df6bd3c2a4'
+[    2.356735] Loaded X.509 cert 'uos: CA: c7ba07eaa2ad94f0f7871d17d6553f6ee059be9e'
+[    2.358404] zswap: loaded using pool lzo/zbud
+[    2.359486] page_owner is disabled
+[    2.360543] Btrfs loaded, crc32c=crc32c-generic
+[    2.365464] Key type big_key registered
+[    2.370027] Key type trusted registered
+[    2.374543] Key type encrypted registered
+[    2.375491] ima: No TPM chip found, activating TPM-bypass!
+[    2.376726] ima: Allocated hash algorithm: sm3
+[    2.377724] evm: Initialising EVM extended attributes:
+[    2.378817] evm: security.selinux
+[    2.379519] evm: security.apparmor
+[    2.380186] evm: security.ima
+[    2.380873] evm: security.capability
+[    2.381600] evm: HMAC attrs: 0x1
+[    2.382759] rtc_cmos 00:00: setting system clock to 2025-09-03 02:29:38 UTC (1756866578)
+[    2.384561] ALSA device list:
+[    2.385220]   #0: Loopback 1
+[    2.390770] integrity: Loaded X.509 cert 'UOS: Server: 5dec21b4d80496b637d3791d1200d0fd53ae1158': /etc/keys/x509_ima.der
+[    2.396320] Freeing unused decrypted memory: 2036K
+[    2.398171] Freeing unused kernel image memory: 2372K
+[    2.415057] Write protecting the kernel read-only data: 22528k
+[    2.417400] Freeing unused kernel image memory: 2024K
+[    2.418971] Freeing unused kernel image memory: 1896K
+[    2.420052] Run /init as init process
+[    2.421012] elfverify: get system basic file info.
+[    2.422104] [uos integrity guard] status: , audit status: 1
+[    2.423360] [elfverify_set_status_early] command: init, device(2), mount(0), elf enabled: 1
+[    2.425205] elfverify: get system basic file info.
+[    2.426276] [uos integrity guard] status: , audit status: 1
+[    2.427530] [elfverify_set_status_early] command: init, device(2), mount(0), elf enabled: 1
+[    2.429564] elfverify: get system basic file info.
+[    2.430645] [uos integrity guard] status: , audit status: 1
+...
+
+6.6抓到的数据是这样的：
+qemu-system-x86_64 -enable-kvm -m 2048M -smp 2 -nographic -kernel /home/guolongji/alios/cloud-kernel/arch/x86/boot/bzImage  -s -S -initrd initramfs-6.6.88-g934da3236484.img -append "console=ttyS0 nokaslr"
+
+(gdb) target remote:1234
+Remote debugging using :1234
+warning: Remote gdbserver does not support determining executable automatically.
+RHEL <=6.8 and <=7.2 versions of gdbserver do not support such automatic executable detection.
+The following versions of gdbserver support it:
+- Upstream version of gdbserver (unsupported) 7.10 or later
+- Red Hat Developer Toolset (DTS) version of gdbserver from DTS 4.0 or later (only on x86_64)
+- RHEL-7.3 versions of gdbserver (on any architecture)
+0x000000000000fff0 in exception_stacks ()
+(gdb) hb start_kernel
+Hardware assisted breakpoint 1 at 0xffffffff845a4320: file init/main.c, line 898.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 1, start_kernel () at init/main.c:898
+898     {
+(gdb) b integrity_load_x509
+Breakpoint 2 at 0xffffffff846078b0: file security/integrity/digsig.c, line 194.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 2, integrity_load_x509 (id=id@entry=1,
+    path=path@entry=0xffffffff83183cec "/etc/keys/x509_ima.der") at security/integrity/digsig.c:194
+194     {
+(gdb) b asymmetric_key_preparse
+Breakpoint 3 at 0xffffffff817acd20: file crypto/asymmetric_keys/asymmetric_type.c, line 403.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 3, asymmetric_key_preparse (prep=0xffffc90000013e20)
+    at crypto/asymmetric_keys/asymmetric_type.c:403
+403     {
+(gdb) bt
+#0  asymmetric_key_preparse (prep=0xffffc90000013e20) at crypto/asymmetric_keys/asymmetric_type.c:403
+#1  0xffffffff816d3126 in __key_create_or_update (keyring_ref=0xffff888007f6b901,
+    type=type@entry=0xffffffff8316f683 "asymmetric",
+    description=description@entry=0x0 <fixed_percpu_data>, payload=0xffffc9000004d000,
+    plen=plen@entry=595, perm=perm@entry=520290304, flags=2, allow_update=true)
+    at security/keys/key.c:842
+#2  0xffffffff816d34c0 in key_create_or_update (keyring_ref=<optimized out>,
+    type=type@entry=0xffffffff8316f683 "asymmetric",
+    description=description@entry=0x0 <fixed_percpu_data>, payload=<optimized out>, plen=plen@entry=595,
+    perm=perm@entry=520290304, flags=2) at security/keys/key.c:1007
+#3  0xffffffff846076e2 in integrity_add_key (id=id@entry=1, data=<optimized out>, size=size@entry=595,
+    perm=perm@entry=520290304) at security/integrity/digsig.c:177
+#4  0xffffffff84607922 in integrity_load_x509 (id=id@entry=1,
+    path=path@entry=0xffffffff83183cec "/etc/keys/x509_ima.der") at security/integrity/digsig.c:211
+#5  0xffffffff8460890b in ima_load_x509 () at security/integrity/ima/ima_init.c:111
+#6  0xffffffff8460761a in integrity_load_keys () at security/integrity/iint.c:232
+#7  0xffffffff81f6e466 in kernel_init (unused=<optimized out>) at init/main.c:1475
+#8  0xffffffff810b9ee0 in ret_from_fork (prev=<optimized out>, regs=0xffffc90000013f58,
+    fn=0xffffffff81f6e450 <kernel_init>, fn_arg=0x0 <fixed_percpu_data>) at arch/x86/kernel/process.c:147
+#9  0xffffffff8100456b in ret_from_fork_asm () at arch/x86/entry/entry_64.S:293
+#10 0x0000000000000000 in ?? ()
+(gdb) p *prep
+$1 = {orig_description = 0x0 <fixed_percpu_data>, description = 0x0 <fixed_percpu_data>, payload = {
+    rcu_data0 = 0x0 <fixed_percpu_data>, data = {0x0 <fixed_percpu_data>, 0x0 <fixed_percpu_data>,
+      0x0 <fixed_percpu_data>, 0x0 <fixed_percpu_data>}}, data = 0xffffc9000004d000, datalen = 595,
+  quotalen = 0, expiry = 9223372036854775807}
+(gdb)  x/595xb prep->data
+0xffffc9000004d000:     0x30    0x82    0x02    0x4f    0x30    0x82    0x01    0xf5
+0xffffc9000004d008:     0xa0    0x03    0x02    0x01    0x02    0x02    0x14    0x24
+0xffffc9000004d010:     0x53    0x5c    0x41    0xdd    0xfb    0xc0    0x50    0x39
+0xffffc9000004d018:     0x03    0x31    0x7c    0xef    0x66    0xdd    0x7c    0x09
+0xffffc9000004d020:     0x9a    0x38    0x65    0x30    0x0a    0x06    0x08    0x2a
+0xffffc9000004d028:     0x81    0x1c    0xcf    0x55    0x01    0x83    0x75    0x30
+0xffffc9000004d030:     0x75    0x31    0x0b    0x30    0x09    0x06    0x03    0x55
+0xffffc9000004d038:     0x04    0x06    0x13    0x02    0x43    0x4e    0x31    0x10
+0xffffc9000004d040:     0x30    0x0e    0x06    0x03    0x55    0x04    0x08    0x0c
+0xffffc9000004d048:     0x07    0x42    0x65    0x69    0x4a    0x69    0x6e    0x67
+0xffffc9000004d050:     0x31    0x11    0x30    0x0f    0x06    0x03    0x55    0x04
+0xffffc9000004d058:     0x07    0x0c    0x08    0x59    0x69    0x5a    0x68    0x75
+0xffffc9000004d060:     0x61    0x6e    0x67    0x31    0x0c    0x30    0x0a    0x06
+0xffffc9000004d068:     0x03    0x55    0x04    0x0a    0x0c    0x03    0x75    0x6f
+0xffffc9000004d070:     0x73    0x31    0x0b    0x30    0x09    0x06    0x03    0x55
+0xffffc9000004d078:     0x04    0x0b    0x0c    0x02    0x4f    0x53    0x31    0x0b
+0xffffc9000004d080:     0x30    0x09    0x06    0x03    0x55    0x04    0x03    0x0c
+0xffffc9000004d088:     0x02    0x43    0x41    0x31    0x19    0x30    0x17    0x06
+0xffffc9000004d090:     0x09    0x2a    0x86    0x48    0x86    0xf7    0x0d    0x01
+0xffffc9000004d098:     0x09    0x01    0x16    0x0a    0x63    0x61    0x40    0x75
+0xffffc9000004d0a0:     0x6f    0x73    0x2e    0x63    0x6f    0x6d    0x30    0x1e
+0xffffc9000004d0a8:     0x17    0x0d    0x32    0x35    0x30    0x36    0x33    0x30
+0xffffc9000004d0b0:     0x30    0x38    0x33    0x36    0x35    0x31    0x5a    0x17
+0xffffc9000004d0b8:     0x0d    0x33    0x35    0x30    0x36    0x32    0x38    0x30
+0xffffc9000004d0c0:     0x38    0x33    0x36    0x35    0x31    0x5a    0x30    0x7b
+0xffffc9000004d0c8:     0x31    0x0b    0x30    0x09    0x06    0x03    0x55    0x04
+0xffffc9000004d0d0:     0x06    0x13    0x02    0x43    0x4e    0x31    0x11    0x30
+0xffffc9000004d0d8:     0x0f    0x06    0x03    0x55    0x04    0x08    0x0c    0x08
+0xffffc9000004d0e0:     0x5a    0x68    0x65    0x6a    0x69    0x61    0x6e    0x67
+0xffffc9000004d0e8:     0x31    0x10    0x30    0x0e    0x06    0x03    0x55    0x04
+0xffffc9000004d0f0:     0x07    0x0c    0x07    0x42    0x65    0x69    0x4a    0x69
+0xffffc9000004d0f8:     0x6e    0x67    0x31    0x0c    0x30    0x0a    0x06    0x03
+0xffffc9000004d100:     0x55    0x04    0x0a    0x0c    0x03    0x55    0x4f    0x53
+0xffffc9000004d108:     0x31    0x0b    0x30    0x09    0x06    0x03    0x55    0x04
+0xffffc9000004d110:     0x0b    0x0c    0x02    0x4f    0x53    0x31    0x0f    0x30
+0xffffc9000004d118:     0x0d    0x06    0x03    0x55    0x04    0x03    0x0c    0x06
+0xffffc9000004d120:     0x53    0x65    0x72    0x76    0x65    0x72    0x31    0x1b
+0xffffc9000004d128:     0x30    0x19    0x06    0x09    0x2a    0x86    0x48    0x86
+0xffffc9000004d130:     0xf7    0x0d    0x01    0x09    0x01    0x16    0x0c    0x74
+0xffffc9000004d138:     0x65    0x73    0x74    0x40    0x75    0x6f    0x73    0x2e
+0xffffc9000004d140:     0x63    0x6f    0x6d    0x30    0x59    0x30    0x13    0x06
+0xffffc9000004d148:     0x07    0x2a    0x86    0x48    0xce    0x3d    0x02    0x01
+0xffffc9000004d150:     0x06    0x08    0x2a    0x81    0x1c    0xcf    0x55    0x01
+0xffffc9000004d158:     0x82    0x2d    0x03    0x42    0x00    0x04    0x0e    0xe1
+0xffffc9000004d160:     0xad    0x1b    0x61    0x16    0xcf    0xae    0xdc    0x1d
+0xffffc9000004d168:     0xe5    0xe0    0x56    0x2b    0x67    0x44    0x75    0xa0
+0xffffc9000004d170:     0xd8    0x9f    0xe2    0x3b    0x00    0xb5    0xbe    0x59
+0xffffc9000004d178:     0xe9    0xf3    0x87    0xc3    0xdf    0xd4    0xb9    0xb9
+0xffffc9000004d180:     0x13    0x97    0x6e    0x6a    0x42    0x00    0x7f    0x01
+0xffffc9000004d188:     0x0e    0x00    0x8b    0x79    0x3b    0x98    0x01    0x0a
+0xffffc9000004d190:     0xe3    0xf4    0x77    0xae    0x0a    0x84    0xe3    0x57
+0xffffc9000004d198:     0x9b    0x1a    0x73    0x58    0x78    0x45    0xa3    0x5d
+0xffffc9000004d1a0:     0x30    0x5b    0x30    0x0c    0x06    0x03    0x55    0x1d
+--Type <RET> for more, q to quit, c to continue without paging--
+0xffffc9000004d1a8:     0x13    0x01    0x01    0xff    0x04    0x02    0x30    0x00
+0xffffc9000004d1b0:     0x30    0x0b    0x06    0x03    0x55    0x1d    0x0f    0x04
+0xffffc9000004d1b8:     0x04    0x03    0x02    0x07    0x80    0x30    0x1d    0x06
+0xffffc9000004d1c0:     0x03    0x55    0x1d    0x0e    0x04    0x16    0x04    0x14
+0xffffc9000004d1c8:     0x5d    0xec    0x21    0xb4    0xd8    0x04    0x96    0xb6
+0xffffc9000004d1d0:     0x37    0xd3    0x79    0x1d    0x12    0x00    0xd0    0xfd
+0xffffc9000004d1d8:     0x53    0xae    0x11    0x58    0x30    0x1f    0x06    0x03
+0xffffc9000004d1e0:     0x55    0x1d    0x23    0x04    0x18    0x30    0x16    0x80
+0xffffc9000004d1e8:     0x14    0xc7    0xba    0x07    0xea    0xa2    0xad    0x94
+0xffffc9000004d1f0:     0xf0    0xf7    0x87    0x1d    0x17    0xd6    0x55    0x3f
+0xffffc9000004d1f8:     0x6e    0xe0    0x59    0xbe    0x9e    0x30    0x0a    0x06
+0xffffc9000004d200:     0x08    0x2a    0x81    0x1c    0xcf    0x55    0x01    0x83
+0xffffc9000004d208:     0x75    0x03    0x48    0x00    0x30    0x45    0x02    0x21
+0xffffc9000004d210:     0x00    0x8b    0xe3    0x62    0xd0    0xf5    0x3a    0x1c
+0xffffc9000004d218:     0xc5    0x51    0x35    0x93    0x0d    0x6e    0x28    0xe5
+0xffffc9000004d220:     0xb7    0xdc    0x4e    0x82    0x7e    0x84    0x3b    0x77
+0xffffc9000004d228:     0x62    0x30    0x50    0xdc    0xed    0xee    0x16    0xc6
+0xffffc9000004d230:     0x83    0x02    0x20    0x2c    0xaa    0xeb    0x96    0xc1
+0xffffc9000004d238:     0xab    0x5c    0xa5    0x82    0xea    0x52    0xfc    0x06
+0xffffc9000004d240:     0xf7    0xef    0xc9    0xf7    0xc2    0x5b    0x69    0x51
+0xffffc9000004d248:     0xa1    0xfd    0xb0    0x6e    0x34    0xdc    0x41    0x55
+0xffffc9000004d250:     0x72    0xfc    0x89
+(gdb) b _sm2_verify
+Breakpoint 4 at 0xffffffff81785fd0: file crypto/sm2.c, line 327.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 4, _sm2_verify (ec=ec@entry=0xffff888005d3c448,
+    hash=hash@entry=0xffff8880056de9e0, sig_r=0xffff8880056de500, sig_s=0xffff8880056de900)
+    at crypto/sm2.c:327
+327     {
+(gdb) p *ec
+$2 = {model = MPI_EC_WEIERSTRASS, dialect = ECC_DIALECT_STANDARD, flags = 0, nbits = 256,
+  p = 0xffff888007cb3060, a = 0xffff888007cb37e0, b = 0xffff888007cb35e0, G = 0xffff888007cb3460,
+  n = 0xffff888007cb3a20, h = 1, Q = 0xffff888007cb35a0, d = 0x0 <fixed_percpu_data>,
+  name = 0xffffffff83184d12 "sm2p256v1", t = {valid = {a_is_pminus3 = 0, two_inv_p = 0},
+    a_is_pminus3 = 0, two_inv_p = 0x0 <fixed_percpu_data>, p_barrett = 0x0 <fixed_percpu_data>,
+    scratch = {0xffff888007cb38a0, 0xffff888007cb3580, 0xffff888007cb3d80, 0xffff888005445140,
+      0xffff8880054457a0, 0xffff888005445180, 0xffff8880054456e0, 0xffff8880054451a0,
+      0xffff888005445aa0, 0xffff888005445a60, 0xffff888005f23dc0}}, addm = 0xffffffff81846f50 <ec_addm>,
+  subm = 0xffffffff818461c0 <ec_subm>, mulm = 0xffffffff81846fa0 <ec_mulm>,
+  pow2 = 0xffffffff81846ff0 <ec_pow2>, mul2 = 0xffffffff81846f00 <ec_mul2>}
+(gdb) p sig_r
+$3 = (MPI) 0xffff8880056de500
+(gdb) p *sig_r
+$4 = {alloced = 4, nlimbs = 4, nbits = 256, sign = 0, flags = 0, d = 0xffff8880056dec00}
+(gdb) p sig_r->d
+$5 = (mpi_limb_t *) 0xffff8880056dec00
+(gdb) p *sig_r->d
+$6 = 3481525426417223299
+(gdb) p *sig_s->d
+$7 = 7941214216125611145
+(gdb) p *hash->d
+$8 = 729232130552547459
+(gdb)
+
+证书加载失败了：
+[    0.908433] Key type dns_resolver registered
+[    0.909633] IPI shorthand broadcast: enabled
+[    0.912664] sched_clock: Marking stable (791007384, 120784020)->(922511438, -10720034)
+[    0.914243] registered taskstats version 1
+[    0.915031] Loading compiled-in X.509 certificates
+[    0.919623] Loaded X.509 cert 'uos: CA: c7ba07eaa2ad94f0f7871d17d6553f6ee059be9e'
+[    0.924121] ima: No TPM chip found, activating TPM-bypass!
+[    0.925155] ima: Allocated hash algorithm: sm3
+[    0.926002] ima: No architecture policies found
+[    0.926909] PM:   Magic number: 9:983:469
+[    0.927665] leds input1::capslock: hash matches
+[    0.928554] printk: console [netcon0] enabled
+[    0.929375] netconsole: network logging started
+[    0.930260] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    0.931949] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    0.933171] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    0.934527] cryptomgr_probe (54) used greatest stack depth: 15464 bytes left
+[    0.935850] ALSA device list:
+[    0.936410]   No soundcards found.
+[    0.979935] Freeing initrd memory: 31296K
+[    0.980835] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    0.982490] cfg80211: failed to load regulatory.db
+[    0.983689] integrity: Loading X.509 certificate: /etc/keys/x509_ima.der
+[    0.988264] integrity: Problem loading X.509 certificate -129
+[    0.989618] Freeing unused kernel image (initmem) memory: 2724K
+[    0.990511] Write protecting the kernel read-only data: 26624k
+[    0.991726] Freeing unused kernel image (rodata/data gap) memory: 1424K
+[    1.043539] x86/mm: Checked W+X mappings: passed, no W+X pages found.
+...
+
+可以看到在6.6内核当中我们的 certs目录下添加的根证书加载成功了，但是initrd当中的证书加载失败了。
+asymmetric_key_preparse当中证书的数据和4.19证书的数据是一致的。
+
+6.6对4.19在ima相关的代码中有一些重构升级如下：
+commit 21155620fbf2edbb071144894ff9d67ba9a1faa0
+Author: Tianjia Zhang <tianjia.zhang@linux.alibaba.com>
+Date:   Mon Sep 18 16:38:50 2023 +0800
+
+    crypto: sm2 - Fix crash caused by uninitialized context
+
+    In sm2_compute_z_digest() function, the newly allocated structure
+    mpi_ec_ctx is used, but forget to initialize it, which will cause
+    a crash when performing subsequent operations.
+
+    Fixes: e5221fa6a355 ("KEYS: asymmetric: Move sm2 code into x509_public_key")
+    Cc: stable@vger.kernel.org # v6.5
+    Signed-off-by: Tianjia Zhang <tianjia.zhang@linux.alibaba.com>
+    Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+
+6.6函数中sm2_compute_z_digest计算的dgst值与4.19有差异，此处逻辑是否有异常呢？
+部分的代码逻辑难以理解，已分析许久没有找到原因，如您可以帮忙解答万分感谢。
+#+end_src
+
+希望可以获得阿里大佬的帮助。
