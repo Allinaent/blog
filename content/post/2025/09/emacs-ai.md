@@ -1,7 +1,7 @@
 +++
 title = "如何在 emacs 当中使用各种 ai 插件"
 date = 2025-09-15T17:11:00+08:00
-lastmod = 2025-09-16T10:15:45+08:00
+lastmod = 2025-09-16T15:03:37+08:00
 draft = false
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
@@ -133,6 +133,9 @@ gptel 的使用截图如下：
 
 ### eca （推荐） {#eca-推荐}
 
+eca 有一个 server ，文档在： <https://eca.dev/> ，这是个支持 MCP 的 server ，可以让它帮忙写代码以及合入， eca 不是基于 git 的，用起来非常不错。这个 server 用的是
+Clojure 来开发的，我觉得很有潜力！
+
 ```lisp
 (use-package eca
   :ensure t
@@ -145,7 +148,7 @@ gptel 的使用截图如下：
 
 这个还需要配置一下 eca 的 server，~/.config/eca/config.json
 
-```json
+```bash
 {
   "providers": {
       "uos": {

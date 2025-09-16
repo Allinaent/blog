@@ -155,6 +155,10 @@ gptel 的使用截图如下：
 
 ** eca （推荐）
 
+eca 有一个 server ，文档在： https://eca.dev/ ，这是个支持 MCP 的 server ，可以
+让它帮忙写代码以及合入， eca 不是基于 git 的，用起来非常不错。这个 server 用的是
+Clojure 来开发的，我觉得很有潜力！
+
 #+begin_src lisp
 (use-package eca
   :ensure t
@@ -167,7 +171,7 @@ gptel 的使用截图如下：
 
 这个还需要配置一下 eca 的 server，~/.config/eca/config.json
 
-#+begin_src json
+#+begin_src bash :results raw :wrap src json
 {
   "providers": {
       "uos": {
@@ -245,6 +249,7 @@ gptel 的使用截图如下：
 #+end_src
 
 eca 的使用截图如下：
+
 #+attr_html: :link t
 #+caption: /eca 的使用截图/
 #+attr_html: :class fancy
