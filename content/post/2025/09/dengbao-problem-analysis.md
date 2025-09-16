@@ -1,7 +1,7 @@
 +++
 title = "IMA 签名失败问题分析"
 date = 2025-09-01T15:00:00+08:00
-lastmod = 2025-09-04T16:11:29+08:00
+lastmod = 2025-09-16T09:19:43+08:00
 categories = ["kernel"]
 draft = false
 toc = true
@@ -54,6 +54,8 @@ x509_cert_parse:
 ```
 
 经过对比 Linux 6.6 和 4.19 内核中的 sm2_compute_z_digest 函数，我发现核心的哈希计算逻辑（即国密SM2标准中Z值的内涵）没有变化，但函数的接口、内部实现细节以及错误处理方式有显著差异。这些变化主要体现了内核代码的优化和抽象层次的提升。
+
+从哪里能看出来是哪个函数使用的公钥上级证书的？在 4.19 这块。这里可以用 gdb 调一下，看看使用的公钥证书。
 
 
 ## 对比 {#对比}
@@ -358,6 +360,137 @@ A syntax error in expression, near `/xb sig->digest'.
 ### 对比点三，sm2_compute_z_digest 内部的代码行 {#对比点三-sm2-compute-z-digest-内部的代码行}
 
 ... ，此处代码逻辑比较复杂，没有看明白。
+
+
+### 对比点四，public_key_verify_signature，验签传入的公钥值 {#对比点四-public-key-verify-signature-验签传入的公钥值}
+
+```bash
+root@localhost:/home/guolongji/imacerts# openssl x509 -in /etc/keys/x509_ima.der -inform der -text -noout
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            24:53:5c:41:dd:fb:c0:50:39:03:31:7c:ef:66:dd:7c:09:9a:38:65
+        Signature Algorithm: sm3WithSM2Sign
+        Issuer: C = CN, ST = BeiJing, L = YiZhuang, O = uos, OU = OS, CN = CA, emailAddress = ca@uos.com
+        Validity
+            Not Before: Jun 30 08:36:51 2025 GMT
+            Not After : Jun 28 08:36:51 2035 GMT
+        Subject: C = CN, ST = Zhejiang, L = BeiJing, O = UOS, OU = OS, CN = Server, emailAddress = test@uos.com
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:0e:e1:ad:1b:61:16:cf:ae:dc:1d:e5:e0:56:2b:
+                    67:44:75:a0:d8:9f:e2:3b:00:b5:be:59:e9:f3:87:
+                    c3:df:d4:b9:b9:13:97:6e:6a:42:00:7f:01:0e:00:
+                    8b:79:3b:98:01:0a:e3:f4:77:ae:0a:84:e3:57:9b:
+                    1a:73:58:78:45
+                ASN1 OID: SM2
+                NIST CURVE: SM2
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage:
+                Digital Signature
+            X509v3 Subject Key Identifier:
+                5D:EC:21:B4:D8:04:96:B6:37:D3:79:1D:12:00:D0:FD:53:AE:11:58
+            X509v3 Authority Key Identifier:
+                keyid:C7:BA:07:EA:A2:AD:94:F0:F7:87:1D:17:D6:55:3F:6E:E0:59:BE:9E
+
+    Signature Algorithm: sm3WithSM2Sign
+         30:45:02:21:00:8b:e3:62:d0:f5:3a:1c:c5:51:35:93:0d:6e:
+         28:e5:b7:dc:4e:82:7e:84:3b:77:62:30:50:dc:ed:ee:16:c6:
+         83:02:20:2c:aa:eb:96:c1:ab:5c:a5:82:ea:52:fc:06:f7:ef:
+         c9:f7:c2:5b:69:51:a1:fd:b0:6e:34:dc:41:55:72:fc:89
+
+
+root@localhost:/home/guolongji/imacerts# openssl x509 -in sm2_ca.crt -inform crt -text -noout
+x509: Invalid format "crt" for -inform
+x509: Use -help for summary.
+root@localhost:/home/guolongji/imacerts# openssl x509 -in sm2_ca.crt  -text -noout
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            74:7b:2d:94:db:9f:28:d7:63:e3:d1:ea:84:41:1f:f2:d4:dd:af:56
+        Signature Algorithm: sm3WithSM2Sign
+        Issuer: C = CN, ST = BeiJing, L = YiZhuang, O = uos, OU = OS, CN = CA, emailAddress = ca@uos.com
+        Validity
+            Not Before: Jun 30 08:36:42 2025 GMT
+            Not After : Jun 28 08:36:42 2035 GMT
+        Subject: C = CN, ST = BeiJing, L = YiZhuang, O = uos, OU = OS, CN = CA, emailAddress = ca@uos.com
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub:
+                    04:d2:08:83:5f:fb:c5:03:2e:51:22:79:2b:cb:aa:
+                    de:eb:65:3c:42:eb:bb:c8:43:76:77:48:49:9a:8a:
+                    44:5b:b9:2c:70:b7:34:a2:3b:5c:25:a8:94:44:89:
+                    fd:3b:39:ac:d4:16:8e:a2:aa:6a:4c:f8:f8:7d:91:
+                    3a:21:7d:16:b9
+                ASN1 OID: SM2
+                NIST CURVE: SM2
+        X509v3 extensions:
+            X509v3 Subject Key Identifier:
+                C7:BA:07:EA:A2:AD:94:F0:F7:87:1D:17:D6:55:3F:6E:E0:59:BE:9E
+            X509v3 Authority Key Identifier:
+                keyid:C7:BA:07:EA:A2:AD:94:F0:F7:87:1D:17:D6:55:3F:6E:E0:59:BE:9E
+
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+    Signature Algorithm: sm3WithSM2Sign
+         30:45:02:20:69:2e:f6:f1:d7:a3:c3:fb:b0:cf:88:61:6e:bc:
+         f1:f0:96:a3:a6:42:8f:5e:39:bc:80:e6:96:3c:36:87:2f:82:
+         02:21:00:d6:2d:a4:d9:58:b5:e8:20:1d:05:51:66:95:a0:d0:
+         3f:77:11:02:1f:b6:a5:6d:29:fb:ac:12:d8:34:35:18:c2
+
+4.19 使用的公钥值为：
+(gdb) hb start_kernel
+Hardware assisted breakpoint 1 at 0xffffffff82fe0caa: file init/main.c, line 554.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 1, start_kernel () at init/main.c:554
+554     {
+(gdb) b integrity_load_x509
+Breakpoint 2 at 0xffffffff83029056: file security/integrity/digsig.c, line 114.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 2, integrity_load_x509 (id=1, path=0xffffffff82344088 "/etc/keys/x509_ima.der")
+    at security/integrity/digsig.c:114
+114     {
+(gdb) b public_key_verify_signature
+Breakpoint 3 at 0xffffffff8144d698: file crypto/asymmetric_keys/public_key.c, line 124.
+(gdb) c
+Continuing.
+
+Thread 1 hit Breakpoint 3, public_key_verify_signature (pkey=0xffff88807dea9da0, sig=0xffff88807f93fd80)
+    at crypto/asymmetric_keys/public_key.c:124
+124     {
+(gdb) p *pkey
+$1 = {key = 0xffff88807df442a0, keylen = 65, id_type = 0xffffffff81e9e820 "X509",
+  pkey_algo = 0xffffffff81e9e486 "sm2"}
+(gdb) x/65xb pkey->key
+0xffff88807df442a0:     0x04    0xd2    0x08    0x83    0x5f    0xfb    0xc5    0x03
+0xffff88807df442a8:     0x2e    0x51    0x22    0x79    0x2b    0xcb    0xaa    0xde
+0xffff88807df442b0:     0xeb    0x65    0x3c    0x42    0xeb    0xbb    0xc8    0x43
+0xffff88807df442b8:     0x76    0x77    0x48    0x49    0x9a    0x8a    0x44    0x5b
+0xffff88807df442c0:     0xb9    0x2c    0x70    0xb7    0x34    0xa2    0x3b    0x5c
+0xffff88807df442c8:     0x25    0xa8    0x94    0x44    0x89    0xfd    0x3b    0x39
+0xffff88807df442d0:     0xac    0xd4    0x16    0x8e    0xa2    0xaa    0x6a    0x4c
+0xffff88807df442d8:     0xf8    0xf8    0x7d    0x91    0x3a    0x21    0x7d    0x16
+0xffff88807df442e0:     0xb9
+
+```
+
+```c
+/* See if we have a key that signed this one. */
+key = find_asymmetric_key(trust_keyring,
+                          sig->auth_ids[0], sig->auth_ids[1],
+                          false);
+```
 
 
 ## 总结邮件 {#总结邮件}
@@ -800,3 +933,222 @@ Date:   Mon Sep 18 16:38:50 2023 +0800
 ```
 
 希望可以获得阿里大佬的帮助。
+
+
+## 根因 {#根因}
+
+问题最终找到了，鹏哥发现验签使用的公钥是证书本身的公钥，而不是根证书的公钥。占总用 claude 4 的 ai
+写了一个补丁：
+
+```diff
+From a77bc719e0a92812c1f18e2ffc58f43ab7dc281e Mon Sep 17 00:00:00 2001
+From: meihaipeng <meihaipeng@uniontech.com>
+Date: Tue, 9 Sep 2025 18:14:41 +0800
+Subject: [PATCH] uos: crypto: Fix SM2 Z digest calculation in X.509
+ certificate verification
+
+The current SM2 implementation in x509_get_sig_params() incorrectly uses
+the certificate's own public key (cert->pub->key) to calculate the Z digest.
+According to SM2 standard (GM/T 0003.2-2012), the Z digest should be
+calculated using the signer's (CA's) public key.
+
+Additionally, the is_hash_blacklisted() function checks an incomplete digest
+for SM2 certificates, which may lead to security issues.
+
+Signed-off-by: meihaipeng <meihaipeng@uniontech.com>
+Change-Id: I168969d9d1c40470289752ce59c7263e13097382
+---
+ crypto/asymmetric_keys/public_key.c      | 92 ++++++++++++++++++++++++
+ crypto/asymmetric_keys/x509_public_key.c | 31 +++++---
+ 2 files changed, 114 insertions(+), 9 deletions(-)
+
+diff --git a/crypto/asymmetric_keys/public_key.c b/crypto/asymmetric_keys/public_key.c
+index 1dcab27986a6..4d1f64916b85 100644
+--- a/crypto/asymmetric_keys/public_key.c
++++ b/crypto/asymmetric_keys/public_key.c
+@@ -11,6 +11,9 @@
+ #include <crypto/akcipher.h>
+ #include <crypto/public_key.h>
+ #include <crypto/sig.h>
++#include <crypto/sm2.h>
++#include <crypto/hash.h>
++#include <keys/system_keyring.h>
+ #include <keys/asymmetric-subtype.h>
+ #include <linux/asn1.h>
+ #include <linux/err.h>
+@@ -373,6 +376,90 @@ static int software_key_eds_op(struct kernel_pkey_params *params,
+        return ret;
+ }
+
++/*
++ * Recalculate SM2 digest using signer's public key and perform blacklist check
++ * This function performs the complete SM2 digest calculation that was deferred
++ * from x509_get_sig_params() when signer's public key was not available.
++ * The TBS data is temporarily stored in sig->digest buffer.
++ */
++static int sm2_recalc_digest_and_blacklist_check(const struct public_key *pkey,
++						 struct public_key_signature *sig)
++{
++	struct crypto_shash *tfm;
++	struct shash_desc *desc;
++	size_t desc_size;
++	void *tbs_data;
++	size_t tbs_size;
++	int ret;
++
++	/* Only process SM2 with SM3 and valid TBS data in digest buffer */
++	if (strcmp(pkey->pkey_algo, "sm2") != 0 ||
++	    strcmp(sig->hash_algo, "sm3") != 0 ||
++	    !sig->digest || !sig->digest_size)
++		return 0;
++
++	/* For sm2 &&sm3 the sig->digest is tbs data which is made in x509_get_sig_params*/
++	tbs_size = sig->digest_size;
++	tbs_data = sig->digest;
++	if (!tbs_data)
++		return -ENOMEM;
++
++	pr_devel("SM2: Recalculating digest with signer's public key\n");
++
++	/* Allocate hash context */
++	tfm = crypto_alloc_shash(sig->hash_algo, 0, 0);
++	if (IS_ERR(tfm)) {
++		ret = PTR_ERR(tfm);
++		goto error_free_tbs;
++	}
++
++	desc_size = crypto_shash_descsize(tfm) + sizeof(*desc);
++	sig->digest_size = crypto_shash_digestsize(tfm);
++	desc = kzalloc(desc_size, GFP_KERNEL);
++	if (!desc) {
++		ret = -ENOMEM;
++		goto error_free_tfm;
++	}
++
++	sig->digest = kmalloc(sig->digest_size, GFP_KERNEL);
++	if (!sig->digest) {
++		kfree(desc);
++		crypto_free_shash(tfm);
++		return -ENOMEM;
++	}
++
++	desc->tfm = tfm;
++
++	/* Recalculate SM2 digest using signer's public key (the correct way) */
++	ret = crypto_shash_init(desc) ?:
++	      sm2_compute_z_digest(desc, pkey->key, pkey->keylen, sig->digest) ?:
++	      crypto_shash_init(desc) ?:
++	      crypto_shash_update(desc, sig->digest, sig->digest_size) ?:
++	      crypto_shash_finup(desc, tbs_data, tbs_size, sig->digest);
++
++	kfree(desc);
++error_free_tfm:
++	crypto_free_shash(tfm);
++error_free_tbs:
++	//Free the memory allocated in x509_get_sig_params
++	kfree(tbs_data);
++
++	if (ret < 0)
++		return ret;
++
++	/* Now perform blacklist check with correct complete SM2 digest */
++	ret = is_hash_blacklisted(sig->digest, sig->digest_size,
++				  BLACKLIST_HASH_X509_TBS);
++	if (ret == -EKEYREJECTED) {
++		pr_err("SM2 Cert %*phN is blacklisted\n",
++		       sig->digest_size, sig->digest);
++		return ret;
++	}
++
++	pr_devel("SM2: Digest recalculated and blacklist check completed\n");
++	return 0;
++}
++
+ /*
+  * Verify a signature using a public key.
+  */
+@@ -436,6 +523,11 @@ int public_key_verify_signature(const struct public_key *pkey,
+        if (ret)
+                goto error_free_key;
+
++	/* Handle SM2 signature verification with proper digest and blacklist check */
++	ret = sm2_recalc_digest_and_blacklist_check(pkey, (struct public_key_signature *)sig);
++	if (ret)
++		goto error_free_key;
++
+        ret = crypto_sig_verify(tfm, sig->s, sig->s_size,
+                                sig->digest, sig->digest_size);
+
+diff --git a/crypto/asymmetric_keys/x509_public_key.c b/crypto/asymmetric_keys/x509_public_key.c
+index 6a4f00be22fc..017f4e63ba46 100644
+--- a/crypto/asymmetric_keys/x509_public_key.c
++++ b/crypto/asymmetric_keys/x509_public_key.c
+@@ -65,15 +65,28 @@ int x509_get_sig_params(struct x509_certificate *cert)
+        desc->tfm = tfm;
+
+        if (strcmp(cert->pub->pkey_algo, "sm2") == 0) {
+-		ret = strcmp(sig->hash_algo, "sm3") != 0 ? -EINVAL :
+-		      crypto_shash_init(desc) ?:
+-		      sm2_compute_z_digest(desc, cert->pub->key,
+-					   cert->pub->keylen, sig->digest) ?:
+-		      crypto_shash_init(desc) ?:
+-		      crypto_shash_update(desc, sig->digest,
+-					  sig->digest_size) ?:
+-		      crypto_shash_finup(desc, cert->tbs, cert->tbs_size,
+-					 sig->digest);
++		/* For SM2, defer all digest calculation until signature verification
++		 * when signer's public key is available. Just validate hash algorithm.
++		 */
++		if (strcmp(sig->hash_algo, "sm3") != 0) {
++			ret = -EINVAL;
++		} else {
++			ret = 0;
++			/* Store TBS data in the signature for later SM2 digest calculation */
++			//Free the sig->digest to avoid memory leak;
++			kfree(sig->digest);
++			sig->digest = kmalloc(cert->tbs_size, GFP_KERNEL);
++			if (!sig->digest) {
++				ret = -ENOMEM;
++			} else {
++				memcpy(sig->digest, cert->tbs, cert->tbs_size);
++				sig->digest_size = cert->tbs_size;
++				pr_devel("SM2: TBS data stored for delayed digest calculation\n");
++			}
++		}
++
++		/* Skip blacklist check for SM2 - will be done after proper digest calculation */
++		goto error_2;
+        } else {
+                ret = crypto_shash_digest(desc, cert->tbs, cert->tbs_size,
+                                          sig->digest);
+--
+2.20.1
+
+```
+
+
+## 其它备注 {#其它备注}
+
+用到的生成 initramfs 的命令，这个命令和 installkernel 生成的 initramfs 有区别，这个更通用一些。
+
+dracut initramfs-6.6.0+.img 6.6.0+ --force --include /etc/keys/x509_ima.der /etc/keys/x509_ima.der
+
+打开动态调试：
+
+```nil
+看见 pr_devel 直接打开动态调试就可以了。
+# 启用特定文件的所有 pr_devel 输出
+dyndbg="file crypto/asymmetric_keys/public_key.c +p"
+
+# 或者更精确地启用特定函数的调试
+dyndbg="func verify_signature +p"
+
+# 或者启用整个子系统的调试
+dyndbg="file crypto/asymmetric_keys/* +p"
+```
+
+内核 gdb 去掉部分文件的编译优化，有两个方法：
+
+1.  <https://stackoverflow.com/questions/69447357/how-to-prevent-some-values-from-being-optimized-out-in-linux-kernel-debugging>
+
+2.  相关的 Makefile 当中增加 CFLAGS_key.o += -O0 类似这种格式的编译选项。
