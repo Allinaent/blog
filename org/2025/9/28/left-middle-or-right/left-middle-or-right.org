@@ -7,8 +7,8 @@
 #+DATE: [2025-09-28 日 10:14]
 #+TITLE: 木桶效应与竹杆效应——过度封装与适当封装
 #+HUGO_TAGS: 
-#+HUGO_CATEGORIES: 
-#+HUGO_CUSTOM_FRONT_MATTER: :image
+#+HUGO_CATEGORIES: prose
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png
 
 * 适合自己的才是最好的
 

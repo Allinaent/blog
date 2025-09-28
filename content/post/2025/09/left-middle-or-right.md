@@ -1,9 +1,11 @@
 +++
 title = "木桶效应与竹杆效应——过度封装与适当封装"
 date = 2025-09-28T10:14:00+08:00
-lastmod = 2025-09-28T11:38:03+08:00
+lastmod = 2025-09-28T11:43:36+08:00
+categories = ["prose"]
 draft = false
 toc = true
+image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
 +++
 
 ## 适合自己的才是最好的 {#适合自己的才是最好的}
