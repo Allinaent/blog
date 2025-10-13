@@ -1,9 +1,9 @@
 +++
 title = "linux 用户输入增强"
 date = 2024-10-28T10:56:00+08:00
-lastmod = 2024-10-28T17:46:21+08:00
+lastmod = 2025-10-13T12:57:25+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 [_build]
   list = "never"
@@ -1871,132 +1871,255 @@ demo 运行无误。
 
 ### 内核修改 {#内核修改}
 
-内核的修改非常少：
+v25 的代码提交在：kernel-v25 的 proj-d-localization-gpu-dev 分支，还没有提交
+
+补丁是：cat 0001-feat-feat-add-input-enhance-module.patch
 
 ```diff
+From 30d0cdde9ef598d32157f216f7270c2eac4252d3 Mon Sep 17 00:00:00 2001
+From: Longji Guo <guolongji@uniontech.com>
+Date: Fri, 1 Nov 2024 15:13:32 +0800
+Subject: [PATCH] feat: feat: add input enhance module
+
+Change-Id: Ie255fdeae0093ede6a343498326d6315875f1a3e
+---
+ drivers/input/Kconfig         |   8 +++
+ drivers/input/Makefile        |   2 +-
+ drivers/input/input-enhance.c | 112 ++++++++++++++++++++++++++++++++++
+ drivers/input/input-enhance.h |  21 +++++++
+ drivers/input/input.c         |  12 ++++
+ 5 files changed, 154 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/input/input-enhance.c
+ create mode 100644 drivers/input/input-enhance.h
+
+diff --git a/drivers/input/Kconfig b/drivers/input/Kconfig
+index 3bdbd34314b3..f8bb4619485f 100644
+--- a/drivers/input/Kconfig
++++ b/drivers/input/Kconfig
+@@ -176,6 +176,14 @@ config INPUT_KUNIT_TEST
+
+         If in doubt, say "N".
+
++config INPUT_ENHANCE
++	bool "Input Enhance"
++	default y
++	help
++	 Say y herel if you want enhance input.
++	 To compile this driver as a module,choose M here: the module
++	 will be called input_enhance.
++
+ config INPUT_APMPOWER
+        tristate "Input Power Event -> APM Bridge" if EXPERT
+        depends on INPUT && APM_EMULATION
+diff --git a/drivers/input/Makefile b/drivers/input/Makefile
+index c78753274921..30e80a453f37 100644
+--- a/drivers/input/Makefile
++++ b/drivers/input/Makefile
+@@ -6,7 +6,7 @@
+ # Each configuration option enables a list of files.
+
+ obj-$(CONFIG_INPUT)		+= input-core.o
+-input-core-y := input.o input-compat.o input-mt.o input-poller.o ff-core.o
++input-core-y := input.o input-compat.o input-mt.o input-poller.o ff-core.o input-enhance.o
+ input-core-y += touchscreen.o
+
+ obj-$(CONFIG_INPUT_FF_MEMLESS)	+= ff-memless.o
 diff --git a/drivers/input/input-enhance.c b/drivers/input/input-enhance.c
-index a3416368679b..86b2708e3858 100644
---- a/drivers/input/input-enhance.c
+new file mode 100644
+index 000000000000..a01010ae7ee6
+--- /dev/null
 +++ b/drivers/input/input-enhance.c
-@@ -23,6 +23,7 @@ static struct   device* enhance_module_device = NULL;
- struct enhance_param enhance_param_data = {
-        0,
-        0,
-+       0x1234, // default xor_key
- };
- EXPORT_SYMBOL(enhance_param_data);
-
+@@ -0,0 +1,112 @@
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/scpi_protocol.h>
++#include <asm/io.h>
++#include <linux/slab.h>
++#include <linux/fs.h>
++#include <linux/device.h>
++#include <linux/uaccess.h>
++#include "input-enhance.h"
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("guolongij@uniontech.com");
++MODULE_DESCRIPTION("Driver to enhance input");
++
++static int      majorNumber;
++static struct   class*  enhance_module_class = NULL;
++static struct   device* enhance_module_device = NULL;
++
++#define DEVICE_NAME "input_enhance"
++#define CLASS_NAME  "enhance_module"
++
++struct enhance_param enhance_param_data = {
++	0,
++	0,
++	0x123, // max value >= 0x2fe
++};
++EXPORT_SYMBOL(enhance_param_data);
++
++static long enhance_module_ioctl(struct file *, unsigned int, unsigned long);
++static int __init enhance_init(void);
++static void __exit enhance_exit(void);
++
++static const struct file_operations enhance_module_fo = {
++        .owner = THIS_MODULE,
++        .unlocked_ioctl = enhance_module_ioctl,
++};
++
++static long enhance_module_ioctl(struct file *file,
++                 unsigned int cmd,
++                 unsigned long arg)
++{
++        switch(cmd){
++        case CMD_IOC_0:
++        {
++                printk(KERN_INFO "[EnhanceModule:] Inner function (CMD_IOC_0) finished.\n");
++		if (copy_to_user((void __user *)arg, &enhance_param_data, sizeof(struct enhance_param)))
++			return -EFAULT;
++                break;
++        }
++	case CMD_IOC_1:
++        {
++                printk(KERN_INFO "[EnhanceModule:] Inner function (CMD_IOC_1) finished.\n");
++		if (copy_from_user(&enhance_param_data, (void __user *)arg, sizeof(struct enhance_param)))
++			return -EFAULT;
++                break;
++        }
++        default:
++                printk(KERN_INFO "[EnhanceModule:] Unknown ioctl cmd!\n");
++                return -EINVAL;
++        }
++        return 0;
++}
++
++static int __init enhance_init(void) {
++        printk(KERN_INFO "[EnhanceModule:] Entering test module. \n");
++        majorNumber = register_chrdev(0, DEVICE_NAME, &enhance_module_fo);
++        if(majorNumber < 0){
++                printk(KERN_INFO "[EnhanceModule:] Failed to register a major number. \n");
++                return majorNumber;
++        }
++
++        printk(KERN_INFO "[EnhanceModule:] Successful to register a major number %d. \n", majorNumber);
++
++        enhance_module_class = class_create(CLASS_NAME);
++        if(IS_ERR(enhance_module_class)) {
++                unregister_chrdev(majorNumber, DEVICE_NAME);
++                printk(KERN_INFO "[EnhanceModule:] Class device register failed!\n");
++                return PTR_ERR(enhance_module_class);
++        }
++
++        printk(KERN_INFO "[EnhanceModule:] Class device register success!\n");
++
++        enhance_module_device = device_create(enhance_module_class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
++        if (IS_ERR(enhance_module_device)) {
++                class_destroy(enhance_module_class);
++                unregister_chrdev(majorNumber, DEVICE_NAME);
++                printk(KERN_ALERT "Failed to create the device\n");
++                return PTR_ERR(enhance_module_device);
++
++        }
++
++        printk(KERN_INFO "[EnhanceModule:] Test module register successful. \n");
++
++        return 0;
++
++}
++
++static void __exit enhance_exit(void)
++{
++
++        printk(KERN_INFO "[EnhanceModule:] Start to clean up module.\n");
++        device_destroy(enhance_module_class, MKDEV(majorNumber, 0));
++        class_destroy(enhance_module_class);
++        unregister_chrdev(majorNumber, DEVICE_NAME);
++        printk(KERN_INFO "[EnhanceModule:] Clean up successful. Bye.\n");
++}
++
++module_init(enhance_init);
++module_exit(enhance_exit);
++
++
 diff --git a/drivers/input/input-enhance.h b/drivers/input/input-enhance.h
-index de168472a4c2..9eec09478c91 100644
---- a/drivers/input/input-enhance.h
+new file mode 100644
+index 000000000000..abe09f46c07a
+--- /dev/null
 +++ b/drivers/input/input-enhance.h
-@@ -8,6 +8,7 @@
- struct enhance_param {
-        int enhance_state;
-        int encrypt_type;
-+       uint16_t xor_key;
-        char *public_key;
-
- };
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef _INPUT_ENHANCE_H
++#define _INPUT_ENHANCE_H
++
++#include <linux/ioctl.h>
++
++// long enhance_state = 0; // 0 close; 1 open
++struct enhance_param {
++	int enhance_state;
++	int encrypt_type;
++	uint8_t xor_key;
++	char *public_key;
++
++};
++
++#define CMD_IOC_MAGIC 'a'
++#define CMD_IOC_0 _IOR(CMD_IOC_MAGIC, 0, struct enhance_param)
++#define CMD_IOC_1 _IOW(CMD_IOC_MAGIC, 1, struct enhance_param)
++#define CMD_IOC_2 _IOW(CMD_IOC_MAGIC, 2, struct enhance_param)
++
++#endif /* _INPUT_ENHANCE_H */
 diff --git a/drivers/input/input.c b/drivers/input/input.c
-index ee82d94cc68e..3c0092f6d119 100644
+index 6173218a3f1a..f6a8762c7ca9 100644
 --- a/drivers/input/input.c
 +++ b/drivers/input/input.c
-@@ -410,6 +410,10 @@ void input_handle_event(struct input_dev *dev,
+@@ -28,6 +28,9 @@
+ #include "input-compat.h"
+ #include "input-core-private.h"
+ #include "input-poller.h"
++#include "input-enhance.h"
++
++extern struct enhance_param enhance_param_data;
+
+ MODULE_AUTHOR("Vojtech Pavlik <vojtech@suse.cz>");
+ MODULE_DESCRIPTION("Input core");
+@@ -407,6 +410,10 @@ void input_handle_event(struct input_dev *dev,
         }
  }
 
 +void xor_encrypt_decrypt(uint16_t *data, uint16_t key) {
-+    *data ^= key;
++	*data = (*data ^ key) % 0x2ff;
 +}
 +
  /**
   * input_event() - report new input event
   * @dev: device that generated the event
-@@ -434,7 +438,7 @@ void input_event(struct input_dev *dev,
+@@ -429,6 +436,11 @@ void input_event(struct input_dev *dev,
+ {
+        unsigned long flags;
 
-        if (enhance_param_data.enhance_state == 1 && type == 0x01
-                && code != 272 && code != 273 && code != 274) {
--               code = code +1;
-+               xor_encrypt_decrypt((uint16_t *)&code, enhance_param_data.xor_key);
-        }
-
-        if (is_event_supported(type, dev->evbit, EV_MAX)) {
-
++	if (enhance_param_data.enhance_state == 1 && type == 0x01
++		&& code != 272 && code != 273 && code != 274) {
++		xor_encrypt_decrypt((uint16_t *)&code, enhance_param_data.xor_key);
++	}
++
+        if (is_event_supported(type, dev->evbit, EV_MAX)
+ #ifdef CONFIG_UOS_TOUCHPAD_SWITCH
+                 && !test_bit(INPUT_PROP_TOUCHPAD_SWITCH, dev->propbit)
+--
+2.20.1
 ```
-
-直接编译一下应该就可以了。
 
 
 ### 用户态库的修改 {#用户态库的修改}
 
-先想一想要改的地方有哪些？一是增加一个设置 xor_key 的函数。二是增加一个
-xor 的解密函数。之前的函数都不要删。后续还有可能修改。那这块也非常地简单。
+用户态的库项目在：<https://gitlabwh.uniontech.com/ut000683/libinput-enhance>
 
-```diff
-64,90d63
-< /**
-<  * @ingroup config
-<  *
-<  * Xor set key let kernel encrypt keycode
-<  *
-<  * @param type algrithm type
-<  * @param pkey optional public key for some algrithms
-<  * @return 0 is success
-<  */
-< int libinput_enhance_set_xor_key(uint16_t xor_key);
-<
-<
-< /**
-<  * @ingroup config
-<  *
-<  * Decrypt the reported code value with xor algrithm
-<  *
-<  * @param keycode The encryted code
-<  * @return The decrypt code value
-<  */
-< // 注意，因为库不是写在 libinput 当中的，不好判断类型是否是 EV_KEY
-< // 在是 EV_KEY 且 keycode 的值不是 272 273 274 才需要调用此函数解密
-< // 目的是防止还没有被 treeland接管的其他应用鼠标的三个键混乱造成不必
-< // 要的演示麻烦
-< unsigned short libinput_enhance_xor_decode_keycode(unsigned short keycode);
-```
+使用最新的V25 镜像。
 
-```diff
-14d13
-< 	uint16_t xor_key;
-22,23d20
-< uint16_t global_xor_key=0x1234;
-<
-80,107d76
-< }
-<
-< int
-< libinput_enhance_set_xor_key(uint16_t xor_key)
-< {
-< 	int fd;
-<         struct enhance_param p;
-<         fd = open("/dev/input_enhance", O_RDWR);
-<         p.xor_key = xor_key;
-<         if (fd < 0)
-<                 return 1;
-<         int ret = ioctl(fd, CMD_IOC_1, &p);
-<         close(fd);
-< 	if (ret == 0)
-< 		global_xor_key = xor_key;
-<         return ret;
-< }
-<
-< void xor_encrypt_decrypt(uint16_t *data) {
-<     *data ^= global_xor_key;
-< }
-<
-< unsigned short
-< libinput_enhance_xor_decode_keycode(unsigned short keycode)
-< {
-< 	unsigned short retcode = keycode;
-< 	xor_encrypt_decrypt(&retcode);
-< 	ret retcode;
-```
 
-编译，测试。
+### 对接人 {#对接人}
+
+treeland 的对接人是：郭垚
+
+内核还有库的功能基本上完成，不知道会不会有细节上的问题。后面就是配合郭垚调通 treeland 。目标是达到用 evtest 看到的键是加密的，treeland 管理的窗口获得的键是正常的。

@@ -1,9 +1,9 @@
 +++
 title = "AppArmor"
 date = 2024-01-03T14:03:00+08:00
-lastmod = 2024-06-06T16:01:12+08:00
+lastmod = 2025-10-13T13:16:31+08:00
 categories = ["technology"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190ce06.png"
 +++
@@ -14,7 +14,7 @@ image = "https://r2.guolongji.xyz/allinaent/2024/06/1f2393d0488363e89799334dd190
 
 通过配置文件。
 
-{{< figure src="/ox-hugo/img_20240103_140715.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 1: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20240103_140715.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 1: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 
 ## 启用 {#启用}
@@ -60,7 +60,7 @@ sudo aa-gen
 
 ## 使用的技术 {#使用的技术}
 
-{{< figure src="/ox-hugo/img_20240103_142639.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 2: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20240103_142639.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 2: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 flex 举例， sudo apt install flex
 
@@ -98,7 +98,7 @@ vim scan.lex
 
 状态机。
 
-{{< figure src="/ox-hugo/img_20240103_144517.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 3: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20240103_144517.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 3: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 状态机的性能非常好，可以对状态机生成的表格做一下压缩。
 

@@ -1,9 +1,9 @@
 +++
 title = "1070 窗口黑屏问题分析"
 date = 2024-06-12T11:08:00+08:00
-lastmod = 2024-06-19T16:56:13+08:00
+lastmod = 2025-10-13T13:22:24+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/d3b65553a8f45ae50b1ffe00c35d6dfd.png"
 +++

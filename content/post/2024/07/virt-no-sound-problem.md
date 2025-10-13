@@ -1,9 +1,9 @@
 +++
 title = "虚拟机无声音问题学习"
 date = 2024-07-29T14:11:00+08:00
-lastmod = 2024-07-29T17:10:44+08:00
+lastmod = 2025-10-13T13:30:07+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

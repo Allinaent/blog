@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2024/12
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2024-12-13 五 16:33]
 #+TITLE: treeland环境下ctrl-alt-del重启问题（韬哥）
 #+HUGO_TAGS:

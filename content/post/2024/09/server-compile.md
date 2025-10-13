@@ -1,9 +1,9 @@
 +++
 title = "服务器版本内核本地编译流程"
 date = 2024-09-11T10:54:00+08:00
-lastmod = 2024-09-11T11:35:59+08:00
+lastmod = 2025-10-13T12:59:29+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

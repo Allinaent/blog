@@ -1,9 +1,9 @@
 +++
 title = "loongarch 平台 amdgpu 驱动问题分析"
 date = 2024-06-19T09:15:00+08:00
-lastmod = 2024-06-19T10:04:37+08:00
+lastmod = 2025-10-13T13:09:35+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

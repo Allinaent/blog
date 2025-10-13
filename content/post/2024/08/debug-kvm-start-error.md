@@ -1,9 +1,9 @@
 +++
 title = "Intel机器510内核环境虚拟机安装完成后无法启动根因——另附庖丁解牛13式"
 date = 2024-08-19T09:34:00+08:00
-lastmod = 2024-08-19T15:53:05+08:00
+lastmod = 2025-10-13T13:03:26+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
@@ -30,9 +30,9 @@ Release:  UOS Server release 20 (kongzi)Kernel :  5.10.0-46.31.uelc20.x
 
 在1060u1a版本5.10内核系统上安装虚拟机，安装完成后，重启出现如下现象，虚拟机起不来。
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/002651624c0ffe43da5c197ab06b0dbf.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 1: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/002651624c0ffe43da5c197ab06b0dbf.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 1: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/a594f0141d058c646597cd5577f76f75.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 2: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/a594f0141d058c646597cd5577f76f75.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 2: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 
 ## 复现方法 {#复现方法}
@@ -49,34 +49,34 @@ A版本：
 
 {{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/8433d84ae168be126cf241603991a80c.png" >}}
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/be18877847ee742dd07a498bb4cddbec.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 3: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/be18877847ee742dd07a498bb4cddbec.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 3: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/156913582c073d7ac3ca5d453e92b50a.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 4: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/156913582c073d7ac3ca5d453e92b50a.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 4: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/8a9783de1fa436c20824b517a126d279.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 5: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/8a9783de1fa436c20824b517a126d279.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 5: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 3、虚拟机安装完成以后，虚拟机无法启动，具体现象如下：
 
 legacy模式-重启-选择510内核进系统--之后报错如下：
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/002651624c0ffe43da5c197ab06b0dbf.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 6: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/002651624c0ffe43da5c197ab06b0dbf.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 6: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 UEFI模式-重启-选择510内核进系统--之后报错如下：
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/a594f0141d058c646597cd5577f76f75.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 7: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/a594f0141d058c646597cd5577f76f75.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 7: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 4、虚拟化对比测试如下：
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/d4f739a14dc41e6cefff8cb41379ed41.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 8: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/d4f739a14dc41e6cefff8cb41379ed41.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 8: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 
 ## 日志分析 {#日志分析}
 
 从问题现象我们可以看到，内核出现了启动初期阶段，报了panic，如下图：
 
-<div class="fancy" link>
+<div link class="fancy">
 
-<img src="https://r2.guolongji.xyz/allinaent/2024/08/a46967e37804817e5e059c377e7330f2.png" alt="Caption not used as alt text" width="900" class="fancy" link="t" />
+<img src="https://r2.guolongji.xyz/allinaent/2024/08/a46967e37804817e5e059c377e7330f2.png" alt="Caption not used as alt text" link="t" class="fancy" width="900" />
 往上看可以看到最后调用的函数栈，最后函数位置 fpu\__init_cpu_xstate+0x63 ，这个函数看着是浮点state初始化,
 看一下这个函数的内容如下：
 
@@ -86,19 +86,19 @@ UEFI模式-重启-选择510内核进系统--之后报错如下：
 
 可以看到基本都是操作寄存器相关操作，我们反汇编看一下具体死在了哪行代码:
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/8d619b135b415f9385e7d12610237586.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 10: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/8d619b135b415f9385e7d12610237586.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 10: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 可以看到正好是xsetbv指令，我们将xsetbv设置的值打印出来可以看到目前出现问题时，他的值是0x202e7，该指令是将EDX:EAX中的值写入ECX指定的XCR。这时候就需要看看intel手册关于这条指令的详细信息了，这个值是否有异常。
 
 在Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume 1的13.3章节描述了关系XSTATE的相关内容：
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/566ecd9010581012efccd8d72a97a399.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 11: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/566ecd9010581012efccd8d72a97a399.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 11: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 可以看到，当XCR0的bit18-17是01,10时候会报GP错误，而0x202e7的bit18-17确实是10，到现在报GP问题根因找到了，接下来的问题就是找到为什么EDA:EAX的值低32bit的bit18-17不是00或者11了。
 
 下面我们梳理一下，GUEST、HOST、QEMU交互流程，如下图：
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/61ea0931fa1a6a7071ae74cc71b34b11.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 12: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/61ea0931fa1a6a7071ae74cc71b34b11.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 12: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 接下来我们需要调试一下②流程：
 
@@ -113,7 +113,7 @@ set args -smp 4 -m 4096 -cpu host,migratable=on -machine pc-i440fx-rhel7.6.0 -en
 
 {{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/72df934c98b435598cbdb4a79d463292.png" >}}
 
-{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/483f848a89a3a9c89dc13f5e44cbdf25.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 13: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
+{{< figure src="https://r2.guolongji.xyz/allinaent/2024/08/483f848a89a3a9c89dc13f5e44cbdf25.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 13: </span>_\"caption\"_" link="t" class="fancy" width="900" target="_blank" >}}
 
 ```nil
 bpftrace -e 'kprobe:kvm_arch_vcpu_ioctl {printf("ioctl args: flip %x, ioctl %x, arg %lx\n", arg0, arg1, arg2);}'

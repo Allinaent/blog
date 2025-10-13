@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2025/01
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2025-01-13 一 14:40]
 #+TITLE: 一次软锁问题的分析
 #+HUGO_TAGS:

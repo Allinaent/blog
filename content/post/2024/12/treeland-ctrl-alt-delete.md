@@ -1,9 +1,9 @@
 +++
 title = "treeland环境下ctrl-alt-del重启问题（韬哥）"
 date = 2024-12-13T16:33:00+08:00
-lastmod = 2024-12-13T16:59:35+08:00
+lastmod = 2025-10-13T13:04:24+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

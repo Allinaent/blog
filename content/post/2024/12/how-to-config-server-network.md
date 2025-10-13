@@ -1,9 +1,9 @@
 +++
 title = "如何配置多网卡服务器的网络"
 date = 2024-12-11T19:55:00+08:00
-lastmod = 2025-03-12T15:37:05+08:00
+lastmod = 2025-10-13T13:52:51+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = false
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

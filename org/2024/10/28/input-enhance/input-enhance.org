@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2024/10
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2024-10-28 一 10:56]
 #+TITLE: linux 用户输入增强
 #+HUGO_TAGS:

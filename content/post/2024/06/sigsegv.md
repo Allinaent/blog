@@ -1,9 +1,9 @@
 +++
 title = "一波三折的SIGSEGV以及signal相关"
 date = 2024-06-12T12:32:00+08:00
-lastmod = 2024-06-12T12:42:48+08:00
+lastmod = 2025-10-13T13:46:45+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

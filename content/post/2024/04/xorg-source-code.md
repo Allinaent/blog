@@ -1,9 +1,9 @@
 +++
 title = "xorg 代码琉理"
 date = 2024-04-01T14:26:00+08:00
-lastmod = 2024-06-06T12:25:16+08:00
+lastmod = 2025-10-13T13:25:03+08:00
 categories = ["graphic"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

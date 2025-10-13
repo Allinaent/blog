@@ -1,9 +1,9 @@
 +++
 title = "从欧拉 510 内核中找到调度低延时的补丁"
 date = 2024-07-29T17:30:00+08:00
-lastmod = 2024-08-01T16:47:56+08:00
+lastmod = 2025-10-13T13:05:45+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
@@ -427,7 +427,7 @@ hiroce3驱动在arm64 clang allmodconfig编译时有报错，bugfix
 无关
 
 （41
-0083-entry-rcu-Check-TIF_RESCHED-_after_-delayed-RCU-wake.patch
+0083-entry-rcu-Check-TIF_RESCHED-<span class="underline">after</span>-delayed-RCU-wake.patch
 
 同上，无关
 

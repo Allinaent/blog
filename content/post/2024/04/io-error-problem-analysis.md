@@ -1,9 +1,9 @@
 +++
 title = "浪潮产线硬盘压测重启后io-error 问题"
 date = 2024-04-28T09:54:00+08:00
-lastmod = 2024-06-06T11:44:08+08:00
+lastmod = 2025-10-13T13:23:41+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

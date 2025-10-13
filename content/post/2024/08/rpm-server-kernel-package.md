@@ -1,9 +1,9 @@
 +++
 title = "服务器内核打包过程"
 date = 2024-08-05T13:18:00+08:00
-lastmod = 2024-08-06T10:56:22+08:00
+lastmod = 2025-10-13T13:29:17+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
@@ -91,3 +91,126 @@ tar tJvf linux-4.19.0-91.152.28.2.tar.xz |head -n 10
 J 换成 z 就是查看 tar.gz 的。
 
 J 去掉就是查看 tar 包的。
+
+
+## org-roam 网络方式发布 {#org-roam-网络方式发布}
+
+<https://hugocisneros.com/notes/>
+
+<https://hugocisneros.com/blog/my-org-roam-notes-workflow/>#
+
+有一个搞机器学习的大佬，做了一个网站，他的网站可以把 org-roam 的wiki 放到网上，但是过程说的比较模糊，有代码可以参考。
+
+后期数学学习的东西也可以全部放到博客当中来，方便自己随时保持熟练度。
+
+<https://hugocisneros.com/resume/>
+
+follow 这个大佬，他是个法国人，可能只比我大两岁，但人家是博士生，起简历比我强太多了。
+
+
+## 复杂分支下的补丁对比 {#复杂分支下的补丁对比}
+
+这个可以查看不同分支的亲缘关系：
+
+git log --graph --decorate --oneline --simplify-by-decoration --all
+
+出问题的情况一般是在 2000 个补丁之内的，所以我可以这么做：
+
+git log --all --oneline --graph --decorate -2000 &gt; all.log
+
+我关心的就两个分支，一个是 lts-1060 这个分支没有问题。另一个就是 proj-tyy3 这个分支是有问题的，对比这两个分支有哪些补丁的差异。所以可以先删除掉这两个分支以外的其它的分支的提交。
+
+有共同的祖先：
+
+graph 的图很容易看懂，就是
+
+proj-tyy3 上面多的补丁：
+
+```nil
+0cf52dbb3e94 (tag: 4.19.0-91.152.28.1, origin/proj-tyy3, proj-tyy3) uos: kabi: add Module.kabi_aarch64 fr arm4k
+45871d0a7726 uos: update to tg3-3.139b
+cfd79e9343e8 stable: KVM: arm64: Remove S1PTW check from kvm_vcpu_dabt_iswrite() [T314809]
+10a714fb8078 uos: arm64: Change PAGE_SIZE from 64K to 4K
+7cffdee17a9a uos: euler :net: hns3: update hns3 version to 22.9.2
+b73c07dee1bf scsi: mpt3sas: Fix error return code of mpt3sas_base_attach()
+f60a30685f5f scsi: mpt3sas: Fix double free warnings
+ba7ee06ff1a8 uos: update megaraid_sas to 07.724.02.00[T353121]
+b38cb3294ce9 uos: Revert "uos: update megaraid_sas to 07.724.02.00[T353121]"
+ef85c99f0e99 uos: update mpt3sas driver to 45.00.00.00[T353125]
+d76d1c1bb856 uos: update megaraid_sas to 07.724.02.00[T353121]
+```
+
+lts-1060 上多的补丁：
+
+```nil
+fa57de2af4ef (origin/lts-1060, lts-1060) Merge "euler: mm/memcontrol: fix wrong vmstats for dying memcg [T351649]" into lts-1060
+94a498143a07 euler: mm/memcontrol: fix wrong vmstats for dying memcg [T351649]
+839d7b776ced stable: {CVE-2024-26602} sched/membarrier: reduce the ability to hammer on sys_membarrier [T351223]
+67e02a13ac80 uos: drm/hisilicon/hibmc: add gamma_set function [B187793]
+478fe66f706e uos: drm/hisilicon/hibmc: add DPMS on/off function [B187793]
+d9dbfa0d28ca uos: drm/hisilicon/hibmc: fix 'xset dpms force off' fail [B187793]
+```
+
+共同的祖先是这个：
+
+0312e83e101c (tag: 4.19.0-91.152.28) euler: net: sctp: update stream-&gt;incnt after successful allocation of stream_in[B342737]
+
+满打满算，可疑的补丁只有 4 个：
+
+```nil
+b73c07dee1bf scsi: mpt3sas: Fix error return code of mpt3sas_base_attach()
+f60a30685f5f scsi: mpt3sas: Fix double free warnings
+ba7ee06ff1a8 uos: update megaraid_sas to 07.724.02.00[T353121]
+ef85c99f0e99 uos: update mpt3sas driver to 45.00.00.00[T353125]
+```
+
+二分就可快就能出来了吧。为了验证，先弄一个 0312e83e101c 的版本。
+
+想从 koji 上面把内核下载下来：
+
+```nil
+uos@guolongji:~/gg/CJlinux-4.19.90$ host koji.uniontech.com
+koji.uniontech.com has address 10.30.32.42
+```
+
+
+## 问题找到 {#问题找到}
+
+一个限制中断数量的 patch ：
+
+git branch -r --contains 0a814fe1
+
+切到不同的分支去察有没有这个 subject 最合理。
+
+```nil
+uos@guolongji:~/gg/CJlinux-4.19.90$ git log --all --grep="loongarch: pci: irq: Add early" --format=%H
+e155d329b32ed9c4eb1dab27ff3e013fd45f8280
+0a814fe1bf1af00e32dc4b962a77d489db06e983
+```
+
+可以这么做。
+
+```bash
+for commit in $(git log --grep="<subject>" --format=%H); do
+    echo "Branches containing commit $commit:"
+    git branch --contains $commit
+    echo
+done
+```
+
+
+## 服务器版本的 grub 如何增加内核？ {#服务器版本的-grub-如何增加内核}
+
+直接加的vmlinuz，生成了一个img
+
+grubby --add-kernel /boot/vmlinuz-版本 --title 版本
+
+添加完了，想指定启动顺序，默认不是有个启动顺序吗，一般在/boot/grub/grub.cfg能看到
+
+在 _boot/loader/entries_ 下。
+
+A版在grub.cfg没有。
+
+grubby --info=ALL
+
+增加grub 没有成功。还是做 rpm 包更靠谱。

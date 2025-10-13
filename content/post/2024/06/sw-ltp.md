@@ -1,9 +1,9 @@
 +++
 title = "SW 架构 A 卡 LTP 卡死问题分析"
 date = 2024-06-19T11:16:00+08:00
-lastmod = 2024-06-19T14:10:50+08:00
+lastmod = 2025-10-13T13:07:56+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

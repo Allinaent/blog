@@ -1,9 +1,9 @@
 +++
 title = "内核 bpf 程序的开发"
 date = 2025-03-05T14:57:00+08:00
-lastmod = 2025-03-05T17:21:15+08:00
+lastmod = 2025-10-13T13:26:41+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++

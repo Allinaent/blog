@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2024/11
 #+HUGO_CUSTOM_FRONT_MATTER: :toc false
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2024-11-25 一 11:19]
 #+TITLE: 如何使用 crash 分析内核的 vmcore
 #+HUGO_TAGS:

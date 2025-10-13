@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2024/09
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2024-09-11 三 10:54]
 #+TITLE: 服务器版本内核本地编译流程
 #+HUGO_TAGS:

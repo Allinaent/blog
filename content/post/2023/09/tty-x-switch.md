@@ -2,10 +2,10 @@
 title = "tty和x的切换流程"
 author = ["郭隆基"]
 date = 2023-09-25T10:31:00+08:00
-lastmod = 2024-10-25T17:24:39+08:00
+lastmod = 2025-10-13T13:51:04+08:00
 tags = ["gpu"]
 categories = ["graphic"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
@@ -64,7 +64,7 @@ VT 驱动的代码在 drivers/tty/vt/vt.c 当中。其中的 visual_init 函数�
 
 流程是内核启动初始化。
 
-{{< figure src="/ox-hugo/img_20230926_090023.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 1: </span>_tty 子系统架构图_" link="t" class="fancy" width="700" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20230926_090023.png" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 1: </span>_tty 子系统架构图_" link="t" class="fancy" width="700" target="_blank" >}}
 
 
 ## 如何将一个 tty 和一个 xorg 关连起来？ {#如何将一个-tty-和一个-xorg-关连起来}
@@ -2062,9 +2062,9 @@ Detaching...
 
 通过 gdb 调试，发现多次调用 drmModeRmFB ，这个函数是 libdrm 的函数。调用者往前找是
 
-{{< figure src="/ox-hugo/img_20231124_164822.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 2: </span>/ 第一次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20231124_164822.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 2: </span>/ 第一次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
 
-{{< figure src="/ox-hugo/img_20231124_165440.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">Figure 3: </span>/ 第二次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
+{{< figure src="/ox-hugo/img_20231124_165440.jpg" alt="Caption not used as alt text" caption="<span class=\"figure-number\">图 3: </span>/ 第二次调用 /" link="t" class="fancy" width="1500" target="_blank" >}}
 
 为什么会多次调用，我的目的始终是找到这个问题的源头。
 

@@ -3,7 +3,7 @@
 #+HUGO_SECTION: post/2024/06
 #+HUGO_CUSTOM_FRONT_MATTER: :toc true
 #+HUGO_AUTO_SET_LASTMOD: t
-#+HUGO_DRAFT: false
+#+HUGO_DRAFT: true
 #+DATE: [2024-06-12 三 12:32]
 #+TITLE: 一波三折的SIGSEGV以及signal相关
 #+HUGO_TAGS:

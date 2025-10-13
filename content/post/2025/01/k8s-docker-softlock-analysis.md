@@ -1,9 +1,9 @@
 +++
 title = "一次软锁问题的分析"
 date = 2025-01-13T14:40:00+08:00
-lastmod = 2025-06-13T10:20:10+08:00
+lastmod = 2025-10-13T13:41:53+08:00
 categories = ["kernel"]
-draft = false
+draft = true
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/92a1feeab471b12646b9c76edccc1546.jpg"
 +++
