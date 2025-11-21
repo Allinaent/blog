@@ -1,7 +1,7 @@
 +++
 title = "与 deepseek 讨论物理——对称性与终极理论"
 date = 2025-11-06T17:08:00+08:00
-lastmod = 2025-11-06T17:15:29+08:00
+lastmod = 2025-11-21T20:15:07+08:00
 draft = false
 toc = true
 image = "https://r2.guolongji.xyz/allinaent/2024/06/a5024b3cfabbbb97c49656e4223d6be8.png"
