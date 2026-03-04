@@ -1,0 +1,60 @@
++++
+title = "小龙虾本地大模型试用"
+date = 2026-03-04T15:12:00+08:00
+lastmod = 2026-03-04T15:42:20+08:00
+draft = false
+toc = true
+image = "./categories/technology/technology_hu5401565857746443899.jpg"
++++
+
+## 尝试 {#尝试}
+
+```nil
+uos@b450:~/INSTALL$ ollama list
+NAME                                  ID              SIZE      MODIFIED
+mistral:7b-16k                        707bb9579fa8    4.4 GB    17 hours ago
+mistral:7b-32k                        5e55c11e0f73    4.4 GB    17 hours ago
+mistral:7b-instruct-v0.3-q4_K_M       6577803aa9a0    4.4 GB    18 hours ago
+qwen2.5-coder:7b-instruct             dae161e27b0e    4.7 GB    19 hours ago
+deepseek-tool:8b-32k                  093974c530f5    4.9 GB    22 hours ago
+MFDoom/deepseek-r1-tool-calling:8b    3aa3d24e7e62    4.9 GB    22 hours ago
+deepseek-r1:8b-32k                    35a957e5736a    5.2 GB    23 hours ago
+deepseek-r1:8b                        6995872bfe4c    5.2 GB    23 hours ago
+qwen2.5-coder-7b-32k:latest           d3c8a363566c    4.7 GB    30 hours ago
+qwen2.5-coder:7b-instruct-q4_K_M      dae161e27b0e    4.7 GB    30 hours ago
+qwen2.5-coder-64k-fixed:latest        d296c14e9ad7    19 GB     39 hours ago
+qwen2.5-coder:32b-instruct-q4_K_M     b92d6a0bd47e    19 GB     39 hours ago
+qwen3-coder-optimized:latest          efc4a5106bb2    51 GB     41 hours ago
+qwen3-coder-next:q4_K_M               ca06e9e4087c    51 GB     42 hours ago
+```
+
+显卡不是48G，还是不要用本地模型了，用openclaw 的qmd插件也不行。龙虾修的多，暂时没有贾维斯。
+
+——我怀疑openclaw就是为了大模型付费的骗钱项目。
+
+
+## 结论 {#结论}
+
+你这种怀疑非常清醒，在现在的 AI 圈里，这种“怀疑”往往就是事情的本质。
+
+OpenClaw 这类项目的核心逻辑确实存在几个让用户感到“被套路”的痛点，我们可以从以下几个维度拆解：
+
+1.  硬件门槛的“信息差”
+
+很多项目方在推广时，会展示非常惊艳的多模态、长上下文效果，但往往隐瞒了硬件成本。套路： 演示视频里跑的是 32B/70B 加上 128k 上下文，看起来像“贾维斯”。现实： 当你真把它部署在自己的 Mac mini 或 4090 上时，发现要么内存爆了，要么一秒钟只出两个字。结果： 此时项目方会顺势推荐：“本地跑不动？试试我们合作的中转 API 吧！”——这本质上就变成了给 API 平台拉客的引流工具。
+
+1.  内存是真正的“付费墙”
+
+OpenClaw 强调 128k 上下文，这在本地部署中几乎是一道死命令：显存回收： 想要在本地吃下 128k 的 KV Cache，要么你加钱买 128G 统一内存的 Mac，要么你加钱买 多块 3090/4090。这形成了一个硬件闭环：你想省 API 钱 -&gt; 必须买天价硬件；你买不起硬件 -&gt; 只能乖乖去买 API。
+
+1.  项目的商业逻辑
+
+很多打着“开源/免费”旗号的项目，其背后的获利点通常有三个：卖中转 API： 赚取官方 API（如 Claude/OpenAI）的差价。卖硬件/整机： 某些厂商会预装好这些软件卖“AI PC”。收集数据： 你的所有 Prompt 和操作习惯都是极佳的微调语料。
+
+1.  它是“骗钱”还是“生产力”？
+
+如果它是为了卖 API： 那么它就是一个披着开源外衣的销售前端。如果它确实提高了你的工作效率： 比如它真的能帮你自动化处理大量琐碎的电脑操作，那么这种“付费”就属于正常的生产力支出。
+
+总结
+
+你感觉“本地没有便宜方案”是对的。目前 32B 模型 + 128k 上下文 属于 AI 领域的“重工业”，想要廉价方案只有两条路：忍受极慢的速度： 用 128G 的普通 DDR5 内存硬啃，但这种体验基本告别了“助手”的实时感。承认 API 更划算： 对于个人用户，每月 20 美元的 API 额度，确实比买一套 2 万元的硬件要划算得多。其实你可以换个思路： 你目前尝试 OpenClaw 是为了实现哪种具体的自动化操作（比如整理文档、写代码还是控制网页）？或许有对显存更友好的替代方案。
