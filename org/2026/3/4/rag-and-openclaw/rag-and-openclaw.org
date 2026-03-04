@@ -8,7 +8,7 @@
 #+TITLE: 小龙虾本地大模型试用
 #+HUGO_TAGS: 
 #+HUGO_CATEGORIES: 
-#+HUGO_CUSTOM_FRONT_MATTER: :image ./categories/technology/technology_hu5401565857746443899.jpg
+#+HUGO_CUSTOM_FRONT_MATTER: :image https://r2.guolongji.xyz/allinaent/2026/03/356bf603c46f2dd15fd783a52aab1faf.png
 
 * 尝试
 

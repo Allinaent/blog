@@ -1,10 +1,10 @@
 +++
 title = "小龙虾本地大模型试用"
 date = 2026-03-04T15:12:00+08:00
-lastmod = 2026-03-04T15:42:20+08:00
+lastmod = 2026-03-04T16:13:39+08:00
 draft = false
 toc = true
-image = "./categories/technology/technology_hu5401565857746443899.jpg"
+image = "https://r2.guolongji.xyz/allinaent/2026/03/356bf603c46f2dd15fd783a52aab1faf.png"
 +++
 
 ## 尝试 {#尝试}
