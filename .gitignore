@@ -1,5 +1,6 @@
 *~
-/public/*
+/public/
+/resources/
 *.bbl
 *.blg
 *.swp
