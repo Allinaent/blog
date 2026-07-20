@@ -7,7 +7,7 @@ BasicInfo:
     - Icon: fas fa-envelope
       Info: 1909943253@qq.com
     - Icon: fas fa-globe
-      Info: <a class="contact__link" href="https://guolongji.xyz" target="_blank">https://guolongji.xyz</a>
+      Info: <a class="contact__link" href="https://blog.guolongji.xyz" target="_blank">https://guolongji.xyz</a>
     - Icon: fas fa-map-marker-alt
       Info: 北京-大兴
 
@@ -24,7 +24,7 @@ Experience:
     Place: Oxford, UK
     Positions:
       - Title: 高级内核研发工程师
-        Date: 2021.1 - 今
+        Date: 2021.1 - 2026.1
         Details:
           - 主要工作是统信UOS V20和V25桌面内核的开发和维护工作。
           - 21 年到22 年中参与mips ，loongarch 架构bugfix，5.10到4.19内核的backport。
