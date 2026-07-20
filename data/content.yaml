@@ -7,7 +7,7 @@ BasicInfo:
     - Icon: fas fa-envelope
       Info: 1909943253@qq.com
     - Icon: fas fa-globe
-      Info: <a class="contact__link" href="https://blog.guolongji.xyz" target="_blank">https://guolongji.xyz</a>
+      Info: <a class="contact__link" href="https://blog.guolongji.xyz" target="_blank">https://blog.guolongji.xyz</a>
     - Icon: fas fa-map-marker-alt
       Info: 北京-大兴
 
