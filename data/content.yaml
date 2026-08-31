@@ -23,6 +23,20 @@ Experience:
   - Employer: 统信软件科技有限公司
     Place: Oxford, UK
     Positions:
+      - Title: 代码审计/AI代码rubric标注工程师
+        Date: 2026.3 - 今
+        Details:
+          - 负责大模型代码生成与Agent能力的评测及数据标注工作。
+          - 评测执行：针对Kimi、GLM、Doubao等主流模型，执行Vibicoding、Dogfooding等评测任务，通过多轮问答与推演，从代码质量、安全拦截、推理正确性等维度完成模型能力横向评估。
+          - 环境搭建与验证：基于真实代码仓库构建Docker可复现环境，编写初始化脚本与用户任务；遵循最小修改原则修复F2P验证链路，补充单元测试用例，打通自动化验证闭环。
+          - 复杂场景设计：设计高难度多轮Prompt及配套材料，模拟真实办公场景，观测模型工具调用与交付质量。
+          - 数据质量管理：开展TRAE企业版与竞品对比评测，完成代码样本清洗、分类、校验与审核，保证数据集质量。            
+        Badges: ['hermes/openclaw', 'C++', 'python', 'aigc/rubrics规范']
+
+Experience:
+  - Employer: 统信软件科技有限公司
+    Place: Oxford, UK
+    Positions:
       - Title: 高级内核研发工程师
         Date: 2021.1 - 2026.1
         Details:
