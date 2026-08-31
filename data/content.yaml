@@ -32,8 +32,6 @@ Experience:
           - 复杂场景设计：设计高难度多轮Prompt及配套材料，模拟真实办公场景，观测模型工具调用与交付质量。
           - 数据质量管理：开展TRAE企业版与竞品对比评测，完成代码样本清洗、分类、校验与审核，保证数据集质量。            
         Badges: ['hermes/openclaw', 'C++', 'python', 'aigc/rubrics规范']
-
-Experience:
   - Employer: 统信软件科技有限公司
     Place: Oxford, UK
     Positions:
